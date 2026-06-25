@@ -6,6 +6,7 @@ require (
 	github.com/cloudwego/eino v0.9.9
 	github.com/cloudwego/eino-ext/components/model/deepseek v0.1.6
 	github.com/eino-contrib/jsonschema v1.0.3
+	go.uber.org/zap v1.28.0
 	google.golang.org/protobuf v1.36.11
 )
 
@@ -35,6 +36,7 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	github.com/yargevad/filepathx v1.0.0 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/arch v0.11.0 // indirect
 	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
 	golang.org/x/sys v0.30.0 // indirect

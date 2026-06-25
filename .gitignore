@@ -16,8 +16,12 @@ Agent-brains/_build/
 Agent-brains/rebar.lock
 Agent-brains/erl_crash.dump
 Agent-brains/rebar3.crashdump
+# mnesia 磁盘数据 (运行期生成, 不入库)
+# mnesia_store 默认目录: data/mnesia (hermes_brains env mnesia_dir 可覆盖)
+Agent-brains/data/
 # gpb 在编译期生成，不入库 (源在 proto/hermes.proto)
-Agent-brains/src/hermes.erl
+# 重排后 hermes.erl 输出到 src/app/ (rebar.config gpb_opts {o_erl, "src/app"})
+Agent-brains/src/app/hermes.erl
 Agent-brains/include/hermes.hrl
 
 # =========================================================

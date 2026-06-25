@@ -29,7 +29,7 @@
 
 %% 默认查询: 询问北京天气 (会触发 get_weather 工具调用)
 run() ->
-    run(u("北京今天天气怎么样？")).
+    run(util:u("北京今天天气怎么样？")).
 
 %% 自定义用户 query 的端到端演示
 %% 流程: 加载 app -> 注入凭证与 server 路径 -> 启动 app -> 起 FSM -> 触发 ReAct -> 等待结束 -> 打印历史
@@ -94,7 +94,7 @@ load_credentials() ->
     application:set_env(hermes_brains, api_key, Key),
     application:set_env(hermes_brains, default_model, Model),
     io:format("[demo] api_key 已注入 (前 8 位: ~s...), default_model=~s~n",
-              [safe_prefix(Key), Model]),
+              [util:safe_prefix(Key), Model]),
     ok.
 
 %% 兼容: 没有 jsx 依赖时, 用 erlang 自带的 json 模块 (OTP 26+)
@@ -102,31 +102,12 @@ jsx_decode_safe(Bin) ->
     case code:which(json) of
         non_existing ->
             %% 老版本 OTP 没有 json 模块, 退化用正则提取 (够 demo 用)
-            extract_kv(Bin);
+            util:extract_kv(Bin);
         _ ->
             json:decode(Bin)
     end.
 
-%% 退化解析: 从 api-key.json 提取 api_key / model
-extract_kv(Bin) ->
-    ApiKey = extract_string_field(Bin, <<"api_key">>),
-    Model = extract_string_field(Bin, <<"model">>),
-    #{<<"api_key">> => ApiKey, <<"model">> => Model}.
-
-extract_string_field(Bin, Field) ->
-    %% 极简正则: "field": "value"
-    Pattern = <<$", Field/binary, $", "\\s*:\\s*\"([^\"]+)\"">>,
-    {ok, RE} = re:compile(Pattern),
-    case re:run(Bin, RE, [{capture, all_but_first, binary}]) of
-        {match, [Val]} -> Val;
-        nomatch -> <<>>
-    end.
-
-%% 安全打印 api_key 前缀 (避免在日志里泄漏完整 key)
-safe_prefix(Key) when byte_size(Key) >= 8 ->
-    <<Pre:8/binary, _/binary>> = Key,
-    Pre;
-safe_prefix(_) -> "****".
+%% (extract_kv / extract_string_field / safe_prefix / u 已迁出至 util.erl)
 
 %% 打印当前 application env (用于调试)
 print_env() ->
@@ -142,10 +123,11 @@ start_fsm(Query) ->
     InitialHistory = [#{role => <<"user">>, content => Query}],
     Args = [{session_id, ?DEFAULT_SESSION},
             {model, application:get_env(hermes_brains, default_model, <<"deepseek-v4-pro">>)},
-            {tools, Tools}],
+            {tools, Tools},
+            {history, InitialHistory}],
     case agent_sup:start_agent(Args) of
         {ok, Pid} ->
-            %% 把初始用户消息写入 state_store 历史 (FSM 启动时不会自动写入)
+            %% 把初始用户消息写入 state_store 历史 (供 wait_idle 轮询读取)
             [state_store:append_history(?DEFAULT_SESSION, M) || M <- InitialHistory],
             {ok, Pid};
         {error, _} = E ->
@@ -154,16 +136,18 @@ start_fsm(Query) ->
 
 %% get_weather 工具描述 (与 Eion-tools server.go GetWeatherHandler 对齐)
 get_weather_tool() ->
+    %% 注意: 含中文的字面量必须走 util:u/1 (string list -> unicode:characters_to_binary/2),
+    %%       直接写 <<"...中文...">> 二进制字面量在编译期会被破坏 (非有效 UTF-8)。
     #{
         name => <<"get_weather">>,
-        description => u("获取指定城市的当前天气。仅支持中国主要城市。"),
-        parameters_json => <<"{
-            \"type\":\"object\",
-            \"properties\":{
-                \"city\":{\"type\":\"string\",\"description\":\"城市名，例如 北京/上海/深圳\"}
-            },
-            \"required\":[\"city\"]
-        }">>
+        description => util:u("获取指定城市的当前天气。仅支持中国主要城市。"),
+        parameters_json => util:u(
+            "{\"type\":\"object\","
+            "\"properties\":{"
+            "\"city\":{\"type\":\"string\",\"description\":\"城市名，例如 北京/上海/深圳\"}"
+            "},"
+            "\"required\":[\"city\"]"
+            "}")
     }.
 
 %% 等待 FSM 回到 idle (轮询 state_store 快照, loop_count 不再增长 + history 末尾出现 assistant 无 tool_calls)
@@ -245,6 +229,4 @@ is_final_answer(#{role := <<"assistant">>} = Msg) ->
 is_final_answer(_) ->
     false.
 
-%% UTF-8 字符串辅助: 源码字面量在 erl_opts{encoding,utf8} 下被读为 latin1,
-%% 用 unicode:characters_to_binary 显式转码以保证中文正确。
-u(Str) -> unicode:characters_to_binary(Str, utf8).
+%% (u/1 已迁出至 util.erl)

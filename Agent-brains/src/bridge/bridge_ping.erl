@@ -4,7 +4,7 @@
 
 -export([run/0]).
 
--include_lib("kernel/include/logger.hrl").
+-include("log.hrl").
 
 run() ->
     %% 1. 准备 env
@@ -15,7 +15,7 @@ run() ->
     application:set_env(hermes_brains, api_key, ApiKey),
     application:set_env(hermes_brains, default_model, Model),
     application:set_env(hermes_brains, eion_tools_bin, "/tmp/eion-tools-server"),
-    io:format("[ping] api_key=~s..., model=~s~n", [safe_prefix(ApiKey), Model]),
+    io:format("[ping] api_key=~s..., model=~s~n", [util:safe_prefix(ApiKey), Model]),
 
     %% 2. 启动 app
     {ok, _} = application:ensure_all_started(hermes_brains),
@@ -26,7 +26,7 @@ run() ->
         model => Model,
         messages => [
             #{role => <<"system">>, content => <<"You are a helpful assistant.">>},
-            #{role => <<"user">>, content => u("用一句话介绍 Erlang")}
+            #{role => <<"user">>, content => util:u("用一句话介绍 Erlang")}
         ],
         tools => []
     },
@@ -60,9 +60,4 @@ run() ->
 
     halt().
 
-safe_prefix(Key) when byte_size(Key) >= 8 ->
-    <<Pre:8/binary, _/binary>> = Key,
-    Pre;
-safe_prefix(_) -> "****".
-
-u(Str) -> unicode:characters_to_binary(Str, utf8).
+%% (safe_prefix/1, u/1 已迁出至 util.erl)

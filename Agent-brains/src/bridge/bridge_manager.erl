@@ -91,14 +91,16 @@ queue_len() ->
 init([]) ->
     ServerBin = application:get_env(hermes_brains, eion_tools_bin,
                                     "eion-tools-server"),
+    lager:info("opening port to eion-tools server: ~s", [ServerBin]),
     %% 拉起 Eion-tools server 子进程
     %% {packet, 4}: Erlang 自动处理 4 字节大端长度前缀 (与 Go 侧 readFrame 对齐)
     %% use_stdio + binary: 用 stdin/stdout 通信, 数据以 binary 传输
-    %% 注意: 不开 stderr_to_stdout —— 否则 Go 侧 log.Println 输出的非 framed 文本
+    %% 注意: 不开 stderr_to_stdout —— 否则 Go 侧 zap 输出的非 framed 文本
     %%       会污染 stdout 的 packet 流, 破坏 {packet,4} 解析。Go 的 stderr 直接
     %%       继承到调用进程的 stderr, 在终端里仍可见, 不影响端口数据流。
     Port = erlang:open_port({spawn, ServerBin},
                             [binary, {packet, 4}, use_stdio, exit_status]),
+    lager:info("port opened successfully", []),
     {ok, #state{port = Port}}.
 
 handle_call(port_info, _From, #state{port = Port} = State) ->
@@ -109,6 +111,8 @@ handle_call(_Request, _From, State) ->
     {reply, {error, not_implemented}, State}.
 
 handle_cast({call_llm, FsmPid, Ref, Req}, State) ->
+    %% 关键节点: LLM 推理请求入队 (异步)
+    lager:info("call_llm queued, ref=~p, fsm_pid=~p", [Ref, FsmPid]),
     %% 注入凭证 (来自 app env, 不来自 FSM)
     ApiBase = application:get_env(hermes_brains, api_base, <<>>),
     ApiKey = application:get_env(hermes_brains, api_key, <<>>),
@@ -120,6 +124,8 @@ handle_cast({call_llm, FsmPid, Ref, Req}, State) ->
                            State);
 
 handle_cast({call_tool, FsmPid, Ref, Id, Name, Args}, State) ->
+    lager:info("call_tool queued, ref=~p, tool=~s, req_id=~s",
+                [Ref, Name, Id]),
     BizReq = #{kind => tool_exec,
                req_id => Id,
                tool_name => Name,
@@ -135,15 +141,15 @@ handle_cast(_Msg, State) ->
 handle_info({Port, {data, Bin}}, #state{port = Port,
                                         current = {Ref, FsmPid, Kind, ReqId},
                                         timer = TRef} = State) ->
-    error_logger:info_msg("[bridge] got port data: ~p bytes, current Ref=~p~n",
-                         [byte_size(Bin), Ref]),
+    lager:info("port data received: bytes=~p, ref=~p, kind=~p",
+                [byte_size(Bin), Ref, Kind]),
     %% 取消当前在途请求的超时计时器
     _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
     %% 解码 protobuf 响应 -> 业务 Map
     Resp = pb_codec:decode_resp(Bin),
-    error_logger:info_msg("[bridge] decoded resp kind=~p, content_size=~p~n",
-                         [maps:get(kind, Resp, unknown),
-                          byte_size(maps:get(content, Resp, <<>>))]),
+    lager:debug("decoded resp, kind=~p, content_size=~p",
+                [maps:get(kind, Resp, unknown),
+                 byte_size(maps:get(content, Resp, <<>>))]),
     %% 按 Kind 投回对应 FSM
     case Kind of
         llm   -> gen_statem:cast(FsmPid, {llm_response, Ref, Resp});
@@ -154,23 +160,24 @@ handle_info({Port, {data, Bin}}, #state{port = Port,
 
 %% 调试: 收到任何 Port 消息但 current 不匹配时打印
 handle_info({Port, Other}, #state{port = Port} = State) ->
-    error_logger:info_msg("[bridge] unexpected port msg: ~p~n", [Other]),
+    lager:warning("unexpected port msg: ~p", [Other]),
     {noreply, State};
 
 %% Port 进程退出: Go 侧崩溃, 通知所有等待中的 FSM 并尝试重启 Port
 handle_info({Port, {exit_status, Status}}, #state{port = Port} = State) ->
-    error_logger:warning_msg("Eion-tools server exited: ~p, restarting port~n",
-                             [Status]),
+    lager:warning("eion-tools server exited: status=~p, restarting port", [Status]),
     notify_all_disconnect(State),
     ServerBin = application:get_env(hermes_brains, eion_tools_bin,
                                     "eion-tools-server"),
     NewPort = erlang:open_port({spawn, ServerBin},
                                [binary, {packet, 4}, use_stdio, exit_status]),
+    lager:info("port reopened, new port=~p", [NewPort]),
     {noreply, #state{port = NewPort}};
 
 %% 当前在途请求超时: 通知对应 FSM 断连, 发下一条
 handle_info({timeout, TRef, {req, Ref}}, #state{timer = TRef,
                                                  current = {Ref, FsmPid, _Kind, _ReqId}} = State) ->
+    lager:warning("request timeout, ref=~p, notifying fsm=~p", [Ref, FsmPid]),
     gen_statem:cast(FsmPid, {bridge_disconnect}),
     {noreply, dispatch_next(State#state{current = undefined, timer = undefined})};
 
@@ -187,22 +194,22 @@ handle_info(_Info, State) ->
 
 %% 入队请求: 如果当前无在途请求, 立即发送; 否则排到队列尾部
 enqueue_and_maybe_send(Item, #state{current = undefined} = State) ->
-    send_item(Item, State);
+    {noreply, send_item(Item, State)};
 enqueue_and_maybe_send(Item, #state{queue = Q} = State) ->
     {noreply, State#state{queue = queue:in(Item, Q)}}.
 
-%% 实际发送: 把 Payload 写到 Port, 启动超时计时器, 设置 current
+%% 实际发送: 把 Payload 写到 Port, 启动超时计时器, 设置 current。
+%% 返回新的 State (不包 {noreply, ...}, 由调用方按需包装)。
 send_item({Ref, FsmPid, Kind, ReqId, Payload, TimeoutMs}, #state{port = Port} = State) ->
     Port ! {self(), {command, Payload}},
     TRef = erlang:start_timer(TimeoutMs, self(), {req, Ref}),
-    {noreply, State#state{current = {Ref, FsmPid, Kind, ReqId}, timer = TRef}}.
+    State#state{current = {Ref, FsmPid, Kind, ReqId}, timer = TRef}.
 
 %% 派发下一条排队请求 (current 已清空时调用)
 dispatch_next(#state{queue = Q} = State) ->
     case queue:out(Q) of
         {{value, Item}, Q1} ->
-            {ok, NewState} = send_item(Item, State#state{queue = Q1}),
-            NewState;
+            send_item(Item, State#state{queue = Q1});
         {empty, _Q} ->
             %% 队列空, 进入空闲
             State

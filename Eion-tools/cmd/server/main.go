@@ -15,26 +15,30 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/light-code-ai/eion-tools/internal/dispatcher"
+	"github.com/light-code-ai/eion-tools/internal/logging"
 	"github.com/light-code-ai/eion-tools/internal/tool"
 	hermes "github.com/light-code-ai/eion-tools/proto/gen"
 )
 
 func main() {
+	logging.Init()
+	defer func() { _ = logging.Logger.Sync() }()
+
 	// 1. 初始化 dispatcher，注册示例工具 get_weather
 	d := dispatcher.New()
 	name, desc, params, handler := tool.GetWeatherHandler()
 	d.ToolWrapper().Register(name, desc, params, handler)
 
 	// 2. 启动 stdin/stdout 二进制帧循环（Erlang 端口通信占位实现）
-	log.Println("eion-tools server: stdin/stdout framing loop started")
+	logging.Logger.Info("eion-tools server: stdin/stdout framing loop started")
 	if err := runFramingLoop(os.Stdin, os.Stdout, d); err != nil {
-		log.Fatalf("framing loop exited: %v", err)
+		logging.Logger.Fatal("framing loop exited", zap.Error(err))
 	}
 }
 
@@ -49,11 +53,11 @@ func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) 
 			}
 			return fmt.Errorf("read frame: %w", err)
 		}
-		log.Printf("[debug] received frame: %d bytes", len(req))
+		logging.Logger.Info("received frame", zap.Int("bytes", len(req)))
 
 		agentReq := &hermes.AgentRequest{}
 		if err := proto.Unmarshal(req, agentReq); err != nil {
-			log.Printf("[debug] unmarshal failed: %v", err)
+			logging.Logger.Error("unmarshal failed", zap.Error(err))
 			// 解码失败：构造一个错误响应回写，避免 Erlang 端阻塞等待
 			errResp := &hermes.AgentResponse{
 				Payload: &hermes.AgentResponse_ToolExec{
@@ -71,11 +75,16 @@ func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) 
 		// 调试: 打印请求概要
 		switch p := agentReq.GetPayload().(type) {
 		case *hermes.AgentRequest_LlmInfer:
-			log.Printf("[debug] dispatch: kind=llm_infer, model=%s, msgs=%d, tools=%d",
-				p.LlmInfer.GetModel(), len(p.LlmInfer.GetMessages()), len(p.LlmInfer.GetTools()))
+			logging.Logger.Debug("dispatch: llm_infer",
+				zap.String("model", p.LlmInfer.GetModel()),
+				zap.Int("msgs", len(p.LlmInfer.GetMessages())),
+				zap.Int("tools", len(p.LlmInfer.GetTools())),
+			)
 		case *hermes.AgentRequest_ToolExec:
-			log.Printf("[debug] dispatch: kind=tool_exec, name=%s, req_id=%s",
-				p.ToolExec.GetToolName(), p.ToolExec.GetReqId())
+			logging.Logger.Debug("dispatch: tool_exec",
+				zap.String("name", p.ToolExec.GetToolName()),
+				zap.String("req_id", p.ToolExec.GetReqId()),
+			)
 		}
 
 		// dispatcher 内部已有 Panic_Guard，理论上不会 panic 出来
@@ -88,7 +97,7 @@ func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) 
 			}
 		}
 
-		log.Printf("[debug] sending response frame: %d bytes", proto.Size(resp))
+		logging.Logger.Info("sending response frame", zap.Int("bytes", proto.Size(resp)))
 		if err := writeFrame(w, resp); err != nil {
 			return fmt.Errorf("write frame: %w", err)
 		}

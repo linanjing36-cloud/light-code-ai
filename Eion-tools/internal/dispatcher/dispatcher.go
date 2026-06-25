@@ -10,9 +10,11 @@ package dispatcher
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 
+	"go.uber.org/zap"
+
+	"github.com/light-code-ai/eion-tools/internal/logging"
 	"github.com/light-code-ai/eion-tools/internal/model"
 	"github.com/light-code-ai/eion-tools/internal/tool"
 	hermes "github.com/light-code-ai/eion-tools/proto/gen"
@@ -48,7 +50,7 @@ func (d *Command_Dispatcher) ToolWrapper() *tool.Eino_Tool_Wrapper {
 func (d *Command_Dispatcher) Dispatch(ctx context.Context, req *hermes.AgentRequest) (resp *hermes.AgentResponse) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("dispatcher panic recovered: %v", r)
+			logging.Logger.Error("dispatcher panic recovered", zap.Any("panic", r))
 			if resp == nil {
 				resp = &hermes.AgentResponse{}
 			}
@@ -95,7 +97,7 @@ func (d *Command_Dispatcher) Dispatch(ctx context.Context, req *hermes.AgentRequ
 func (d *Command_Dispatcher) handleLLM(ctx context.Context, req *hermes.LLMInferRequest) *hermes.LLMInferResponse {
 	out, err := d.modelW.Infer(ctx, req)
 	if err != nil {
-		log.Printf("llm infer error: %v", err)
+		logging.Logger.Error("llm infer error", zap.Error(err))
 		return &hermes.LLMInferResponse{}
 	}
 	return out
