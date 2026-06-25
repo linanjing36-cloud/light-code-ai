@@ -1,0 +1,42 @@
+2026-06-25 17:50:17 =CRASH REPORT====
+  crasher:
+    initial call: mnesia_store:init/1
+    pid: <0.134.0>
+    registered_name: []
+    process_label: undefined
+    exception error: {{mnesia_create_table_failed,{bad_type,ets_snapshot,disc_copies,nonode@nohost}},[{mnesia_store,do_init_store,0,[{file,"/Users/zhangsan/local/light-code-ai/Agent-brains/src/data_base/mnesia_store.erl"},{line,180}]},{mnesia_store,init,1,[{file,"/Users/zhangsan/local/light-code-ai/Agent-brains/src/data_base/mnesia_store.erl"},{line,78}]},{gen_server,init_it,2,[{file,"gen_server.erl"},{line,2276}]},{gen_server,init_it,6,[{file,"gen_server.erl"},{line,2236}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,333}]}]}
+    ancestors: [hermes_brains_sup,<0.132.0>]
+    message_queue_len: 0
+    messages: []
+    links: [<0.133.0>]
+    dictionary: []
+    trap_exit: false
+    status: running
+    heap_size: 610
+    stack_size: 29
+    reductions: 2121
+  neighbours:
+2026-06-25 17:50:17 =SUPERVISOR REPORT====
+     Supervisor: {local,hermes_brains_sup}
+     Context:    start_error
+     Reason:     {{mnesia_create_table_failed,{bad_type,ets_snapshot,disc_copies,nonode@nohost}},[{mnesia_store,do_init_store,0,[{file,"/Users/zhangsan/local/light-code-ai/Agent-brains/src/data_base/mnesia_store.erl"},{line,180}]},{mnesia_store,init,1,[{file,"/Users/zhangsan/local/light-code-ai/Agent-brains/src/data_base/mnesia_store.erl"},{line,78}]},{gen_server,init_it,2,[{file,"gen_server.erl"},{line,2276}]},{gen_server,init_it,6,[{file,"gen_server.erl"},{line,2236}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,333}]}]}
+     Offender:   [{pid,undefined},{id,mnesia_store},{mfargs,{mnesia_store,start_link,[]}},{restart_type,permanent},{significant,false},{shutdown,5000},{child_type,worker}]
+
+2026-06-25 17:50:17 =CRASH REPORT====
+  crasher:
+    initial call: application_master:init/3
+    pid: <0.131.0>
+    registered_name: []
+    process_label: undefined
+    exception exit: {{{shutdown,{failed_to_start_child,mnesia_store,{{mnesia_create_table_failed,{bad_type,ets_snapshot,disc_copies,nonode@nohost}},[{mnesia_store,do_init_store,0,[{file,"/Users/zhangsan/local/light-code-ai/Agent-brains/src/data_base/mnesia_store.erl"},{line,180}]},{mnesia_store,init,1,[{file,"/Users/zhangsan/local/light-code-ai/Agent-brains/src/data_base/mnesia_store.erl"},{line,78}]},{gen_server,init_it,2,[{file,"gen_server.erl"},{line,2276}]},{gen_server,init_it,6,[{file,"gen_server.erl"},{line,2236}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,333}]}]}}},{hermes_brains_app,start,[normal,[]]}},[{application_master,init,3,[{file,"application_master.erl"},{line,147}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,333}]}]}
+    ancestors: [application_controller,<0.10.0>]
+    message_queue_len: 1
+    messages: [{'EXIT',<0.132.0>,normal}]
+    links: [<0.45.0>]
+    dictionary: []
+    trap_exit: true
+    status: running
+    heap_size: 987
+    stack_size: 29
+    reductions: 121
+  neighbours:

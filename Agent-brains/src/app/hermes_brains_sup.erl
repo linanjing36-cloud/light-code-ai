@@ -7,11 +7,16 @@
 
 %% 顶层监督者: rest_for_one 策略。
 %%
-%% 子进程顺序: state_store (ETS 持有者) -> agent_sup (动态 FSM 监督者)
+%% 子进程顺序: timing_wheel -> mnesia_store -> state_store -> bridge_manager -> agent_sup
 %% 选择 rest_for_one 的理由:
-%%   state_store 崩溃意味着 ETS 表丢失, 其上所有 FSM 的快照/历史也随之失效,
-%%   因此 agent_sup 及其下所有 FSM 必须一起重启 (可从持久层恢复快照)。
-%%   反之 agent_sup 崩溃不会影响 state_store 的 ETS 表。
+%%   - timing_wheel 崩溃 → 所有周期/一次性事件丢失, mnesia_store 的 snapshot tick
+%%     也来自这里, 所以后续全部要重启重新注册 timer。
+%%   - mnesia_store 崩溃 → 磁盘层失效, state_store 后续的 restore/snapshot 都不可信,
+%%     后续全部重启。
+%%   - state_store 崩溃意味着 ETS 表丢失, 其上所有 FSM 的快照/历史也随之失效,
+%%     因此 bridge_manager / agent_sup 及其下所有 FSM 必须一起重启
+%%     (state_store 重启后会从 mnesia_store 恢复 ETS 快照)。
+%%   - 反之 agent_sup 崩溃不会影响 state_store 的 ETS 表。
 
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
@@ -20,6 +25,25 @@ init([]) ->
     SupFlags = #{strategy => rest_for_one,
                  intensity => 5,
                  period => 10},
+
+    %% Timing_Wheel: 通用时间轮 (用 erlang:start_timer 驱动)
+    %% 必须最先启动 —— mnesia_store 的周期 snapshot tick 由它调度
+    TimingWheel = #{id => timing_wheel,
+                    start => {timing_wheel, start_link, []},
+                    restart => permanent,
+                    shutdown => 5000,
+                    type => worker,
+                    modules => [timing_wheel]},
+
+    %% Mnesia_Store: ETS 快照的磁盘中期存储 (gen_server)
+    %% 必须在 state_store 之前启动 —— state_store init 会调 mnesia_store:restore
+    %% 把磁盘快照加载回刚创建的 ETS 表, 实现跨重启恢复
+    MnesiaStore = #{id => mnesia_store,
+                    start => {mnesia_store, start_link, []},
+                    restart => permanent,
+                    shutdown => 5000,
+                    type => worker,
+                    modules => [mnesia_store]},
 
     %% ETS 持有者: 存放 FSM 快照 + 短期记忆
     StateStore = #{id => state_store,
@@ -46,6 +70,6 @@ init([]) ->
                  type => supervisor,
                  modules => [agent_sup]},
 
-    %% 启动顺序: state_store -> bridge_manager -> agent_sup
+    %% 启动顺序: timing_wheel -> mnesia_store -> state_store -> bridge_manager -> agent_sup
     %% rest_for_one: 任何前置崩溃, 后续全部重启
-    {ok, {SupFlags, [StateStore, BridgeManager, AgentSup]}}.
+    {ok, {SupFlags, [TimingWheel, MnesiaStore, StateStore, BridgeManager, AgentSup]}}.

@@ -54,6 +54,19 @@ get_history(SessionId) ->
 init([]) ->
     %% named_table: 让 FSM/其他进程可并发读; 写入经本 GenServer 串行化
     ets:new(?TABLE, [set, public, named_table, {read_concurrency, true}]),
+    %% 从磁盘快照恢复 ETS 内容 (mnesia_store 已在 sup 中先行启动)
+    %% 第一次启动没有快照, mnesia_store:restore 返回 {error, no_snapshot}, 这里只记录不阻塞
+    case mnesia_store:restore(?TABLE) of
+        ok ->
+            lager:info("state_store: ETS ~p restored from mnesia snapshot",
+                       [?TABLE]);
+        {error, no_snapshot} ->
+            lager:info("state_store: no mnesia snapshot for ~p, starting fresh",
+                       [?TABLE]);
+        {error, Reason} ->
+            lager:warning("state_store: restore ~p failed: ~p, starting fresh",
+                          [?TABLE, Reason])
+    end,
     {ok, #state{}}.
 
 handle_call({put_snapshot, SessionId, Data}, _From, State) ->

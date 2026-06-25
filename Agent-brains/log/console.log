@@ -1,0 +1,32 @@
+2026-06-25 17:45:16.512 [info] <0.135.0>@bridge_manager:init:{94,5} opening port to eion-tools server: /tmp/eion-tools-server
+2026-06-25 17:45:16.513 [info] <0.135.0>@bridge_manager:init:{103,5} port opened successfully
+2026-06-25 17:50:17.369 [info] <0.134.0>@mnesia_store:do_init_store:{154,14} mnesia schema already exists at data/mnesia
+2026-06-25 17:50:17.372 [error] <0.134.0>@mnesia_store:do_init_store:{179,14} mnesia create_table failed: {bad_type,ets_snapshot,disc_copies,nonode@nohost}
+2026-06-25 17:50:17.372 [error] <0.134.0> CRASH REPORT Process <0.134.0> with 0 neighbours crashed with reason: {mnesia_create_table_failed,{bad_type,ets_snapshot,disc_copies,nonode@nohost}} in mnesia_store:do_init_store/0 line 180
+2026-06-25 17:50:17.372 [error] <0.133.0> Supervisor hermes_brains_sup had child mnesia_store started with mnesia_store:start_link() at undefined exit with reason {mnesia_create_table_failed,{bad_type,ets_snapshot,disc_copies,nonode@nohost}} in mnesia_store:do_init_store/0 line 180 in context start_error
+2026-06-25 17:50:17.373 [info] <0.45.0> Application hermes_brains exited with reason: {{shutdown,{failed_to_start_child,mnesia_store,{{mnesia_create_table_failed,{bad_type,ets_snapshot,disc_copies,nonode@nohost}},[{mnesia_store,do_init_store,0,[{file,"/Users/zhangsan/local/light-code-ai/Agent-brains/src/data_base/mnesia_store.erl"},{line,180}]},{mnesia_store,init,1,[{file,"/Users/zhangsan/local/light-code-ai/Agent-brains/src/data_base/mnesia_store.erl"},{line,78}]},{gen_server,init_it,2,[{file,"gen_server.erl"},{line,2276}]},{gen_server,init_it,6,[{file,"gen_server.erl"},{line,...}]},...]}}},...}
+2026-06-25 17:50:17.373 [error] <0.131.0> CRASH REPORT Process <0.131.0> with 0 neighbours exited with reason: {{shutdown,{failed_to_start_child,mnesia_store,{{mnesia_create_table_failed,{bad_type,ets_snapshot,disc_copies,nonode@nohost}},[{mnesia_store,do_init_store,0,[{file,"/Users/zhangsan/local/light-code-ai/Agent-brains/src/data_base/mnesia_store.erl"},{line,180}]},{mnesia_store,init,1,[{file,"/Users/zhangsan/local/light-code-ai/Agent-brains/src/data_base/mnesia_store.erl"},{line,78}]},{gen_server,init_it,2,[{file,"gen_server.erl"},{line,2276}]},{gen_server,init_it,6,[{file,"gen_server.erl"},{line,...}]},...]}}},...} in application_master:init/3 line 147
+2026-06-25 17:50:17.387 [info] <0.136.0> Application mnesia exited with reason: stopped
+2026-06-25 17:51:33.041 [info] <0.118.0>@mnesia_store:do_init_store:{152,14} mnesia schema created at data/mnesia
+2026-06-25 17:51:33.069 [info] <0.118.0>@mnesia_store:do_init_store:{173,14} mnesia snapshot table created (disc_copies)
+2026-06-25 17:51:33.069 [info] <0.118.0>@mnesia_store:init:{89,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-25 17:51:33.069 [warning] <0.118.0>@mnesia_store:do_restore:{225,14} restore: no snapshot for table=hermes_brains_state
+2026-06-25 17:51:33.069 [info] <0.170.0>@state_store:init:{64,13} state_store: no mnesia snapshot for hermes_brains_state, starting fresh
+2026-06-25 17:51:33.070 [info] <0.171.0>@bridge_manager:init:{94,5} opening port to eion-tools server: /tmp/eion-tools-server
+2026-06-25 17:51:33.070 [info] <0.171.0>@bridge_manager:init:{103,5} port opened successfully
+2026-06-25 17:52:05.256 [info] <0.118.0>@mnesia_store:do_init_store:{152,14} mnesia schema created at data/mnesia
+2026-06-25 17:52:05.279 [info] <0.118.0>@mnesia_store:do_init_store:{173,14} mnesia snapshot table created (disc_copies)
+2026-06-25 17:52:05.279 [info] <0.118.0>@mnesia_store:init:{89,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-25 17:52:05.280 [warning] <0.118.0>@mnesia_store:do_restore:{225,14} restore: no snapshot for table=hermes_brains_state
+2026-06-25 17:52:05.280 [info] <0.170.0>@state_store:init:{64,13} state_store: no mnesia snapshot for hermes_brains_state, starting fresh
+2026-06-25 17:52:05.280 [info] <0.171.0>@bridge_manager:init:{94,5} opening port to eion-tools server: /tmp/eion-tools-server
+2026-06-25 17:52:05.281 [info] <0.171.0>@bridge_manager:init:{103,5} port opened successfully
+2026-06-25 17:52:05.281 [info] <0.118.0>@mnesia_store:do_snapshot:{193,22} snapshot taken, table=hermes_brains_state, entries=1
+2026-06-25 17:52:05.282 [info] <0.173.0> Application hermes_brains exited with reason: stopped
+2026-06-25 17:52:05.783 [info] <0.177.0>@mnesia_store:do_init_store:{154,14} mnesia schema already exists at data/mnesia
+2026-06-25 17:52:05.784 [info] <0.177.0>@mnesia_store:do_init_store:{176,14} mnesia snapshot table already exists
+2026-06-25 17:52:05.784 [info] <0.177.0>@mnesia_store:init:{89,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-25 17:52:05.784 [info] <0.177.0>@mnesia_store:do_restore:{216,18} restore ok, table=hermes_brains_state, entries=1
+2026-06-25 17:52:05.784 [info] <0.179.0>@state_store:init:{61,13} state_store: ETS hermes_brains_state restored from mnesia snapshot
+2026-06-25 17:52:05.784 [info] <0.180.0>@bridge_manager:init:{94,5} opening port to eion-tools server: /tmp/eion-tools-server
+2026-06-25 17:52:05.786 [info] <0.180.0>@bridge_manager:init:{103,5} port opened successfully
