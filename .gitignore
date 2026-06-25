@@ -1,0 +1,45 @@
+# =========================================================
+# Hermes 项目根 .gitignore
+# =========================================================
+
+# ---- 凭据 / 本地调试密钥 (绝对不要进仓库) ----
+api-key.json
+api-key.local.json
+*.secret.json
+.env
+.env.local
+
+# =========================================================
+# Agent-brains (Erlang/OTP + rebar3)
+# =========================================================
+Agent-brains/_build/
+Agent-brains/rebar.lock
+Agent-brains/erl_crash.dump
+Agent-brains/rebar3.crashdump
+# gpb 在编译期生成，不入库 (源在 proto/hermes.proto)
+Agent-brains/src/hermes.erl
+Agent-brains/include/hermes.hrl
+
+# =========================================================
+# Eion-tools (Go)
+# =========================================================
+Eion-tools/bin/
+Eion-tools/*.log
+# protoc 生成的 Go 代码不入库 (源在 proto/hermes.proto)
+Eion-tools/proto/gen/
+Eion-tools/hermes.pb.go
+
+# =========================================================
+# Wails-v3
+# =========================================================
+Wails-v3/build/
+Wails-v3/frontend/dist/
+Wails-v3/*.app/
+Wails-v3/extract/
+
+# ---- OS / Editor ----
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/

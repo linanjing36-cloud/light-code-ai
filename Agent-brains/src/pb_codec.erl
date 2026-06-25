@@ -8,50 +8,59 @@
 %%
 %% 设计原则:
 %%   - 业务代码 (agent_fsm / context_assembler / bridge_manager) 只触碰 Erlang Map,
-%%     永远不直接调用 hermes_pb (由 .proto 生成的模块)。
+%%     永远不直接调用 hermes 模块 (由 .proto 生成的 gpb 模块)。
 %%   - 所有 Map ↔ Protobuf 转换集中在本模块。
-%%   - to_struct/1 : 业务 Map -> gpb 消息 Map (供 hermes_pb:encode_msg 使用)
-%%   - from_struct/1 : gpb 消息 Map -> 业务 Map (hermes_pb:decode_msg 的产物)
+%%   - to_struct/1   : 业务 Map -> gpb 消息 Map (供 hermes:encode_msg 使用)
+%%   - from_struct/1 : gpb 消息 Map -> 业务 Map (hermes:decode_msg 的产物)
 %%
-%% 对齐的协议: Eion-tools/proto/hermes.proto
-%%   AgentRequest { oneof payload { LLMInferRequest llm_infer; ToolExecRequest tool_exec; } }
+%% 对齐的协议: Agent-brains/proto/hermes.proto (与 Eion-tools 共享同一份契约)
+%%   AgentRequest  { oneof payload { LLMInferRequest llm_infer; ToolExecRequest tool_exec; } }
 %%   AgentResponse { oneof payload { LLMInferResponse llm_infer; ToolExecResponse tool_exec; } }
 %%
-%% 注: 该 proto 使用具体消息类型 (而非 google.protobuf.Struct)。
-%% 这里的 "struct" 指 gpb 生成的结构化消息 Map (use_maps:true 下字段为 atom 键)。
+%% gpb 5.0 选项 (rebar.config 中 gpb_opts):
+%%   - maps / mapfields_as_maps : 消息与 map 字段都用 Erlang Map 表示
+%%   - {maps_oneof, flat}       : oneof 字段在 Map 里以 {Tag, Value} 形式呈现，
+%%                                即顶层就是 #{llm_infer => InnerMap} 或 #{tool_exec => InnerMap}
+%%   - {maps_unset_optional, omitted} : 未设置的 optional 字段不出现在 Map 中
+%%   - strings_as_binaries       : 字符串字段用 binary 而非 Erlang list
 %%====================================================================
 
--define(HERMES_PB, hermes_pb).  % 由 rebar3_gpb 从 proto/hermes.proto 生成
+-define(HERMES_PB, hermes).  % 由 rebar3_gpb_plugin 从 proto/hermes.proto 生成 (proto package=hermes)
 
 %%%===================================================================
 %%% 对外接口
 %%%===================================================================
 
 %% 将业务请求 Map 编码为 AgentRequest 的 Protobuf 二进制。
+%%
 %% BizReq 形如:
-%%   #{kind => llm_infer, model, api_base, api_key, messages, tools}
-%%   #{kind => tool_exec, req_id, tool_name, arguments_json}
+%%   #{kind => llm_infer,  model, api_base, api_key, messages, tools}
+%%   #{kind => tool_exec,  req_id, tool_name, arguments_json}
+%%
+%% 返回: binary()  —— 直接发给 Go 侧 (Eion-tools) 的 4 字节长度前缀帧的 protobuf 负载
 -spec encode_req(map()) -> binary().
 encode_req(BizReq) when is_map(BizReq) ->
     AgentReq = to_struct(BizReq),
-    %% TODO: dep 拉取后启用 -> ?HERMES_PB:encode_msg(AgentReq, 'AgentRequest')
-    _ = AgentReq,
-    <<>>.
+    ?HERMES_PB:encode_msg(AgentReq, 'AgentRequest').
 
 %% 将 AgentResponse 的 Protobuf 二进制解码为业务响应 Map。
+%%
 %% 返回形如:
-%%   #{kind => llm_infer, content, tool_calls, prompt_tokens, completion_tokens}
+%%   #{kind => llm_infer, content, tool_calls, prompt_tokens, completion_tokens, reasoning_content}
 %%   #{kind => tool_exec, result_json, error}
+%%
+%% 注: reasoning_content 来自 v4-pro 等推理模型，正文仍在 content。
 -spec decode_resp(binary()) -> map().
-decode_resp(_Bin) ->
-    %% TODO: dep 拉取后启用 ->
-    %%   #{'AgentResponse'} = ?HERMES_PB:decode_msg(Bin, 'AgentResponse'),
-    %%   from_struct(Resp)
-    #{kind => llm_infer, content => <<>>, tool_calls => [],
-      prompt_tokens => 0, completion_tokens => 0}.
+decode_resp(Bin) when is_binary(Bin) ->
+    Resp = ?HERMES_PB:decode_msg(Bin, 'AgentResponse'),
+    from_struct(Resp).
 
 %%%===================================================================
 %%% 业务 Map -> gpb 消息 Map (to_struct)
+%%%
+%%% gpb 在 {maps_oneof, flat} 选项下:
+%%%   - 顶层 AgentRequest 表示为 #{llm_infer => LlmReq} 或 #{tool_exec => ToolReq}
+%%%   - 内层消息的字段名是 atom，缺失字段不出现在 Map 中
 %%%===================================================================
 
 -spec to_struct(map()) -> map().
@@ -93,22 +102,31 @@ tool_desc_to_struct(T) ->
 
 %%%===================================================================
 %%% gpb 消息 Map -> 业务 Map (from_struct)
+%%%
+%%% gpb 解码出的顶层 AgentResponse 在 {maps_oneof, flat} 选项下形如:
+%%%   #{llm_infer => InnerMap}  -> 走 LLM 响应分支
+%%%   #{tool_exec => InnerMap}  -> 走 工具响应分支
+%%% 内层 InnerMap 的字段名是 atom，缺失字段不在 Map 中（需用 maps:get 带默认值兜底）
 %%%===================================================================
 
 -spec from_struct(map()) -> map().
 from_struct(#{llm_infer := Resp}) ->
     %% LLMInferResponse 分支
+    %% 注意: reasoning_content 是 v4-pro 推理模型新增字段，可能在普通模型响应中缺失
     #{kind => llm_infer,
       content => maps:get(content, Resp, <<>>),
       tool_calls => [tool_call_from_struct(TC) || TC <- maps:get(tool_calls, Resp, [])],
       prompt_tokens => maps:get(prompt_tokens, Resp, 0),
-      completion_tokens => maps:get(completion_tokens, Resp, 0)};
+      completion_tokens => maps:get(completion_tokens, Resp, 0),
+      reasoning_content => maps:get(reasoning_content, Resp, <<>>)};
 from_struct(#{tool_exec := Resp}) ->
     %% ToolExecResponse 分支 (error 非空表示失败)
     #{kind => tool_exec,
       result_json => maps:get(result_json, Resp, <<>>),
       error => maps:get(error, Resp, <<>>)};
 from_struct(Other) ->
+    %% 防御性兜底: 未知结构 (例如 Go 侧返回空 oneof 时 gpb 解出 #{})
+    %% 直接原样返回，让调用方按需处理
     Other.
 
 %% ToolCall gpb map -> 业务 Map

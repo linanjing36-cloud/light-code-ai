@@ -9,7 +9,7 @@
               {applications,[kernel,stdlib]},
               {modules,[agent_fsm,agent_sup,bridge_manager,context_assembler,
                         hermes,hermes_brains_app,hermes_brains_sup,pb_codec,
-                        state_store,test_gpb]},
+                        state_store]},
               {env,[{go_node,eion_tools@localhost},
                     {api_base,<<>>},
                     {api_key,<<>>}]},
