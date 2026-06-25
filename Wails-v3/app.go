@@ -2,72 +2,102 @@ package main
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/wailsapp/wails/v3/pkg/application"
 
 	"hermes/internal/brain"
 )
 
-// App 是暴露给前端 (React) 的 Go 侧对象。
-// 前端调用这些方法 → 转发到 Erlang 大脑 → Erlang 编排 → 调用 Eion-tools 执行。
-// Wails 自身不直接接触 LLM API 或工具,保持"哑终端"属性。
-type App struct {
-	ctx    context.Context
-	brain  *brain.Bridge
+// HermesService 是暴露给前端 (TS via Wails bindings) 的 RPC 对象。
+// 前端调用这些方法 → 经 brain.Bridge.Call (TCP+JSON) → Erlang panel_server。
+//
+// 设计原则: 本 Service 不持有业务状态, 仅做转发。
+// 所有状态在 Erlang 侧的 agent_fsm / state_store 中, Wails 保持"哑终端"属性。
+type HermesService struct {
+	ctx   context.Context
+	brain *brain.Bridge
 }
 
-func NewApp(b *brain.Bridge) *App {
-	return &App{brain: b}
+func NewHermesService(b *brain.Bridge) *HermesService {
+	return &HermesService{brain: b}
 }
 
-func (a *App) OnStartup(ctx context.Context) {
-	a.ctx = ctx
+// ServiceStartup 实现 application.ServiceStartup (Wails v3 生命周期)。
+// Wails 应用启动时调用, 注入 ctx 供后续 Call 使用。
+func (s *HermesService) ServiceStartup(ctx context.Context, _ application.ServiceOptions) error {
+	s.ctx = ctx
+	return nil
+}
+
+// ServiceShutdown 实现 application.ServiceShutdown (Wails v3 生命周期)。
+func (s *HermesService) ServiceShutdown() error {
+	return nil
 }
 
 // ---- 会话管理 ----
 
-// StartSession 启动一个新的 Agent 会话,Erlang 侧会派发一个 Agent_FSM 进程。
-func (a *App) StartSession(systemPrompt string) (string, error) {
-	out, err := a.brain.Call("start_session", map[string]any{
+// SessionInfo: StartSession 返回值
+type SessionInfo struct {
+	SessionID string `json:"session_id"`
+	Started   bool   `json:"started"`
+}
+
+// StartSession 启动一个新的 Agent 会话, Erlang 侧会派发一个 Agent_FSM 进程。
+// systemPrompt: 系统提示词 (定义 agent 角色/约束), 可为空使用默认值。
+func (s *HermesService) StartSession(systemPrompt string) (*SessionInfo, error) {
+	out, err := s.brain.Call("start_session", map[string]any{
 		"system_prompt": systemPrompt,
 	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	if s, ok := out.(string); ok {
-		return s, nil
+	m, _ := out.(map[string]any)
+	id, _ := m["session_id"].(string)
+	if id == "" {
+		return nil, fmt.Errorf("brain: invalid start_session response: %v", out)
 	}
-	return "", nil
+	return &SessionInfo{SessionID: id, Started: true}, nil
 }
 
 // ---- 对话 ----
 
-// Send 向指定会话发送用户消息,触发 ReAct 循环。
-// 返回 stream id,前端通过 StreamEvents 订阅实时事件 (thinking/tool/result)。
-func (a *App) Send(sessionID, message string) (string, error) {
-	out, err := a.brain.Call("send", map[string]any{
+// SendResult: Send 返回值
+type SendResult struct {
+	StreamID string `json:"stream_id"`
+}
+
+// Send 向指定会话发送用户消息, 触发 ReAct 循环。
+// 当前是同步等待 final answer 返回 (后续可改 stream)。
+func (s *HermesService) Send(sessionID, message string) (*SendResult, error) {
+	out, err := s.brain.Call("send", map[string]any{
 		"session_id": sessionID,
 		"message":    message,
 	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	if s, ok := out.(string); ok {
-		return s, nil
-	}
-	return "", nil
+	m, _ := out.(map[string]any)
+	id, _ := m["stream_id"].(string)
+	return &SendResult{StreamID: id}, nil
 }
 
-// ---- 上下文 / 工具 ----
+// ---- 工具 ----
 
 // ListTools 列出 Eion-tools 侧注册的工具描述 (经 Erlang 转发)。
-func (a *App) ListTools() ([]string, error) {
-	out, err := a.brain.Call("list_tools", nil)
-	_ = out
-	return nil, err
+func (s *HermesService) ListTools() ([]string, error) {
+	out, err := s.brain.Call("list_tools", nil)
+	if err != nil {
+		return nil, err
+	}
+	m, _ := out.(map[string]any)
+	tools, _ := m["tools"].([]string)
+	return tools, nil
 }
 
 // ApproveToolCall 对需要人工确认的工具调用进行授权 (inline approval)。
-func (a *App) ApproveToolCall(reqID string, allow bool) error {
-	_, err := a.brain.Call("approve", map[string]any{
+func (s *HermesService) ApproveToolCall(reqID string, allow bool) error {
+	_, err := s.brain.Call("approve", map[string]any{
 		"req_id": reqID,
 		"allow":  allow,
 	})
@@ -76,11 +106,19 @@ func (a *App) ApproveToolCall(reqID string, allow bool) error {
 
 // ---- Brain 状态 ----
 
-// BrainStatus 返回 Erlang 大脑的运行状态 (FSM 状态/Loop 计数/Go 节点连接)。
-func (a *App) BrainStatus() (map[string]any, error) {
-	out, err := a.brain.Call("brain_status", nil)
-	if m, ok := out.(map[string]any); ok {
-		return m, err
-	}
-	return nil, err
+// BrainStatus 返回 Erlang 大脑的运行状态。
+// 返回字段: state (idle/thinking/acting), loop_count, max_loops, history_len。
+func (s *HermesService) BrainStatus(sessionID string) (map[string]any, error) {
+	return s.brain.Call("brain_status", map[string]any{
+		"session_id": sessionID,
+	})
+}
+
+// ---- Brain 控制 ----
+
+// StopBrain 优雅停止 Erlang 大脑 (触发 init:stop, 退出整个 erl 子进程)。
+// 用于面板"退出"按钮, 让 Erlang 侧的 sup 逆序 terminate 子进程后再退。
+func (s *HermesService) StopBrain() error {
+	_, err := s.brain.Call("stop", nil)
+	return err
 }

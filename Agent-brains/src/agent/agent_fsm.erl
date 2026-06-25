@@ -23,7 +23,7 @@
 %%====================================================================
 
 %% 对外接口
--export([start_link/1, start/2]).
+-export([start_link/1, start/2, status/1]).
 %% gen_statem 回调
 -export([init/1, callback_mode/0, terminate/3, code_change/4]).
 %% 状态函数 (observing 逻辑已内联到 acting, 不再单独设状态)
@@ -62,6 +62,20 @@ start_link(Args) ->
 start(Pid, _Opts) ->
     gen_statem:cast(Pid, start).
 
+%% 查询 FSM 当前状态 (供 panel_server 经 sys:get_state 读, 返回 map 给前端)
+%% 返回: #{state => idle|thinking|acting, loop_count, max_loops, history_len}
+status(Pid) ->
+    case sys:get_state(Pid, 5000) of
+        {StateName, #data{loop_count = Loop, max_loops = Max, history = Hist}}
+          when StateName =:= idle; StateName =:= thinking; StateName =:= acting ->
+            #{state => StateName,
+              loop_count => Loop,
+              max_loops => Max,
+              history_len => length(Hist)};
+        Other ->
+            #{state => unknown, raw => Other}
+    end.
+
 %%%===================================================================
 %%% gen_statem 回调
 %%%===================================================================
@@ -70,14 +84,35 @@ init(Args) ->
     SessionId = proplists:get_value(session_id, Args, <<>>),
     Model = proplists:get_value(model, Args, <<"gpt-4">>),
     Tools = proplists:get_value(tools, Args, []),
-    History = proplists:get_value(history, Args, []),
-    Data = #data{session_id = SessionId,
-                 model = Model,
-                 tools = Tools,
-                 history = History,
-                 max_loops = ?MAX_LOOPS},
-    %% 启动即停留在 idle, 等待外部 start 触发主循环
-    {ok, idle, Data}.
+    History0 = proplists:get_value(history, Args, []),
+    %% 崩溃恢复 (架构文档 5.1 / Phase 3.1):
+    %% rest_for_one 重启场景下, state_store 仍持有上次崩溃前的快照 (#data{} term)。
+    %% 优先从快照恢复 loop_count/history/pending_tool_calls 等运行时状态,
+    %% 避免每次崩溃都丢失上下文从头开始。
+    %% 恢复后停留在 idle, 等外部 start 重新触发 (LLM ref 已失效, 不能自动续跑)。
+    case state_store:get_snapshot(SessionId) of
+        {ok, #data{} = Saved} ->
+            lager:info("agent_fsm recovering from snapshot, session_id=~p, "
+                       "loop=~p/~p, history_len=~p",
+                       [SessionId, Saved#data.loop_count, Saved#data.max_loops,
+                        length(Saved#data.history)]),
+            %% Args 中的 Model/Tools 视为"热更新"覆盖, 优先于快照
+            %% (允许重启时切换模型或更新工具列表, 而不丢失对话历史)
+            Data = Saved#data{model = Model, tools = Tools,
+                              llm_ref = undefined,
+                              pending_tool_calls = [],
+                              tool_results = #{},
+                              pending_count = 0},
+            {ok, idle, Data};
+        not_found ->
+            lager:info("agent_fsm fresh start, session_id=~p", [SessionId]),
+            Data = #data{session_id = SessionId,
+                         model = Model,
+                         tools = Tools,
+                         history = History0,
+                         max_loops = ?MAX_LOOPS},
+            {ok, idle, Data}
+    end.
 
 callback_mode() ->
     %% state_functions: 用 StateName/3 函数处理事件
@@ -155,9 +190,16 @@ thinking(cast, {llm_response, Ref, Response},
                         pending_count = length(ToolCalls)}}
     end;
 thinking(cast, {bridge_disconnect}, Data) ->
-    %% Go 侧断连: 本轮推理无法完成, 落快照后回 idle
-    ok = snapshot(Data),
-    {next_state, idle, Data};
+    %% 柔性降级 (架构文档 5.3 / Phase 3.2):
+    %% Go 侧断连, 本轮 LLM 推理无法完成。把"中断"作为 Observation 喂给 LLM,
+    %% 让 LLM 决定道歉/重试/换路径, 而非直接结束会话。
+    %% loop_count +1 防止断连反复重试导致死循环。
+    lager:warning("bridge_disconnect in thinking, feeding as observation to LLM"),
+    ObsMsg = #{role => <<"system">>,
+               content => <<"Bridge disconnected during LLM inference. "
+                            "Please retry the request or adjust strategy.">>},
+    Data1 = append_observation(Data, ObsMsg),
+    continue_after_observe(Data1#data{llm_ref = undefined});
 thinking(_EventType, _EventContent, _Data) ->
     keep_state_and_data.
 
@@ -192,9 +234,23 @@ acting(cast, {tool_result, ToolCallId, Resp}, Data) ->
             {keep_state, Data#data{tool_results = Results}}
     end;
 acting(cast, {bridge_disconnect}, Data) ->
-    %% Go 侧断连: 已收的部分结果丢弃, 落快照后回 idle
-    ok = snapshot(Data),
-    {next_state, idle, Data};
+    %% 柔性降级 (架构文档 5.3 / Phase 3.2):
+    %% Go 侧断连, 本轮工具执行中断。对每个未收结果的 pending_tool_call
+    %% 生成 error observation, 全部当作工具失败喂给 LLM, 让 LLM 决定下一步。
+    %% 已收的部分结果保留, 未收的标记为 interrupted。
+    lager:warning("bridge_disconnect in acting, marking ~p pending tools as interrupted",
+                   [length(Data#data.pending_tool_calls) - map_size(Data#data.tool_results)]),
+    FailedMsgs = [tool_msg(TC,
+                           #{result_json => <<>>,
+                             error => <<"bridge disconnected, tool execution interrupted">>})
+                  || TC <- Data#data.pending_tool_calls,
+                     not maps:is_key(maps:get(id, TC, <<>>),
+                                     Data#data.tool_results)],
+    Data1 = lists:foldl(fun(M, D) -> append_observation(D, M) end,
+                        Data, FailedMsgs),
+    continue_after_observe(Data1#data{pending_tool_calls = [],
+                                      tool_results = #{},
+                                      pending_count = 0});
 acting(_EventType, _EventContent, _Data) ->
     keep_state_and_data.
 
@@ -202,35 +258,42 @@ acting(_EventType, _EventContent, _Data) ->
 %%% 内部函数
 %%%===================================================================
 
-%% 观察并决定下一步: 将工具结果追加进历史, 循环计数+1, 判断上限。
+%% 观察并决定下一步: 将工具结果追加进历史, 然后调公共的 continue_after_observe。
 %% 由 acting 状态在收齐所有工具结果后调用 (非 enter 回调, 可自由返回 {next_state, ...})。
 observe_and_transition(Data) ->
-    NewCount = Data#data.loop_count + 1,
     %% 按 pending_tool_calls 顺序生成 tool 角色消息 (tool_call_id 与结果一一对应)
     ToolMsgs = [tool_msg(TC, maps:get(maps:get(id, TC, <<>>),
-                                      Data#data.tool_results, #{result_json => <<>>, error => <<>>}))
+                                      Data#data.tool_results,
+                                      #{result_json => <<>>, error => <<>>}))
                 || TC <- Data#data.pending_tool_calls],
-    NewHistory = Data#data.history ++ ToolMsgs,
-    %% 同步 tool 角色消息到 state_store (供外部轮询)
-    lists:foreach(fun(TM) -> state_store:append_history(Data#data.session_id, TM) end, ToolMsgs),
-    NewData = Data#data{loop_count = NewCount,
-                        history = NewHistory,
-                        tool_results = #{},
-                        pending_tool_calls = [],
-                        pending_count = 0},
-    ok = snapshot(NewData),
-    case NewCount >= NewData#data.max_loops of
+    Data1 = lists:foldl(fun(M, D) -> append_observation(D, M) end, Data, ToolMsgs),
+    continue_after_observe(Data1#data{tool_results = #{},
+                                      pending_tool_calls = [],
+                                      pending_count = 0}).
+
+%% 公共: 观察后的循环上限判断与下一步。
+%% 由 observe_and_transition (工具收齐) 和 bridge_disconnect (柔性降级) 共用。
+%% 行为: loop_count+1 -> 落快照 -> 判断上限 -> 回 thinking 让 LLM 决定 或 回 idle 强制结束。
+continue_after_observe(Data0) ->
+    NewCount = Data0#data.loop_count + 1,
+    Data = Data0#data{loop_count = NewCount},
+    ok = snapshot(Data),
+    case NewCount >= Data#data.max_loops of
         true ->
-            %% 超过循环上限 -> 强制结束
-            lager:warning("observe: loop_count=~p >= max_loops=~p, forcing idle",
-                          [NewCount, NewData#data.max_loops]),
-            {next_state, idle, NewData};
+            lager:warning("continue_after_observe: loop_count=~p >= max_loops=~p, forcing idle",
+                          [NewCount, Data#data.max_loops]),
+            {next_state, idle, Data};
         false ->
-            %% 继续 ReAct 循环
-            lager:info("observe: tool results appended, loop=~p/~p, back to thinking",
-                       [NewCount, NewData#data.max_loops]),
-            {next_state, thinking, NewData}
+            lager:info("continue_after_observe: loop=~p/~p, back to thinking for LLM to decide",
+                       [NewCount, Data#data.max_loops]),
+            {next_state, thinking, Data}
     end.
+
+%% 追加一条 Observation 消息到 history (本地 + state_store 双写)
+append_observation(Data, Msg) ->
+    NewHistory = Data#data.history ++ [Msg],
+    state_store:append_history(Data#data.session_id, Msg),
+    Data#data{history = NewHistory}.
 
 %% 由 ToolCall + ToolExecResponse 构造一条 tool 角色消息
 %% 与 hermes.proto 的 Message{role, content, tool_calls, tool_call_id} 对齐
@@ -255,5 +318,5 @@ snapshot(Data) ->
 terminate(_Reason, _State, _Data) ->
     ok.
 
-code_change(_Vsn, State, Data, _Extra) ->
+code_change(_OldVsn, State, Data, _Extra) ->
     {ok, State, Data}.

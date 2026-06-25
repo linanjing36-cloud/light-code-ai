@@ -1,52 +1,76 @@
+// Package main 是 Hermes Agent Workbench 的 Wails v3 入口。
+//
+// 架构定位:
+//
+//	Wails/Go (本进程)  ──spawn──▶  Erlang ERTS (Agent-brains)
+//	                                     │
+//	                           TCP+JSON  │ RPC (panel_server)
+//	                                     ▼
+//	                               agent_fsm (ReAct 编排)
+//	                                     │
+//	                           Protobuf  │ IPC
+//	                                     ▼
+//	                               Eion-tools (Go/Eino)  ← 无状态执行
+//
+// 本进程是"哑终端": 只渲染 UI + 转发用户操作到 Erlang 大脑。
+// LLM 推理与工具编排全在 Erlang 侧完成, Wails 不直接接触 LLM API。
 package main
 
 import (
 	"embed"
+	"log"
 
-	"github.com/wailsapp/wails/v2"
-	"github.com/wailsapp/wails/v2/pkg/options"
-	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
-	"github.com/wailsapp/wails/v2/pkg/options/mac"
+	"github.com/wailsapp/wails/v3/pkg/application"
 
 	"hermes/internal/brain"
 )
 
+// Wails 使用 Go 的 `embed` 包把前端文件嵌入到二进制中。
+// frontend/dist 目录下所有文件都会被打包, 经 AssetFileServerFS 暴露给前端。
 //go:embed all:frontend/dist
 var assets embed.FS
 
 func main() {
-	// 启动 Erlang 编排大脑 (Agent-brains) 子进程。
-	// Hermes 面板本身只做 UI 与桥接,所有 ReAct 编排由 Erlang 侧闭环。
-	// Wails 不直接引入 Eion-tools —— 它只与 Erlang 对话,
-	// Erlang 再通过 Protobuf 调用 Eion-tools (Go/Eino) 执行 LLM 推理与工具。
-	brainBridge := brain.NewBridge()
-	if err := brainBridge.Start(); err != nil {
-		panic(err)
-	}
-	defer brainBridge.Stop()
+	// brain.Bridge 是 Erlang 子进程的生命周期管理者 (实现 Wails v3 Service 接口):
+	//   - ServiceStartup: spawn erl + 等 panel_server 上线 (TCP 连接就绪)
+	//   - ServiceShutdown: rpc init:stop 优雅退出
+	bridge := brain.NewBridge()
 
-	app := NewApp(brainBridge)
+	// HermesService 是暴露给前端 (TS) 的 RPC 对象:
+	//   - StartSession / Send / BrainStatus / ApproveToolCall / ListTools
+	//   - 内部全部走 bridge.Call → Erlang panel_server
+	svc := NewHermesService(bridge)
 
-	err := wails.Run(&options.App{
-		Title:  "Hermes — Agent Workbench",
-		Width:  1280,
-		Height: 820,
-		MinWidth: 960,
-		MinHeight: 640,
-		AssetServer: &assetserver.Options{
-			Assets: assets,
+	app := application.New(application.Options{
+		Name:        "Hermes",
+		Description: "Hermes Agent Workbench — Erlang/OTP orchestration + Wails UI",
+		Services: []application.Service{
+			application.NewService(bridge),
+			application.NewService(svc),
 		},
-		BackgroundColour: &options.RGBA{R: 20, G: 17, B: 13, A: 1},
-		OnStartup:       app.OnStartup,
-		Mac: &mac.Options{
-			TitleBar: mac.TitleBarHiddenInset(),
+		Assets: application.AssetOptions{
+			Handler: application.AssetFileServerFS(assets),
 		},
-		Bind: []any{
-			app,
+		Mac: application.MacOptions{
+			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},
 	})
 
-	if err != nil {
-		panic(err)
+	// Atelier Terminal 主窗口: 暖色深底 + 藏红强调色 (致敬 Hermes 权杖)
+	app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title:  "Hermes — Agent Workbench",
+		Width:  1280,
+		Height: 820,
+		Mac: application.MacWindow{
+			InvisibleTitleBarHeight: 50,
+			Backdrop:                application.MacBackdropTranslucent,
+			TitleBar:                application.MacTitleBarHiddenInset,
+		},
+		BackgroundColour: application.NewRGB(20, 17, 13), // #14110D warm dark
+		URL:              "/",
+	})
+
+	if err := app.Run(); err != nil {
+		log.Fatal(err)
 	}
 }

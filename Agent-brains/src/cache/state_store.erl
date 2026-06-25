@@ -16,7 +16,8 @@
 %% 对外接口
 -export([start_link/0,
          put_snapshot/2, get_snapshot/1,
-         append_history/2, get_history/1]).
+         append_history/2, get_history/1,
+         register_session/2, lookup_session/1, unregister_session/1]).
 %% gen_server 回调
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
@@ -46,6 +47,25 @@ append_history(SessionId, Message) ->
 
 get_history(SessionId) ->
     gen_server:call(?MODULE, {get_history, SessionId}).
+
+%% 会话注册: SessionId -> agent_fsm Pid (由 panel_server 在 start_session 时写入)
+%% 用于 panel_server 在 send/brain_status 时反查 FSM 进程。
+register_session(SessionId, Pid) ->
+    gen_server:call(?MODULE, {register_session, SessionId, Pid}).
+
+lookup_session(SessionId) ->
+    case ets:lookup(?TABLE, {session_pid, SessionId}) of
+        [{{session_pid, SessionId}, Pid}] ->
+            case is_process_alive(Pid) of
+                true -> {ok, Pid};
+                false -> not_found
+            end;
+        [] ->
+            not_found
+    end.
+
+unregister_session(SessionId) ->
+    gen_server:call(?MODULE, {unregister_session, SessionId}).
 
 %%%===================================================================
 %%% gen_server 回调
@@ -89,7 +109,13 @@ handle_call({get_history, SessionId}, _From, State) ->
     case ets:lookup(?TABLE, {history, SessionId}) of
         [{{history, SessionId}, Msgs}] -> {reply, {ok, lists:reverse(Msgs)}, State};
         [] -> {reply, {ok, []}, State}
-    end.
+    end;
+handle_call({register_session, SessionId, Pid}, _From, State) ->
+    ets:insert(?TABLE, {{session_pid, SessionId}, Pid}),
+    {reply, ok, State};
+handle_call({unregister_session, SessionId}, _From, State) ->
+    ets:delete(?TABLE, {session_pid, SessionId}),
+    {reply, ok, State}.
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
