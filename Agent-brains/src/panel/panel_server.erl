@@ -123,10 +123,13 @@ code_change(_Old, State, _Extra) ->
 accept_loop(Sock) ->
     case gen_tcp:accept(Sock) of
         {ok, Conn} ->
+            Remote = format_remote(Conn),
+            ?LOG_INFO("connection accepted: remote=~s", [Remote]),
             %% 每个连接 spawn 一个 connection 进程, 不阻塞 acceptor
-            spawn(fun() -> connection_loop(Conn) end),
+            spawn(fun() -> connection_loop(Conn, Remote) end),
             accept_loop(Sock);
         {error, closed} ->
+            ?LOG_INFO("accept loop exiting: listen socket closed", []),
             ok;
         {error, Reason} ->
             ?LOG_INFO("accept failed: ~p", [Reason]),
@@ -137,16 +140,30 @@ accept_loop(Sock) ->
 %% 内部: connection loop (每连接一个进程, 持续读帧分发)
 %%====================================================================
 
-connection_loop(Sock) ->
+connection_loop(Sock, Remote) ->
+    ?LOG_INFO("connection handler started: remote=~s", [Remote]),
+    connection_loop_impl(Sock, Remote).
+
+connection_loop_impl(Sock, Remote) ->
     case read_frame(Sock) of
         {ok, Req} ->
+            Method = maps:get(<<"method">>, Req, <<>>),
+            Id = maps:get(<<"id">>, Req, 0),
+            ?LOG_INFO("request received: remote=~s id=~p method=~s", [Remote, Id, Method]),
             Resp = dispatch(Req),
-            ok = write_frame(Sock, Resp),
-            connection_loop(Sock);
+            case write_frame(Sock, Resp) of
+                ok ->
+                    ?LOG_INFO("response sent: remote=~s id=~p method=~s", [Remote, Id, Method]),
+                    connection_loop_impl(Sock, Remote);
+                {error, WErr} ->
+                    ?LOG_INFO("connection handler exiting: remote=~s write failed: ~p", [Remote, WErr]),
+                    ok
+            end;
         {error, closed} ->
+            ?LOG_INFO("connection handler exiting: remote=~s closed by peer", [Remote]),
             ok;
         {error, Reason} ->
-            ?LOG_INFO("conn read failed: ~p", [Reason]),
+            ?LOG_INFO("connection handler exiting: remote=~s read failed: ~p", [Remote, Reason]),
             ok
     end.
 
@@ -297,3 +314,12 @@ panel_addr_file() ->
 %% 把完整地址 "127.0.0.1:<port>" 写入端口文件, 供 Wails 侧读取发现。
 write_addr_file(Addr) when is_list(Addr); is_binary(Addr) ->
     file:write_file(panel_addr_file(), Addr).
+
+%% 格式化对端地址为 "A.B.C.D:Port" 字符串, 用于日志
+format_remote(Sock) ->
+    case inet:peername(Sock) of
+        {ok, {{A, B, C, D}, Port}} ->
+            lists:flatten(io_lib:format("~p.~p.~p.~p:~p", [A, B, C, D, Port]));
+        {error, _} ->
+            "unknown"
+    end.

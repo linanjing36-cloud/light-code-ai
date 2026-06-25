@@ -106,19 +106,25 @@ func main() {
 
 // handleConn 处理单个连接: 跑帧循环直到连接关闭。
 func handleConn(ctx context.Context, conn net.Conn, d *dispatcher.Command_Dispatcher) {
-	defer conn.Close()
+	remote := conn.RemoteAddr().String()
+	logging.Logger.Info("connection handler started", zap.String("remote", remote))
+	defer func() {
+		_ = conn.Close()
+		logging.Logger.Info("connection handler exited", zap.String("remote", remote))
+	}()
 	// 用 done chan 让 ctx 取消时关闭 conn
 	done := make(chan struct{})
 	defer close(done)
 	go func() {
 		select {
 		case <-ctx.Done():
+			logging.Logger.Info("context cancelled, closing connection", zap.String("remote", remote))
 			_ = conn.Close()
 		case <-done:
 		}
 	}()
 	if err := runFramingLoop(conn, conn, d); err != nil {
-		logging.Logger.Info("connection framing loop ended", zap.Error(err))
+		logging.Logger.Info("connection framing loop ended", zap.String("remote", remote), zap.Error(err))
 	}
 }
 

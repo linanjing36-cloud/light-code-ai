@@ -146,30 +146,40 @@ handle_cast(_Msg, State) ->
 
 %% 建立整个连接池
 handle_info(connect_all, #state{addr = Addr, pool_size = N} = State) ->
-    Conns = lists:foldl(fun(_, Acc) ->
+    lager:info("connect_all: building pool, addr=~s target_size=~p", [Addr, N]),
+    {Conns, Failed} = lists:foldl(fun(I, {Acc, F}) ->
         case connect_one(Addr) of
             {ok, Sock} ->
-                [#conn{socket = Sock, state = idle} | Acc];
+                lager:info("pool slot ~p/~p connected: socket=~p", [I, N, Sock]),
+                {[#conn{socket = Sock, state = idle} | Acc], F};
             {error, Reason} ->
-                lager:warning("pool connect failed: ~p, will retry in ~pms",
-                              [Reason, ?RECONNECT_DELAY]),
-                timer:send_after(?RECONNECT_DELAY, reconnect),
-                Acc
+                lager:warning("pool slot ~p/~p connect failed: ~p", [I, N, Reason]),
+                {Acc, F + 1}
         end
-    end, [], lists:seq(1, N)),
-    lager:info("pool connected: ~p/~p connections", [length(Conns), N]),
-    %% 连接池建好后, 派发队列中等待的请求
-    State1 = State#state{conns = Conns},
+    end, {[], 0}, lists:seq(1, N)),
+    Conns1 = lists:reverse(Conns),
+    lager:info("pool build done: connected=~p/~p failed=~p",
+               [length(Conns1), N, Failed]),
+    %% 全部失败才触发全局重连 (避免 N 个重连消息堆积)
+    case Conns1 of
+        [] ->
+            lager:warning("all pool connections failed, full retry in ~pms", [?RECONNECT_DELAY]),
+            timer:send_after(?RECONNECT_DELAY, reconnect);
+        _ ->
+            ok
+    end,
+    State1 = State#state{conns = Conns1},
     {noreply, dispatch_next(State1)};
 
 %% 重连 (个别连接断开后重连)
 handle_info({reconnect, Idx}, #state{addr = Addr, conns = Conns} = State) ->
+    lager:info("reconnect slot ~p: addr=~s", [Idx, Addr]),
     case connect_one(Addr) of
         {ok, Sock} ->
             NewConn = #conn{socket = Sock, state = idle},
             %% 替换指定位置的连接 (Idx 从 1 开始)
             Conns1 = lists:sublist(Conns, Idx - 1) ++ [NewConn] ++ lists:nthtail(Idx, Conns),
-            lager:info("reconnected pool slot ~p", [Idx]),
+            lager:info("reconnect slot ~p success: socket=~p", [Idx, Sock]),
             {noreply, dispatch_next(State#state{conns = Conns1})};
         {error, Reason} ->
             lager:warning("reconnect slot ~p failed: ~p, retry in ~pms",
@@ -180,15 +190,16 @@ handle_info({reconnect, Idx}, #state{addr = Addr, conns = Conns} = State) ->
 
 %% 全局重连 (init 时全部失败)
 handle_info(reconnect, #state{addr = Addr, pool_size = N} = State) ->
+    lager:info("reconnect (full): addr=~s target_size=~p", [Addr, N]),
     case connect_one(Addr) of
         {ok, Sock} ->
             %% 第一个连接成功, 尝试建立剩余
             Conns = [#conn{socket = Sock, state = idle}],
             self() ! {connect_rest, 2, N},
-            lager:info("first connection established, building rest of pool"),
+            lager:info("reconnect first success: socket=~p, building rest of pool", [Sock]),
             {noreply, dispatch_next(State#state{conns = Conns})};
         {error, Reason} ->
-            lager:warning("reconnect failed: ~p, retry in ~pms",
+            lager:warning("reconnect (full) failed: ~p, retry in ~pms",
                           [Reason, ?RECONNECT_DELAY]),
             timer:send_after(?RECONNECT_DELAY, reconnect),
             {noreply, State}
@@ -199,10 +210,12 @@ handle_info({connect_rest, Idx, N}, #state{addr = Addr, conns = Conns} = State) 
     case connect_one(Addr) of
         {ok, Sock} ->
             Conns1 = Conns ++ [#conn{socket = Sock, state = idle}],
+            lager:info("pool slot ~p/~p connected (rest): socket=~p", [Idx, N, Sock]),
             self() ! {connect_rest, Idx + 1, N},
             {noreply, dispatch_next(State#state{conns = Conns1})};
-        {error, _Reason} ->
+        {error, Reason} ->
             %% 单个失败不影响整体, 跳过继续
+            lager:warning("pool slot ~p/~p connect failed (rest): ~p", [Idx, N, Reason]),
             self() ! {connect_rest, Idx + 1, N},
             {noreply, State}
     end;
@@ -217,8 +230,8 @@ handle_info({tcp, Sock, Bin}, #state{pending = Pending, timers = Timers} = State
             _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
             %% 解码 protobuf 响应 -> 业务 Map
             Resp = pb_codec:decode_resp(Bin),
-            lager:info("tcp response received: bytes=~p, ref=~p, kind=~p",
-                        [byte_size(Bin), Ref, Kind]),
+            lager:info("tcp response received: socket=~p bytes=~p ref=~p kind=~p req_id=~p",
+                        [Sock, byte_size(Bin), Ref, Kind, ReqId]),
             %% 按 Kind 投回对应 FSM
             case Kind of
                 llm  -> gen_statem:cast(FsmPid, {llm_response, Ref, Resp});
@@ -239,18 +252,18 @@ handle_info({tcp, Sock, Bin}, #state{pending = Pending, timers = Timers} = State
 
 %% 连接断开
 handle_info({tcp_closed, Sock}, #state{pending = Pending, timers = Timers, conns = Conns} = State) ->
-    lager:warning("tcp connection closed: socket=~p", [Sock]),
-    %% 通知等待中的 FSM 断连
+    Idx = index_of_conn(Conns, Sock),
     case maps:get(Sock, Pending, undefined) of
-        {_Ref, FsmPid, _Kind, _ReqId} ->
+        {Ref, FsmPid, Kind, ReqId} ->
+            lager:warning("tcp connection closed: socket=~p slot=~p, in-flight req lost: ref=~p kind=~p req_id=~p, notifying fsm=~p",
+                          [Sock, Idx, Ref, Kind, ReqId, FsmPid]),
             TRef = maps:get(Sock, Timers, undefined),
             _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
             gen_statem:cast(FsmPid, {bridge_disconnect});
         undefined ->
-            ok
+            lager:warning("tcp connection closed: socket=~p slot=~p (no in-flight req)", [Sock, Idx])
     end,
     %% 标记连接为断开 (socket=undefined), 异步重连
-    Idx = index_of_conn(Conns, Sock),
     Conns1 = case Idx of
         0 -> Conns;
         _ -> lists:sublist(Conns, Idx - 1) ++
@@ -259,7 +272,9 @@ handle_info({tcp_closed, Sock}, #state{pending = Pending, timers = Timers, conns
     end,
     case Idx of
         0 -> ok;
-        _ -> timer:send_after(?RECONNECT_DELAY, {reconnect, Idx})
+        _ ->
+            lager:info("scheduling reconnect for slot ~p in ~pms", [Idx, ?RECONNECT_DELAY]),
+            timer:send_after(?RECONNECT_DELAY, {reconnect, Idx})
     end,
     {noreply, State#state{conns = Conns1,
                           pending = maps:remove(Sock, Pending),
@@ -267,7 +282,8 @@ handle_info({tcp_closed, Sock}, #state{pending = Pending, timers = Timers, conns
 
 %% TCP 错误
 handle_info({tcp_error, Sock, Reason}, State) ->
-    lager:warning("tcp error: socket=~p reason=~p", [Sock, Reason]),
+    Idx = index_of_conn(State#state.conns, Sock),
+    lager:warning("tcp error: socket=~p slot=~p reason=~p, treating as closed", [Sock, Idx, Reason]),
     %% 当作 closed 处理
     handle_info({tcp_closed, Sock}, State);
 
@@ -277,11 +293,12 @@ handle_info({timeout, TRef, {req, Sock, Ref}}, #state{timers = Timers,
     case maps:get(Sock, Timers, undefined) of
         TRef ->
             case maps:get(Sock, Pending, undefined) of
-                {Ref, FsmPid, _Kind, _ReqId} ->
-                    lager:warning("request timeout, ref=~p, notifying fsm=~p", [Ref, FsmPid]),
+                {Ref, FsmPid, Kind, ReqId} ->
+                    lager:warning("request timeout: socket=~p ref=~p kind=~p req_id=~p, notifying fsm=~p",
+                                  [Sock, Ref, Kind, ReqId, FsmPid]),
                     gen_statem:cast(FsmPid, {bridge_disconnect});
                 _ ->
-                    ok
+                    lager:warning("request timeout but no matching pending: socket=~p ref=~p", [Sock, Ref])
             end,
             Conns = mark_conn(State#state.conns, Sock, idle),
             {noreply, dispatch_next(State#state{conns = Conns,
@@ -295,12 +312,16 @@ handle_info({timeout, TRef, {req, Sock, Ref}}, #state{timers = Timers,
 handle_info(_Info, State) ->
     {noreply, State}.
 
-terminate(_Reason, State) ->
-    %% 关闭所有连接
+terminate(Reason, State) ->
+    Active = [C || C <- State#state.conns, C#conn.socket =/= undefined],
+    lager:info("bridge_manager terminating: reason=~p, closing ~p/~p connections",
+               [Reason, length(Active), length(State#state.conns)]),
     lists:foreach(fun(#conn{socket = Sock}) ->
         case Sock of
             undefined -> ok;
-            _ -> try gen_tcp:close(Sock) catch _:_ -> ok end
+            _ ->
+                lager:info("closing pool socket: ~p", [Sock]),
+                try gen_tcp:close(Sock) catch _:_ -> ok end
         end
     end, State#state.conns),
     ok.
@@ -356,13 +377,15 @@ parse_addr(Addr) ->
     end.
 
 %% 分发: 如果有 idle 连接, 立即发送; 否则排到队列尾部
-dispatch(#state{conns = Conns} = State, Item) ->
+dispatch(#state{conns = Conns, queue = Q} = State, Item) ->
     case find_idle_conn(Conns) of
         {ok, Sock, Conns1} ->
             send_item(Item, Sock, Conns1, State);
         none ->
             %% 无 idle 连接, 入队
-            State#state{queue = queue:in(Item, State#state.queue)}
+            QLen = queue:len(Q) + 1,
+            lager:info("no idle conn, request queued: queue_len=~p", [QLen]),
+            State#state{queue = queue:in(Item, Q)}
     end.
 
 %% 派发下一条排队请求 (有 idle 连接时)
@@ -371,6 +394,7 @@ dispatch_next(#state{queue = Q, conns = Conns} = State) ->
         {ok, Sock, Conns1} ->
             case queue:out(Q) of
                 {{value, Item}, Q1} ->
+                    lager:info("dispatching queued request: remaining_queue=~p", [queue:rlen(Q1)]),
                     send_item(Item, Sock, Conns1, State#state{queue = Q1});
                 {empty, _} ->
                     State#state{conns = Conns1}
@@ -381,24 +405,29 @@ dispatch_next(#state{queue = Q, conns = Conns} = State) ->
 
 %% 实际发送: 把 Payload 写到 Socket, 启动超时计时器, 记录 pending。
 send_item({Ref, FsmPid, Kind, ReqId, Payload, TimeoutMs}, Sock, Conns, State) ->
+    Bytes = byte_size(Payload),
     case gen_tcp:send(Sock, Payload) of
         ok ->
+            lager:info("request sent: socket=~p bytes=~p ref=~p kind=~p req_id=~p timeout=~pms",
+                       [Sock, Bytes, Ref, Kind, ReqId, TimeoutMs]),
             TRef = erlang:start_timer(TimeoutMs, self(), {req, Sock, Ref}),
             Conns1 = mark_conn(Conns, Sock, busy),
             State#state{conns = Conns1,
                         pending = maps:put(Sock, {Ref, FsmPid, Kind, ReqId}, State#state.pending),
                         timers = maps:put(Sock, TRef, State#state.timers)};
         {error, Reason} ->
-            lager:warning("send failed: ~p, notifying fsm=~p", [Reason, FsmPid]),
+            Idx = index_of_conn(Conns, Sock),
+            lager:warning("send failed: socket=~p slot=~p reason=~p, notifying fsm=~p",
+                          [Sock, Idx, Reason, FsmPid]),
             gen_statem:cast(FsmPid, {bridge_disconnect}),
             %% 连接标记为断开, 触发重连
-            Idx = index_of_conn(Conns, Sock),
             case Idx of
                 0 -> State;
                 _ ->
                     Conns2 = lists:sublist(Conns, Idx - 1) ++
                              [#conn{socket = undefined, state = idle}] ++
                              lists:nthtail(Idx, Conns),
+                    lager:info("scheduling reconnect for slot ~p in ~pms (send failed)", [Idx, ?RECONNECT_DELAY]),
                     timer:send_after(?RECONNECT_DELAY, {reconnect, Idx}),
                     State#state{conns = Conns2}
             end

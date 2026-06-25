@@ -329,9 +329,10 @@ function Invoke-Bin {
     Write-Host "[make] ==> 完成. 编译产物:"
     Write-Host "    .\make.ps1 agent              # Erlang -> bin\erl_bin\"
     Write-Host "    cd Wails-v3; wails3 build     # Wails  -> bin\wails_v3_bin\"
-    Write-Host "[make] ==> 启动 (二选一, 不可同时运行):"
-    Write-Host "    .\make.ps1 run                # 纯命令行模式 (Erlang, 无 GUI)"
-    Write-Host "    .\bin\start-wails.bat         # 桌面面板模式 (Wails 自动拉起 Erlang)"
+    Write-Host "[make] ==> 启动 (三进程独立启动, 按顺序):"
+    Write-Host "    .\bin\start-tools.bat         # 1. Eion-tools server (写 eion-tools.addr)"
+    Write-Host "    .\bin\start-agent.bat         # 2. Erlang brain (写 panel.addr, 连 Eion-tools)"
+    Write-Host "    .\bin\start-wails.bat         # 3. Wails GUI (读 panel.addr, 连 Erlang)"
 }
 
 # 编译 Agent 大脑 (Erlang/OTP), 产物安装到 bin\erl_bin\
@@ -365,8 +366,10 @@ function Invoke-Agent {
               -Destination (Join-Path $ErlBin "config\sys.config") -Force
 
     # 编译 Eion-tools (Go/Eino 无状态执行 SDK) -> bin\eion_bin\eion-tools-server.exe
-    # Erlang 侧 bridge_manager 通过 erlang:open_port({spawn, eion_tools_bin}) 拉起该独立进程,
-    # stdin/stdout 4字节大端长度前缀 + protobuf 帧通信。缺失则 agent_fsm 的 LLM/工具调用全失败。
+    # 新架构: Eion-tools 作为独立 TCP server 进程运行, listen 127.0.0.1:0 (ephemeral),
+    # 把实际地址写入 bin/run/eion-tools.addr 供 Agent-brains (bridge_manager) 发现。
+    # bridge_manager 建立 TCP 连接池 (默认 4 连接), 4字节大端长度前缀 + protobuf 帧通信。
+    # 缺失则 agent_fsm 的 LLM/工具调用全失败。
     Write-Host "[make] ==> 编译 Eion-tools -> $EionBin ..."
     New-Item -ItemType Directory -Force -Path $EionBin | Out-Null
     $eionToolsDir = Join-Path $RootDir "Eion-tools"

@@ -18,7 +18,7 @@
 //   - Start 时建立 N 个连接 (默认 4), 每个 conn 一个 worker goroutine
 //   - 全局请求队列 (chan), N 个 worker 从中取请求串行处理 (写帧→读响应→分发)
 //   - 多连接天然并发: panel_server 侧每连接独立进程, 与本侧 worker 一一对应
-//   - 连接断开: worker 退出, 剩余 worker 继续服务; 后续可加重连
+//   - 断连重连: worker 退出时触发 reconnectLoop, 轮询重连直到池满或 ctx 取消
 //
 // 地址发现 (优先级):
 //   1. HERMES_PANEL_ADDR env (直接地址, 如 "127.0.0.1:12345")
@@ -44,8 +44,12 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
-// 默认连接池大小 (与 Erlang bridge_manager 对齐)
-const defaultPoolSize = 4
+const (
+	defaultPoolSize    = 4                // 默认连接池大小 (与 Erlang bridge_manager 对齐)
+	reconnectDelay     = 2 * time.Second  // 重连间隔
+	dialTimeout        = 5 * time.Second  // 单次 dial 超时
+	addrResolveTimeout = 30 * time.Second // 地址发现 (端口文件轮询) 总超时
+)
 
 // Bridge 管理 Wails ↔ Erlang panel_server 的 TCP/UDS 连接池。
 // 实现 Wails v3 Service 接口: ServiceStartup / ServiceShutdown。
@@ -56,6 +60,7 @@ type Bridge struct {
 	started bool
 
 	// 连接池
+	addr     string // panel_server 地址 (重连用)
 	poolSize int
 	conns    []net.Conn
 	queue    chan pendingCall // 全局请求队列, N 个 worker 从此取请求
@@ -91,20 +96,17 @@ func NewBridge() *Bridge {
 }
 
 // ServiceStartup 实现 application.ServiceStartup (Wails v3 生命周期)。
-// 在应用启动时发现 panel_server 地址, 建立连接池。
 func (b *Bridge) ServiceStartup(ctx context.Context, _ application.ServiceOptions) error {
 	return b.Start(ctx)
 }
 
 // ServiceShutdown 实现 application.ServiceShutdown (Wails v3 生命周期)。
-// 在应用退出时优雅停止连接池 (发 stop RPC + 关闭所有连接)。
 func (b *Bridge) ServiceShutdown() error {
 	b.Stop()
 	return nil
 }
 
 // Start 发现 panel_server 地址并建立 TCP/UDS 连接池。
-// ctx 来自 Wails 应用上下文, ctx 取消时连接池关闭。
 func (b *Bridge) Start(parentCtx context.Context) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -116,33 +118,36 @@ func (b *Bridge) Start(parentCtx context.Context) error {
 	b.ctx, b.cancel = ctx, cancel
 
 	// 1. 发现 panel_server 地址 (轮询读端口文件, 等 Agent 启动)
-	addr, err := resolvePanelAddr(ctx, 30*time.Second)
+	log.Printf("[brain] resolving panel_server addr (timeout=%v)...", addrResolveTimeout)
+	addr, err := resolvePanelAddr(ctx, addrResolveTimeout)
 	if err != nil {
 		cancel()
 		return fmt.Errorf("brain: 发现 panel_server 地址失败: %w", err)
 	}
+	b.addr = addr
 	log.Printf("[brain] panel_server addr resolved: %s", addr)
 
 	// 2. 建立连接池
 	b.queue = make(chan pendingCall, 64)
 	b.conns = make([]net.Conn, 0, b.poolSize)
+	log.Printf("[brain] building connection pool: target=%d", b.poolSize)
 	for i := 0; i < b.poolSize; i++ {
-		conn, err := dialPanel(addr, 5*time.Second)
+		conn, err := dialPanel(addr, dialTimeout)
 		if err != nil {
-			log.Printf("[brain] 连接池 slot %d 连接失败: %v (继续尝试剩余)", i, err)
+			log.Printf("[brain] pool slot %d/%d connect failed: %v (will reconnect)", i+1, b.poolSize, err)
+			go b.reconnectLoop(ctx)
 			continue
 		}
+		log.Printf("[brain] pool slot %d/%d connected: %s", i+1, b.poolSize, conn.RemoteAddr())
 		b.conns = append(b.conns, conn)
+		go b.connWorker(ctx, conn, bufio.NewReaderSize(conn, 64*1024))
 	}
 	if len(b.conns) == 0 {
-		cancel()
-		return fmt.Errorf("brain: 连接 panel_server 失败 (addr=%s): 所有连接均失败", addr)
-	}
-	log.Printf("[brain] 连接池就绪: %d/%d 连接", len(b.conns), b.poolSize)
-
-	// 3. 启动 worker goroutine (每个 conn 一个)
-	for _, conn := range b.conns {
-		go b.connWorker(ctx, conn, bufio.NewReaderSize(conn, 64*1024))
+		log.Printf("[brain] all initial connections failed, reconnecting in background")
+		// 不再直接报错, 由 reconnectLoop 后台重连; 但若无连接则 RPC 会失败
+		// 这里仍标记 started, 让 reconnectLoop 有机会恢复
+	} else {
+		log.Printf("[brain] connection pool ready: %d/%d connected", len(b.conns), b.poolSize)
 	}
 
 	b.started = true
@@ -150,16 +155,15 @@ func (b *Bridge) Start(parentCtx context.Context) error {
 }
 
 // Stop 优雅停止连接池。
-// 优先发 stop RPC (触发 Erlang init:stop), 然后关闭所有连接。
 func (b *Bridge) Stop() {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	if !b.started {
 		return
 	}
+	log.Printf("[brain] stopping: closing %d connections, cancelling context", len(b.conns))
 
 	// 优雅: 发 stop 方法 (Erlang 侧收到后调 init:stop())
-	// 用独立 ctx 避免被 b.ctx 取消影响
 	stopCtx, stopCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	_, _ = b.callInternal(stopCtx, "stop", nil)
 	stopCancel()
@@ -167,15 +171,14 @@ func (b *Bridge) Stop() {
 	if b.cancel != nil {
 		b.cancel()
 	}
-	// 关闭所有连接 (worker 的 Read 会返回 EOF, 自然退出)
 	for _, conn := range b.conns {
 		_ = conn.Close()
 	}
-	// 关闭队列 (worker 的 range 退出)
 	close(b.queue)
 	b.conns = nil
 	b.queue = nil
 	b.started = false
+	log.Printf("[brain] stopped")
 }
 
 // Call 发起一次同步 RPC 到 Erlang 大脑, 返回 result。
@@ -213,14 +216,14 @@ func (b *Bridge) callInternal(ctx context.Context, method string, args map[strin
 	b.pending.Store(id, ch)
 	defer b.pending.Delete(id)
 
-	// 入队 (非阻塞尝试, 队列满则报错)
+	log.Printf("[brain] call queued: id=%d method=%s bytes=%d", id, method, len(frame))
+
 	select {
 	case q <- pendingCall{id: id, body: frame, ch: ch}:
 	default:
 		return nil, fmt.Errorf("brain: request queue full")
 	}
 
-	// 等响应 / ctx 取消 / 超时
 	select {
 	case resp := <-ch:
 		if resp.Error != "" {
@@ -236,48 +239,98 @@ func (b *Bridge) callInternal(ctx context.Context, method string, args map[strin
 
 // connWorker 是单个连接的工作 goroutine:
 // 从全局 queue 取请求 → 写帧 → 读响应 → 分发到 pending chan, 循环。
-// 单连接串行 (与 panel_server connection_loop 匹配), 多连接并发。
 func (b *Bridge) connWorker(ctx context.Context, conn net.Conn, reader *bufio.Reader) {
-	// ctx 取消时关闭 conn, 让 Read 返回
+	remote := conn.RemoteAddr().String()
+	log.Printf("[brain] worker started: remote=%s", remote)
+
 	go func() {
 		<-ctx.Done()
 		_ = conn.Close()
 	}()
 
 	for req := range b.queue {
-		// 写帧 (已含 4 字节长度前缀)
+		log.Printf("[brain] worker sending: id=%d remote=%s bytes=%d", req.id, remote, len(req.body))
 		if _, err := conn.Write(req.body); err != nil {
-			log.Printf("[brain] worker write failed: %v", err)
+			log.Printf("[brain] worker write failed: id=%d remote=%s err=%v", req.id, remote, err)
 			req.ch <- rpcResponse{ID: req.id, Error: fmt.Sprintf("write: %v", err)}
-			b.markConnBroken(conn)
+			b.markConnBroken(conn, remote)
 			return
 		}
-		// 读响应
 		resp, err := readFrame(reader)
 		if err != nil {
-			log.Printf("[brain] worker read failed: %v", err)
+			log.Printf("[brain] worker read failed: id=%d remote=%s err=%v", req.id, remote, err)
 			req.ch <- rpcResponse{ID: req.id, Error: fmt.Sprintf("read: %v", err)}
-			b.markConnBroken(conn)
+			b.markConnBroken(conn, remote)
 			return
 		}
-		// 分发到 pending chan (由 callInternal 等待)
+		log.Printf("[brain] worker response: id=%d remote=%s", req.id, remote)
 		req.ch <- resp
 	}
+	log.Printf("[brain] worker exited: remote=%s (queue closed)", remote)
 }
 
-// markConnBroken 标记连接断开 (当前简化处理: 仅记日志, 后续可加重连)。
-func (b *Bridge) markConnBroken(conn net.Conn) {
+// markConnBroken 标记连接断开并触发重连。
+func (b *Bridge) markConnBroken(conn net.Conn, remote string) {
 	b.mu.Lock()
-	defer b.mu.Unlock()
 	for i, c := range b.conns {
 		if c == conn {
 			b.conns = append(b.conns[:i], b.conns[i+1:]...)
 			break
 		}
 	}
+	remaining := len(b.conns)
+	ctx := b.ctx
+	b.mu.Unlock()
+
 	_ = conn.Close()
-	if len(b.conns) == 0 && b.started {
-		log.Printf("[brain] 连接池已空, 所有连接断开")
+	log.Printf("[brain] conn broken: remote=%s, remaining=%d/%d, scheduling reconnect", remote, remaining, b.poolSize)
+	if ctx != nil && ctx.Err() == nil {
+		go b.reconnectLoop(ctx)
+	}
+}
+
+// reconnectLoop 轮询重连: 成功后把新 conn 加入池并启动 worker, 直到池满或 ctx 取消。
+func (b *Bridge) reconnectLoop(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			log.Printf("[brain] reconnect loop cancelled (ctx done)")
+			return
+		case <-time.After(reconnectDelay):
+		}
+
+		b.mu.Lock()
+		addr := b.addr
+		current := len(b.conns)
+		b.mu.Unlock()
+		if current >= b.poolSize {
+			log.Printf("[brain] pool already full (%d/%d), stop reconnecting", current, b.poolSize)
+			return
+		}
+
+		log.Printf("[brain] reconnecting: addr=%s current=%d/%d", addr, current, b.poolSize)
+		conn, err := dialPanel(addr, dialTimeout)
+		if err != nil {
+			log.Printf("[brain] reconnect failed: %v, retry in %v", err, reconnectDelay)
+			continue
+		}
+
+		b.mu.Lock()
+		if b.ctx == nil || b.ctx.Err() != nil {
+			b.mu.Unlock()
+			_ = conn.Close()
+			log.Printf("[brain] reconnect aborted: ctx cancelled")
+			return
+		}
+		b.conns = append(b.conns, conn)
+		after := len(b.conns)
+		b.mu.Unlock()
+
+		log.Printf("[brain] reconnect success: remote=%s, pool=%d/%d", conn.RemoteAddr(), after, b.poolSize)
+		go b.connWorker(ctx, conn, bufio.NewReaderSize(conn, 64*1024))
+		if after >= b.poolSize {
+			return
+		}
 	}
 }
 
@@ -300,25 +353,24 @@ func readFrame(r *bufio.Reader) (rpcResponse, error) {
 }
 
 // resolvePanelAddr 发现 panel_server 地址 (优先级见包注释)。
-// 超时则返回 error (Agent 未启动或端口文件不可读)。
 func resolvePanelAddr(ctx context.Context, timeout time.Duration) (string, error) {
-	// 1. HERMES_PANEL_ADDR env (直接地址)
 	if addr := os.Getenv("HERMES_PANEL_ADDR"); addr != "" {
+		log.Printf("[brain] addr from HERMES_PANEL_ADDR env: %s", addr)
 		return addr, nil
 	}
 
-	// 2. 端口文件路径: HERMES_PANEL_ADDR_FILE env > 默认 <repo>/bin/run/panel.addr
 	addrFile := os.Getenv("HERMES_PANEL_ADDR_FILE")
 	if addrFile == "" {
 		addrFile = defaultPanelAddrFile()
 	}
+	log.Printf("[brain] polling addr file: %s", addrFile)
 
-	// 3. 轮询读端口文件 (Agent 可能还没启动, 等它写)
 	deadline := time.Now().Add(timeout)
 	for {
 		if data, err := os.ReadFile(addrFile); err == nil {
 			addr := string(data)
 			if addr != "" {
+				log.Printf("[brain] addr file read ok: %s", addr)
 				return addr, nil
 			}
 		}
@@ -334,12 +386,11 @@ func resolvePanelAddr(ctx context.Context, timeout time.Duration) (string, error
 }
 
 // defaultPanelAddrFile 返回默认端口文件路径: <repo>/bin/run/panel.addr
-// 基于 Wails cwd 推算 repo 根: 开发期 Wails-v3/, 生产期 bin/wails_v3_bin/。
 func defaultPanelAddrFile() string {
 	wd, _ := os.Getwd()
 	candidates := []string{
-		filepath.Join(wd, "..", "run", "panel.addr"),       // 生产期: bin/wails_v3_bin/../run/
-		filepath.Join(wd, "..", "bin", "run", "panel.addr"), // 开发期: Wails-v3/../bin/run/
+		filepath.Join(wd, "..", "run", "panel.addr"),
+		filepath.Join(wd, "..", "bin", "run", "panel.addr"),
 	}
 	for _, c := range candidates {
 		if abs, err := filepath.Abs(c); err == nil {
