@@ -25,6 +25,11 @@ init([]) ->
 
 %% 动态启动一个 Agent FSM。
 %% Args 示例: [{session_id, <<"sess-1">>}, {model, <<"gpt-4">>}, {tools, [...]}]
+%%
+%% simple_one_for_one 监督者: child spec 的 start_args = [] 时,
+%% supervisor:start_child/2 的第二参数 Args 是「追加到 start_args 之后的参数列表」。
+%% 我们希望整个 Args 作为单个参数传给 agent_fsm:start_link/1,
+%% 所以必须再套一层 list -> [Args]。
 -spec start_agent([{atom(), term()}]) -> {ok, pid()} | {error, term()}.
 start_agent(Args) ->
-    supervisor:start_child(?MODULE, Args).
+    supervisor:start_child(?MODULE, [Args]).

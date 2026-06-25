@@ -49,9 +49,11 @@ func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) 
 			}
 			return fmt.Errorf("read frame: %w", err)
 		}
+		log.Printf("[debug] received frame: %d bytes", len(req))
 
 		agentReq := &hermes.AgentRequest{}
 		if err := proto.Unmarshal(req, agentReq); err != nil {
+			log.Printf("[debug] unmarshal failed: %v", err)
 			// 解码失败：构造一个错误响应回写，避免 Erlang 端阻塞等待
 			errResp := &hermes.AgentResponse{
 				Payload: &hermes.AgentResponse_ToolExec{
@@ -66,6 +68,16 @@ func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) 
 			continue
 		}
 
+		// 调试: 打印请求概要
+		switch p := agentReq.GetPayload().(type) {
+		case *hermes.AgentRequest_LlmInfer:
+			log.Printf("[debug] dispatch: kind=llm_infer, model=%s, msgs=%d, tools=%d",
+				p.LlmInfer.GetModel(), len(p.LlmInfer.GetMessages()), len(p.LlmInfer.GetTools()))
+		case *hermes.AgentRequest_ToolExec:
+			log.Printf("[debug] dispatch: kind=tool_exec, name=%s, req_id=%s",
+				p.ToolExec.GetToolName(), p.ToolExec.GetReqId())
+		}
+
 		// dispatcher 内部已有 Panic_Guard，理论上不会 panic 出来
 		resp := d.Dispatch(context.Background(), agentReq)
 		if resp == nil {
@@ -76,6 +88,7 @@ func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) 
 			}
 		}
 
+		log.Printf("[debug] sending response frame: %d bytes", proto.Size(resp))
 		if err := writeFrame(w, resp); err != nil {
 			return fmt.Errorf("write frame: %w", err)
 		}

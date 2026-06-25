@@ -29,6 +29,15 @@ init([]) ->
                    type => worker,
                    modules => [state_store]},
 
+    %% Bridge_Manager: 与 Go 侧 Eion-tools 的端口连接管理器
+    %% 必须在 agent_sup 之前启动 —— FSM 一旦启动就要 call_llm/call_tool
+    BridgeManager = #{id => bridge_manager,
+                      start => {bridge_manager, start_link, []},
+                      restart => permanent,
+                      shutdown => 5000,
+                      type => worker,
+                      modules => [bridge_manager]},
+
     %% 动态 FSM 监督者 (simple_one_for_one): 每个 Agent 会话 = 一个 FSM 进程
     AgentSup = #{id => agent_sup,
                  start => {agent_sup, start_link, []},
@@ -37,4 +46,6 @@ init([]) ->
                  type => supervisor,
                  modules => [agent_sup]},
 
-    {ok, {SupFlags, [StateStore, AgentSup]}}.
+    %% 启动顺序: state_store -> bridge_manager -> agent_sup
+    %% rest_for_one: 任何前置崩溃, 后续全部重启
+    {ok, {SupFlags, [StateStore, BridgeManager, AgentSup]}}.

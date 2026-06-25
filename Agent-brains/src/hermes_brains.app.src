@@ -7,11 +7,15 @@
   {modules, [hermes_brains_app, hermes_brains_sup, agent_sup, agent_fsm,
              context_assembler, bridge_manager, pb_codec, state_store]},
   {env, [
-      %% Go 侧 Eion-tools 的连接配置 (分布式节点名 / 端口)
-      {go_node, 'eion_tools@localhost'},
+      %% Go 侧 Eion-tools server 可执行文件路径
+      %% 由 bridge_manager 在 init 时 spawn (erlang:open_port + 4 字节大端长度前缀帧)
+      %% Wails 打包时由 release 脚本注入绝对路径, 开发期默认 "eion-tools-server" (在 PATH 中)
+      {eion_tools_bin, "eion-tools-server"},
       %% LLM provider 凭证 (由 bridge_manager 注入, 不进入 FSM 状态)
-      {api_base, <<>>},
-      {api_key, <<>>}
+      {api_base, <<"https://api.deepseek.com">>},
+      {api_key, <<>>},
+      %% 默认模型 (FSM 启动时未指定则用此值)
+      {default_model, <<"deepseek-v4-pro">>}
   ]},
   {licenses, ["Apache-2.0"]}
  ]}.
