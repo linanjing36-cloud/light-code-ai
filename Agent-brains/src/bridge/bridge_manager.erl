@@ -242,7 +242,7 @@ handle_info({tcp_closed, Sock}, #state{pending = Pending, timers = Timers, conns
     lager:warning("tcp connection closed: socket=~p", [Sock]),
     %% 通知等待中的 FSM 断连
     case maps:get(Sock, Pending, undefined) of
-        {Ref, FsmPid, _Kind, _ReqId} ->
+        {_Ref, FsmPid, _Kind, _ReqId} ->
             TRef = maps:get(Sock, Timers, undefined),
             _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
             gen_statem:cast(FsmPid, {bridge_disconnect});
@@ -300,7 +300,7 @@ terminate(_Reason, State) ->
     lists:foreach(fun(#conn{socket = Sock}) ->
         case Sock of
             undefined -> ok;
-            _ -> catch gen_tcp:close(Sock)
+            _ -> try gen_tcp:close(Sock) catch _:_ -> ok end
         end
     end, State#state.conns),
     ok.
@@ -408,7 +408,7 @@ send_item({Ref, FsmPid, Kind, ReqId, Payload, TimeoutMs}, Sock, Conns, State) ->
 find_idle_conn(Conns) ->
     find_idle_conn(Conns, 1, []).
 
-find_idle_conn([#conn{socket = Sock, state = idle} = C | Rest], Idx, Acc) when Sock =/= undefined ->
+find_idle_conn([#conn{socket = Sock, state = idle} = C | Rest], _Idx, Acc) when Sock =/= undefined ->
     Conns1 = lists:reverse(Acc) ++ [C#conn{state = busy}] ++ Rest,
     {ok, Sock, Conns1};
 find_idle_conn([C | Rest], Idx, Acc) ->

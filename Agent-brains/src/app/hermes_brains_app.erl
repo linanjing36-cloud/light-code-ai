@@ -13,12 +13,16 @@ start(_StartType, _StartArgs) ->
 stop(_State) ->
     ok.
 
-%% serve/0 由 Wails(Go) 侧通过 erl -eval 调用:
+%% serve/0 由 start-agent.bat (或旧版 Wails spawn) 通过 erl -eval 调用:
 %%   erl -eval "application:ensure_all_started(hermes_brains), hermes_brains_app:serve()."
-%% 启动 panel_server (TCP+JSON RPC), 然后阻塞主进程直到应用退出。
 %%
-%% panel_server 启动后会向 stdout 打印 "PANEL_PORT:<port>" 行,
-%% Wails(Go) 侧读这一行拿到端口号, 再建立 TCP 连接进行后续 RPC 调用。
+%% 新架构 (三进程独立启动):
+%%   - Agent-brains 作为独立进程运行 (start-agent.bat), 不再由 Wails spawn
+%%   - panel_server listen 后把地址写入端口文件 (默认 panel.addr),
+%%     Wails 侧读该文件发现地址, 建立 TCP 连接池
+%%   - bridge_manager 作为 TCP 客户端连接 Eion-tools server (独立进程)
+%%
+%% 启动 panel_server (TCP+JSON RPC), 然后阻塞主进程直到应用退出。
 serve() ->
     case panel_server:start_link() of
         {ok, _Pid} ->

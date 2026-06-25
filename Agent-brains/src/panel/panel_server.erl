@@ -2,27 +2,34 @@
 -behaviour(gen_server).
 
 %%====================================================================
-%% Panel_Server —— Hermes 面板与 Erlang 大脑之间的 JSON-RPC 桥接 (TCP)
+%% Panel_Server —— Hermes 面板与 Erlang 大脑之间的 JSON-RPC 桥 (TCP)
 %%====================================================================
 %%
-%% 架构定位:
-%%   Wails (Go)  ──spawn──▶  Erlang ERTS
-%%                                  │
-%%                                  ▼
-%%                              panel_server (本模块)
-%%                                  │
-%%                                  ▼
-%%                             agent_fsm (ReAct 编排)
+%% 架构定位 (新架构: 三进程独立启动 + 连接池):
+%%   Wails (Go)  ──TCP 连接池──▶  panel_server (本模块, Erlang)
+%%                                     │
+%%                                     ▼
+%%                                agent_fsm (ReAct 编排)
+%%                                     │
+%%                                     ▼ (bridge_manager: TCP 连接池)
+%%                                Eion-tools (Go)
 %%
 %% 协议:
 %%   - 帧格式: 4 字节大端长度 + JSON body
 %%   - 请求: {"id": <int>, "method": "<name>", "args": {...}}
 %%   - 响应: {"id": <int>, "result": <any>, "error": <string|null>}
 %%
-%% 启动流程:
+%% 启动流程 (独立启动模式):
 %%   1. 在 127.0.0.1 上 listen 一个 ephemeral port (port 0)
-%%   2. 向 stdout 打印 "PANEL_PORT:<port>\n" (Wails Go 侧读这一行拿端口)
+%%   2. 把完整地址 "127.0.0.1:<port>" 写入端口文件 (供 Wails 读取发现)
+%%      同时仍向 stdout 打印 "PANEL_PORT:<port>" 行 (兼容旧脚本/调试)
 %%   3. spawn 一个 acceptor 进程, 每个连接再 spawn 一个 connection 进程
+%%      (多连接天然并发, 支持 Wails 侧连接池并发请求)
+%%
+%% 端口文件路径解析 (优先级):
+%%   1. app env panel_addr_file (由 -hermes_brains panel_addr_file "path" 注入)
+%%   2. 环境变量 PANEL_ADDR_FILE
+%%   3. 默认 "panel.addr" (相对 erl cwd, 通常 bin/erl_bin/ 或 Agent-brains/)
 %%
 %% 支持的方法 (与 Go 侧 brain.Bridge.Call / HermesService 对齐):
 %%   start_session   [{system_prompt}]              -> #{session_id => binary()}
@@ -74,7 +81,13 @@ init([]) ->
     case gen_tcp:listen(0, Opts) of
         {ok, Sock} ->
             {ok, Port} = inet:port(Sock),
-            %% 关键: 向 stdout 打印端口行, Wails(Go) 侧靠这一行建 TCP 连接
+            Addr = io_lib:format("127.0.0.1:~p", [Port]),
+            %% 把完整地址写入端口文件, 供 Wails 侧读取发现 (新架构: 独立启动)
+            case write_addr_file(Addr) of
+                ok -> ?LOG_INFO("panel addr file written: ~s (~s)", [panel_addr_file(), Addr]);
+                {error, WErr} -> ?LOG_INFO("write panel addr file failed: ~p (addr=~s)", [WErr, Addr])
+            end,
+            %% 兼容旧脚本/调试: 仍向 stdout 打印 PANEL_PORT 行
             io:format("PANEL_PORT:~p~n", [Port]),
             %% 启动 acceptor (单独进程, 不阻塞 gen_server)
             Acceptor = spawn(fun() -> accept_loop(Sock) end),
@@ -96,6 +109,8 @@ handle_info(_Info, State) ->
 
 terminate(_Reason, #state{listen_socket = Sock}) ->
     try gen_tcp:close(Sock) catch _:_ -> ok end,
+    %% 清理端口文件 (避免下次启动读到旧地址)
+    _ = file:delete(panel_addr_file()),
     ok.
 
 code_change(_Old, State, _Extra) ->
@@ -259,3 +274,26 @@ generate_session_id() ->
 generate_stream_id() ->
     Ts = integer_to_binary(erlang:system_time(millisecond)),
     <<"stream-", Ts/binary>>.
+
+%%====================================================================
+%% 内部: 端口文件 (地址发现)
+%%====================================================================
+
+%% 端口文件路径解析 (优先级):
+%%   1. app env panel_addr_file
+%%   2. 环境变量 PANEL_ADDR_FILE
+%%   3. 默认 "panel.addr" (相对 erl cwd)
+panel_addr_file() ->
+    case application:get_env(hermes_brains, panel_addr_file) of
+        {ok, F} when is_list(F), F =/= "" -> F;
+        _ ->
+            case os:getenv("PANEL_ADDR_FILE") of
+                false -> "panel.addr";
+                "" -> "panel.addr";
+                F -> F
+            end
+    end.
+
+%% 把完整地址 "127.0.0.1:<port>" 写入端口文件, 供 Wails 侧读取发现。
+write_addr_file(Addr) when is_list(Addr); is_binary(Addr) ->
+    file:write_file(panel_addr_file(), Addr).
