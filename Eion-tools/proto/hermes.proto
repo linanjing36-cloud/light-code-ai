@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package hermes;
 
+option go_package = "github.com/light-code-ai/eion-tools/proto/gen;hermes";
+
 // Hermes Agent 系统的 Protobuf 契约。
 //
 // 角色分工：

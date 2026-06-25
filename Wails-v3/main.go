@@ -41,7 +41,7 @@ func main() {
 		Mac: &mac.Options{
 			TitleBar: mac.TitleBarHiddenInset(),
 		},
-		Bind: []interface{}{
+		Bind: []any{
 			app,
 		},
 	})

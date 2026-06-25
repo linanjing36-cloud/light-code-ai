@@ -26,9 +26,16 @@ func (a *App) OnStartup(ctx context.Context) {
 
 // StartSession 启动一个新的 Agent 会话,Erlang 侧会派发一个 Agent_FSM 进程。
 func (a *App) StartSession(systemPrompt string) (string, error) {
-	return a.brain.Call("start_session", map[string]any{
+	out, err := a.brain.Call("start_session", map[string]any{
 		"system_prompt": systemPrompt,
 	})
+	if err != nil {
+		return "", err
+	}
+	if s, ok := out.(string); ok {
+		return s, nil
+	}
+	return "", nil
 }
 
 // ---- 对话 ----
@@ -36,10 +43,17 @@ func (a *App) StartSession(systemPrompt string) (string, error) {
 // Send 向指定会话发送用户消息,触发 ReAct 循环。
 // 返回 stream id,前端通过 StreamEvents 订阅实时事件 (thinking/tool/result)。
 func (a *App) Send(sessionID, message string) (string, error) {
-	return a.brain.Call("send", map[string]any{
+	out, err := a.brain.Call("send", map[string]any{
 		"session_id": sessionID,
 		"message":    message,
 	})
+	if err != nil {
+		return "", err
+	}
+	if s, ok := out.(string); ok {
+		return s, nil
+	}
+	return "", nil
 }
 
 // ---- 上下文 / 工具 ----
