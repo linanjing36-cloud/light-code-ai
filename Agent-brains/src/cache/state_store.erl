@@ -30,6 +30,7 @@
 %%%===================================================================
 
 start_link() ->
+    cache:init_table_config(),
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 %% 落 FSM 快照 (崩溃恢复用)
