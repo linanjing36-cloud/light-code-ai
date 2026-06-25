@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package hermes;
+
+// Hermes Agent 系统的 Protobuf 契约（与 Eion-tools/proto/hermes.proto 保持一致）。
+// 本文件由 Agent-brains 通过 rebar3_gpb 在编译期生成 src/hermes_pb.erl。
+// 业务代码（agent_fsm / context_assembler / bridge_manager）只触碰 Erlang Map，
+// 由 pb_codec.erl 负责 Map ↔ gpb Protobuf 转换（防腐层）。
+//
+// 角色分工：
+//   - Erlang（Agent-brains）：负责所有编排（多轮对话、工具调用循环、状态机）。
+//   - Go（Eion-tools）：无状态执行 SDK，"问什么答什么" —— 一次原子请求 → 一次响应。
+
+// 单条消息（role 可以是 system / user / assistant / tool）。
+message Message {
+  string role = 1;
+  string content = 2;
+  repeated ToolCall tool_calls = 3;  // role == "assistant" 时模型发起的调用
+  string tool_call_id = 4;           // role == "tool" 时对应被响应的 tool_call.id
+}
+
+// 模型发起的一次工具调用。
+message ToolCall {
+  string id = 1;
+  string name = 2;
+  string arguments = 3;  // JSON 字符串形式的参数（与 OpenAI tool_call 保持一致）
+}
+
+// 工具描述（注册到模型侧，让其知道有哪些工具可用）。
+message ToolDesc {
+  string name = 1;
+  string description = 2;
+  string parameters_json = 3;  // JSON Schema 字符串
+}
+
+// LLM 推理请求。
+// 所有 provider 配置（model / api_base / api_key）都由请求携带 —— Go 侧不缓存 provider 配置。
+message LLMInferRequest {
+  string model = 1;
+  string api_base = 2;
+  string api_key = 3;
+  repeated Message messages = 4;
+  repeated ToolDesc tools = 5;
+}
+
+// LLM 推理响应。
+message LLMInferResponse {
+  string content = 1;
+  repeated ToolCall tool_calls = 2;
+  int32 prompt_tokens = 3;
+  int32 completion_tokens = 4;
+  string reasoning_content = 5;  // 推理模型的思考过程（v4-pro 等），正文仍在 content
+}
+
+// 工具执行请求。
+// req_id 用作 dispatcher 的幂等缓存键，避免同一请求被重复执行。
+message ToolExecRequest {
+  string req_id = 1;
+  string tool_name = 2;
+  string arguments_json = 3;
+}
+
+// 工具执行响应。
+// error 非空表示执行失败；此时 result_json 应被忽略。
+message ToolExecResponse {
+  string result_json = 1;
+  string error = 2;
+}
+
+// 顶层请求包装：通过 oneof 区分是 LLM 推理还是工具执行。
+message AgentRequest {
+  oneof payload {
+    LLMInferRequest llm_infer = 1;
+    ToolExecRequest tool_exec = 2;
+  }
+}
+
+// 顶层响应包装：与 AgentRequest 的 oneof 分支一一对应。
+message AgentResponse {
+  oneof payload {
+    LLMInferResponse llm_infer = 1;
+    ToolExecResponse tool_exec = 2;
+  }
+}

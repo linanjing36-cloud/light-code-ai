@@ -51,6 +51,7 @@ message LLMInferResponse {
   repeated ToolCall tool_calls = 2;
   int32 prompt_tokens = 3;
   int32 completion_tokens = 4;
+  string reasoning_content = 5;  // 推理模型的思考过程（v4-pro 等），正文仍在 content
 }
 
 // 工具执行请求。

@@ -13,38 +13,32 @@ import (
 	"log"
 	"sync"
 
-	// TODO: 引入 eino 依赖后启用下列 import（go.mod 暂未添加 eino）。
-	// "github.com/cloudwego/eino/components/tool"
-
+	"github.com/light-code-ai/eion-tools/internal/model"
+	"github.com/light-code-ai/eion-tools/internal/tool"
 	hermes "github.com/light-code-ai/eion-tools/proto/gen"
 )
 
 // Command_Dispatcher 接收解码后的 Protobuf 请求并路由到对应包装器。
 // 任何 panic 都会被 Panic_Guard 捕获并转换为错误响应，避免 Go 侧崩溃导致 Erlang 端口异常。
 type Command_Dispatcher struct {
-	mu sync.RWMutex
-
-	// 工具注册表：name -> tools.Tool
-	// TODO: 引入 eino 后将 any 替换为 tool.Tool。
-	tools map[string]any
+	modelW *model.Eino_Model_Wrapper
+	toolW  *tool.Eino_Tool_Wrapper
 
 	// 幂等缓存：ReqId -> *hermes.ToolExecResponse。命中即直接返回，避免重复执行副作用工具。
 	idempotency sync.Map
 }
 
-// New 创建一个 Dispatcher。
+// New 创建一个 Dispatcher，内部装配 model 与 tool 包装器。
 func New() *Command_Dispatcher {
 	return &Command_Dispatcher{
-		tools: make(map[string]any),
+		modelW: model.New(),
+		toolW:  tool.New(),
 	}
 }
 
-// RegisterTool 注册一个工具实现。
-// TODO: 引入 eino 依赖后，将参数类型由 any 改为 tool.Tool。
-func (d *Command_Dispatcher) RegisterTool(name string, t any) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	d.tools[name] = t
+// ToolWrapper 返回内部工具注册表，供外部注册工具。
+func (d *Command_Dispatcher) ToolWrapper() *tool.Eino_Tool_Wrapper {
+	return d.toolW
 }
 
 // Dispatch 是唯一的入口：接收 AgentRequest，返回 AgentResponse。
@@ -58,7 +52,6 @@ func (d *Command_Dispatcher) Dispatch(ctx context.Context, req *hermes.AgentRequ
 			if resp == nil {
 				resp = &hermes.AgentResponse{}
 			}
-			// 根据请求分支填充错误（兜底到 tool_exec 分支）
 			switch req.GetPayload().(type) {
 			case *hermes.AgentRequest_LlmInfer:
 				resp.Payload = &hermes.AgentResponse_LlmInfer{
@@ -100,10 +93,12 @@ func (d *Command_Dispatcher) Dispatch(ctx context.Context, req *hermes.AgentRequ
 
 // handleLLM 路由到 model 包装器。无缓存、无重试、无循环。
 func (d *Command_Dispatcher) handleLLM(ctx context.Context, req *hermes.LLMInferRequest) *hermes.LLMInferResponse {
-	// TODO: 调用 internal/model.Eino_Model_Wrapper.Infer(ctx, req)
-	_ = ctx
-	_ = req
-	return &hermes.LLMInferResponse{}
+	out, err := d.modelW.Infer(ctx, req)
+	if err != nil {
+		log.Printf("llm infer error: %v", err)
+		return &hermes.LLMInferResponse{}
+	}
+	return out
 }
 
 // handleTool 执行工具，并按 ReqId 做幂等缓存。
@@ -118,9 +113,7 @@ func (d *Command_Dispatcher) handleTool(ctx context.Context, req *hermes.ToolExe
 	}
 
 	// 2. 查找工具
-	d.mu.RLock()
-	t, ok := d.tools[req.GetToolName()]
-	d.mu.RUnlock()
+	t, ok := d.toolW.Get(req.GetToolName())
 	if !ok {
 		resp := &hermes.ToolExecResponse{
 			Error: fmt.Sprintf("tool not found: %s", req.GetToolName()),
@@ -129,12 +122,18 @@ func (d *Command_Dispatcher) handleTool(ctx context.Context, req *hermes.ToolExe
 		return resp
 	}
 
-	// 3. TODO: 调用 internal/tool.Eino_Tool_Wrapper 执行 t。
-	//    引入 eino 后此处改为：result, err := t.InvokableRun(ctx, req.GetArgumentsJson())
-	_ = ctx
-	_ = t
+	// 3. 执行工具（InvokableRun）
+	result, err := t.InvokableRun(ctx, req.GetArgumentsJson())
+	if err != nil {
+		resp := &hermes.ToolExecResponse{
+			Error: err.Error(),
+		}
+		d.cacheIdempotent(req.GetReqId(), resp)
+		return resp
+	}
+
 	resp := &hermes.ToolExecResponse{
-		ResultJson: "", // 占位
+		ResultJson: result,
 	}
 	d.cacheIdempotent(req.GetReqId(), resp)
 	return resp

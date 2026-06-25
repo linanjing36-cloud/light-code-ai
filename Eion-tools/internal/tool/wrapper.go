@@ -8,11 +8,12 @@ package tool
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
-	// TODO: 引入 eino 依赖后启用下列 import（go.mod 暂未添加 eino）。
-	// "github.com/cloudwego/eino/components/tool"
-	// "github.com/cloudwego/eino/schema"
+	"github.com/eino-contrib/jsonschema"
+	"github.com/cloudwego/eino/components/tool"
+	"github.com/cloudwego/eino/schema"
 )
 
 // HandlerFunc 是最朴素的 Go 工具实现形式：
@@ -22,31 +23,33 @@ type HandlerFunc func(ctx context.Context, argumentsJSON string) (resultJSON str
 
 // Eino_Tool_Wrapper 维护工具注册表。不持有任何会话状态。
 type Eino_Tool_Wrapper struct {
-	// TODO: 引入 eino 后将 map 值类型改为 tool.Tool。
-	registry map[string]registeredTool
+	registry map[string]*registeredTool
 }
 
 // New 创建包装器。
 func New() *Eino_Tool_Wrapper {
-	return &Eino_Tool_Wrapper{
-		registry: make(map[string]registeredTool),
-	}
+	return &Eino_Tool_Wrapper{registry: make(map[string]*registeredTool)}
 }
 
-// Register 注册一个 HandlerFunc，并标记其将包装为 Eino tools.Tool。
-// TODO: 引入 eino 后，应同时返回/构造符合 tool.InvokableTool 接口的对象并暴露给 dispatcher。
+// Register 注册一个 HandlerFunc 为 Eino InvokableTool。
+// parametersJSON 为 JSON Schema 字符串（OpenAI tool 参数格式）。
 func (w *Eino_Tool_Wrapper) Register(name, description, parametersJSON string, h HandlerFunc) {
-	w.registry[name] = registeredTool{
-		name:           name,
-		description:    description,
-		parametersJSON: parametersJSON,
-		handler:        h,
+	info := &schema.ToolInfo{
+		Name: name,
+		Desc: description,
 	}
+	if parametersJSON != "" {
+		var s jsonschema.Schema
+		if err := json.Unmarshal([]byte(parametersJSON), &s); err == nil {
+			info.ParamsOneOf = schema.NewParamsOneOfByJSONSchema(&s)
+		}
+		// 解析失败则该工具视为无参工具（ParamsOneOf 为 nil）
+	}
+	w.registry[name] = &registeredTool{info: info, handler: h}
 }
 
-// Get 返回注册的工具（供 dispatcher 查找）。
-// TODO: 引入 eino 后将返回值类型改为 tool.Tool。
-func (w *Eino_Tool_Wrapper) Get(name string) (registeredTool, bool) {
+// Get 返回注册的工具（实现 tool.InvokableTool 接口）。
+func (w *Eino_Tool_Wrapper) Get(name string) (tool.InvokableTool, bool) {
 	t, ok := w.registry[name]
 	return t, ok
 }
@@ -60,35 +63,55 @@ func (w *Eino_Tool_Wrapper) Names() []string {
 	return names
 }
 
-// registeredTool 是内部占位实现；接入 eino 后将由实现 tool.BaseTool / InvokableTool
-// 接口的结构替代（Info() 返回 *schema.ToolInfo，InvokableRun() 执行调用）。
-type registeredTool struct {
-	name           string
-	description    string
-	parametersJSON string
-	handler        HandlerFunc
+// ToolInfos 返回所有工具的 schema.ToolInfo，供 model.BindTools 使用。
+func (w *Eino_Tool_Wrapper) ToolInfos() []*schema.ToolInfo {
+	infos := make([]*schema.ToolInfo, 0, len(w.registry))
+	for _, t := range w.registry {
+		infos = append(infos, t.info)
+	}
+	return infos
 }
 
-// Invoke 执行工具（占位形式；接入 eino 后由 InvokableTool 接管）。
-func (t registeredTool) Invoke(ctx context.Context, argumentsJSON string) (string, error) {
+// registeredTool 实现 tool.InvokableTool 接口（BaseTool + InvokableRun）。
+type registeredTool struct {
+	info    *schema.ToolInfo
+	handler HandlerFunc
+}
+
+func (t *registeredTool) Info(_ context.Context) (*schema.ToolInfo, error) {
+	return t.info, nil
+}
+
+func (t *registeredTool) InvokableRun(ctx context.Context, argumentsJSON string, _ ...tool.Option) (string, error) {
 	if t.handler == nil {
-		return "", fmt.Errorf("tool %s has no handler", t.name)
+		return "", fmt.Errorf("tool %s has no handler", t.info.Name)
 	}
 	return t.handler(ctx, argumentsJSON)
 }
 
-// 示例工具：get_weather —— 演示如何用 HandlerFunc 包装一个普通 Go 函数。
-// 真实接入 eino 后应改用 schema.ToolDef + InvokableTool 注册；此处保留 HandlerFunc 形式以便迁移。
-//
-// 返回值：(name, description, parametersJSON, handler)
+// GetWeatherHandler 返回示例工具 get_weather 的注册四元组。
+// 演示如何用 HandlerFunc 包装一个普通 Go 函数；真实工具替换 handler 即可。
 func GetWeatherHandler() (name, description, parametersJSON string, h HandlerFunc) {
 	return "get_weather",
-		"获取指定城市的当前天气",
-		`{"type":"object","properties":{"city":{"type":"string","description":"城市名"}},"required":["city"]}`,
+		"获取指定城市的当前天气。仅支持中国主要城市。",
+		`{"type":"object","properties":{"city":{"type":"string","description":"城市名，例如 北京/上海/深圳"}},"required":["city"]}`,
 		func(ctx context.Context, argumentsJSON string) (string, error) {
-			// TODO: 真实实现应解析 argumentsJSON 并调用天气 API。
-			// 此处仅返回占位结果，证明端到端链路打通。
 			_ = ctx
-			return fmt.Sprintf(`{"city":"unknown","weather":"sunny","temp_c":25,"args":%s}`, argumentsJSON), nil
+			var args struct {
+				City string `json:"city"`
+			}
+			_ = json.Unmarshal([]byte(argumentsJSON), &args)
+			// 占位实现：用一个固定的假数据映射，证明端到端链路打通。
+			// 真实实现应调用天气 API。
+			weather := map[string]string{
+				"北京": "晴, 26°C, 北风3级",
+				"上海": "多云, 23°C, 东风2级",
+				"深圳": "雷阵雨, 28°C, 南风3级",
+			}
+			w, ok := weather[args.City]
+			if !ok {
+				w = "晴, 25°C"
+			}
+			return fmt.Sprintf(`{"city":"%s","weather":"%s"}`, args.City, w), nil
 		}
 }

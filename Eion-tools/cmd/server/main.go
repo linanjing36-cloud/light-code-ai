@@ -26,22 +26,12 @@ import (
 )
 
 func main() {
-	// 1. 初始化工具注册表，注册示例工具 get_weather
-	toolWrap := tool.New()
-	name, desc, params, handler := tool.GetWeatherHandler()
-	toolWrap.Register(name, desc, params, handler)
-
-	// 2. 初始化 dispatcher
+	// 1. 初始化 dispatcher，注册示例工具 get_weather
 	d := dispatcher.New()
-	// TODO: 将 toolWrap 中的工具按名注册到 dispatcher。
-	//   待 dispatcher.RegisterTool 签名稳定为接受 tool.Tool 后启用：
-	//   for _, n := range toolWrap.Names() {
-	//       t, _ := toolWrap.Get(n)
-	//       d.RegisterTool(n, t)
-	//   }
-	_ = toolWrap
+	name, desc, params, handler := tool.GetWeatherHandler()
+	d.ToolWrapper().Register(name, desc, params, handler)
 
-	// 3. 启动 stdin/stdout 二进制帧循环（Erlang 端口通信占位实现）
+	// 2. 启动 stdin/stdout 二进制帧循环（Erlang 端口通信占位实现）
 	log.Println("eion-tools server: stdin/stdout framing loop started")
 	if err := runFramingLoop(os.Stdin, os.Stdout, d); err != nil {
 		log.Fatalf("framing loop exited: %v", err)

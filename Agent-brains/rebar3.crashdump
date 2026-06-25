@@ -1,0 +1,21 @@
+Error: terminated
+[{io,format,
+     ["===> Expanded command sequence to be run: ~w~n",
+      [[app_discovery,install_deps,lock,compile]]],
+     [{file,"io.erl"},
+      {line,202},
+      {error_info,#{cause => {io,terminated},module => erl_stdlib_errors}}]},
+ {rebar_core,process_command,2,
+             [{file,"/private/tmp/rebar3-20260227-7718-90iqm5/rebar3-3.27.0/apps/rebar/src/rebar_core.erl"},
+              {line,95}]},
+ {rebar3,run_aux,2,
+         [{file,"/private/tmp/rebar3-20260227-7718-90iqm5/rebar3-3.27.0/apps/rebar/src/rebar3.erl"},
+          {line,212}]},
+ {rebar3,main,1,
+         [{file,"/private/tmp/rebar3-20260227-7718-90iqm5/rebar3-3.27.0/apps/rebar/src/rebar3.erl"},
+          {line,66}]},
+ {escript,run,2,[{file,"escript.erl"},{line,906}]},
+ {escript,start,1,[{file,"escript.erl"},{line,420}]},
+ {init,start_it,1,[]},
+ {init,start_em,1,[]}]
+
