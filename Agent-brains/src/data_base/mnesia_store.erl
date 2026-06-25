@@ -216,22 +216,29 @@ do_snapshot(EtsTab) when is_atom(EtsTab) ->
 
 %% 从 mnesia 读快照, ets:insert 回 ETS (调用前 ETS 必须已 ets:new 过)
 do_restore(EtsTab) when is_atom(EtsTab) ->
-    {atomic, Result} = mnesia:transaction(fun() ->
+    case mnesia:transaction(fun() ->
         mnesia:read(?SNAPSHOT_TABLE, EtsTab)
-    end),
-    case Result of
-        [{?SNAPSHOT_TABLE, EtsTab, Data}] when is_list(Data) ->
-            try
-                lists:foreach(fun(Entry) -> ets:insert(EtsTab, Entry) end, Data),
-                ?log("restore ok, table=~p, entries=~p",
-                     [EtsTab, length(Data)]),
-                ok
-            catch
-                error:badarg ->
-                    ?log_error("restore: ets table ~p does not exist", [EtsTab]),
-                    {error, no_such_ets}
+    end) of
+        {atomic, Result} ->
+            case Result of
+                [{?SNAPSHOT_TABLE, EtsTab, Data}] when is_list(Data) ->
+                    try
+                        lists:foreach(fun(Entry) -> ets:insert(EtsTab, Entry) end, Data),
+                        ?log("restore ok, table=~p, entries=~p",
+                             [EtsTab, length(Data)]),
+                        ok
+                    catch
+                        error:badarg ->
+                            ?log_error("restore: ets table ~p does not exist", [EtsTab]),
+                            {error, no_such_ets}
+                    end;
+                [] ->
+                    ?log_warning("restore: no snapshot for table=~p", [EtsTab]),
+                    {error, no_snapshot}
             end;
-        [] ->
-            ?log_warning("restore: no snapshot for table=~p", [EtsTab]),
-            {error, no_snapshot}
+        {aborted, Reason} ->
+            %% 表不存在 / mnesia 未就绪等: 不 crash, 让调用方决定如何处理
+            ?log_error("restore: mnesia read failed, table=~p, reason=~p",
+                       [EtsTab, Reason]),
+            {error, {mnesia_read_failed, Reason}}
     end.

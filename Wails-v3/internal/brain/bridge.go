@@ -117,12 +117,15 @@ func (b *Bridge) Start(parentCtx context.Context) error {
 	//   mnesia_dir           —— 绝对路径, 避免 erl cwd 切换后相对路径歧义
 	//   snapshot_interval_ms —— 60s 周期快照
 	// snapshot_tables 是 list 类型, 命令行不好设, 在 -eval 里 set_env。
+	//
+	// 注意: -App Key Value 中 Value 必须是合法 Erlang term。
+	// 字符串需用双引号包裹 (与 start.sh 的 \"\"$VAR\"\" 等价), 否则路径里的 / 会被当成语法错误。
 	mnesiaDir := filepath.Join(wDir, "data", "mnesia")
 	args := []string{
 		"-noshell",
 		"-sname", "hermes_brains",
 		"-setcookie", "hermes_brains",
-		"-hermes_brains", "mnesia_dir", mnesiaDir,
+		"-hermes_brains", "mnesia_dir", `"` + mnesiaDir + `"`,
 		"-hermes_brains", "snapshot_interval_ms", "60000",
 		"-config", sysConfig,
 		"-eval", "application:set_env(hermes_brains, snapshot_tables, [hermes_brains_state]), {ok, _} = application:ensure_all_started(hermes_brains), hermes_brains_app:serve().",
