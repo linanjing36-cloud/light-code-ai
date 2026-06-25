@@ -11,9 +11,16 @@
 %%   - 周期性自动 snapshot 配置好的 ETS 表 (默认 60s 一次)
 %%
 %% 接入:
-%%   作为 hermes_brains_sup 的第一个子进程启动 (rest_for_one 策略下,
+%%   作为 hermes_brains_sup 的第二个子进程启动 (rest_for_one 策略下,
 %%   mnesia_store 崩溃会让 state_store 等后续子进程一起重启)。
-%%   启动顺序: mnesia_store -> state_store -> bridge_manager -> agent_sup
+%%   启动顺序: timing_wheel -> mnesia_store -> state_store -> bridge_manager -> agent_sup
+%%
+%% 定时调度:
+%%   周期 snapshot tick 不再自己用 erlang:send_after 调度,
+%%   而是通过 timing_wheel:add_periodic 注册。timing_wheel 在本进程之前启动,
+%%   init 时同步调用 timing_wheel:add_periodic(Interval, mnesia_store, {snapshot_tick})
+%%   即可。后续每 Interval 毫秒, timing_wheel 会投递 {snapshot_tick} 给本进程。
+%%   崩溃重启后 (rest_for_one 也会重启 timing_wheel), 旧的 periodic ref 自动失效。
 %%
 %% 配置 (hermes_brains env):
 %%   mnesia_dir          —— mnesia 数据目录 (默认 "data/mnesia")
@@ -42,7 +49,7 @@
 
 -record(state, {
     snapshot_tables = [] :: [atom()],
-    timer_ref = undefined :: reference() | undefined
+    wheel_ref = undefined :: reference() | undefined  %% timing_wheel 注册的 periodic ref
 }).
 
 %%%===================================================================
@@ -80,7 +87,9 @@ init([]) ->
             Tables = application:get_env(hermes_brains, snapshot_tables,
                                          ?DEFAULT_SNAPSHOT_TABLES),
             Interval = snapshot_interval_ms(),
-            TimerRef = case Interval of
+            %% 通过 timing_wheel 注册周期 snapshot tick
+            %% (timing_wheel 已在 sup 中先启动, 这里同步 call 注册)
+            WheelRef = case Interval of
                 0 ->
                     ?log("mnesia_store started, periodic snapshot DISABLED, tables=~p",
                          [Tables]),
@@ -88,9 +97,10 @@ init([]) ->
                 _ ->
                     ?log("mnesia_store started, snapshot_tables=~p, interval_ms=~p",
                          [Tables, Interval]),
-                    schedule_snapshot(Interval)
+                    timing_wheel:add_periodic(Interval, mnesia_store,
+                                              {snapshot_tick})
             end,
-            {ok, #state{snapshot_tables = Tables, timer_ref = TimerRef}};
+            {ok, #state{snapshot_tables = Tables, wheel_ref = WheelRef}};
         {error, _} = Err ->
             ?log_error("mnesia_store init failed: ~p, stopping", [Err]),
             {stop, Err}
@@ -111,20 +121,23 @@ handle_call(_Req, _From, State) ->
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
-%% 周期快照触发: 把所有配置的表都 dump 一遍, 然后重新调度下一次
+%% 周期快照触发: timing_wheel 每 Interval 投递一次 {snapshot_tick}
+%% 不再自己重调度 (timing_wheel 周期事件触发后自动重挂到下个周期)
 handle_info({snapshot_tick}, State) ->
     lists:foreach(fun(Tab) -> do_snapshot(Tab) end, State#state.snapshot_tables),
-    Interval = snapshot_interval_ms(),
-    NewTimer = case Interval of
-        0 -> undefined;
-        _ -> schedule_snapshot(Interval)
-    end,
-    {noreply, State#state{timer_ref = NewTimer}};
+    {noreply, State};
 
 handle_info(_Msg, State) ->
     {noreply, State}.
 
-terminate(_Reason, _State) ->
+terminate(_Reason, #state{wheel_ref = undefined}) ->
+    ok;
+terminate(_Reason, #state{wheel_ref = Ref}) when is_reference(Ref) ->
+    %% 主动 cancel timing_wheel 上的 periodic ref
+    %% (rest_for_one 下 timing_wheel 也会重启, 这里清理避免悬挂引用)
+    try timing_wheel:cancel(Ref)
+    catch _:_ -> ok
+    end,
     ok.
 
 code_change(_OldVsn, State, _Extra) ->
@@ -136,9 +149,6 @@ code_change(_OldVsn, State, _Extra) ->
 
 snapshot_interval_ms() ->
     application:get_env(hermes_brains, snapshot_interval_ms, ?DEFAULT_INTERVAL_MS).
-
-schedule_snapshot(Interval) ->
-    erlang:send_after(Interval, self(), {snapshot_tick}).
 
 %% 同步初始化 mnesia schema + ets_snapshot 表 (幂等)
 do_init_store() ->

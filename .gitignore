@@ -9,6 +9,10 @@ api-key.local.json
 .env
 .env.local
 
+# ---- bin/: 本地部署/运行产物 (编译产物 + start/stop 脚本, 均不入库) ----
+# 包含: erl_bin/ (make agent), eion_bin/, wails_v3_bin/, start.sh, stop.sh 等
+bin/
+
 # =========================================================
 # Agent-brains (Erlang/OTP + rebar3)
 # =========================================================

@@ -1,0 +1,15 @@
+2026-06-25 18:35:24.289 [info] <0.119.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-25 18:35:24.311 [info] <0.120.0>@mnesia_store:do_init_store:{162,14} mnesia schema created at /Users/zhangsan/local/light-code-ai/Agent-brains/config/mnesia
+2026-06-25 18:35:24.340 [info] <0.120.0>@mnesia_store:do_init_store:{183,14} mnesia snapshot table created (disc_copies)
+2026-06-25 18:35:24.340 [info] <0.120.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=2000
+2026-06-25 18:35:24.340 [warning] <0.120.0>@mnesia_store:do_restore:{235,14} restore: no snapshot for table=hermes_brains_state
+2026-06-25 18:35:24.340 [info] <0.172.0>@state_store:init:{64,13} state_store: no mnesia snapshot for hermes_brains_state, starting fresh
+2026-06-25 18:35:24.341 [info] <0.173.0>@bridge_manager:init:{94,5} opening port to eion-tools server: /tmp/eion-tools-server
+2026-06-25 18:35:24.341 [info] <0.173.0>@bridge_manager:init:{103,5} port opened successfully
+2026-06-25 18:35:25.287 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 0: slot=0, fired=0, active=1
+2026-06-25 18:35:26.288 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 1: slot=1, fired=0, active=1
+2026-06-25 18:35:27.289 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 2: slot=2, fired=1, active=1
+2026-06-25 18:35:27.290 [info] <0.120.0>@mnesia_store:do_snapshot:{203,22} snapshot taken, table=hermes_brains_state, entries=0
+2026-06-25 18:35:28.290 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 3: slot=3, fired=0, active=1
+2026-06-25 18:35:29.291 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 4: slot=4, fired=1, active=1
+2026-06-25 18:35:29.292 [info] <0.120.0>@mnesia_store:do_snapshot:{203,22} snapshot taken, table=hermes_brains_state, entries=0
