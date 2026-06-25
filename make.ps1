@@ -357,8 +357,23 @@ function Invoke-Agent {
     Copy-Item -Path (Join-Path $AgentDir "config\sys.config") `
               -Destination (Join-Path $ErlBin "config\sys.config") -Force
 
-    Write-Host "[make] ==> 完成. 已安装 OTP apps + config:"
-    Get-ChildItem -Path $ErlBin | ForEach-Object { Write-Host "    $($_.Name)" }
+    # 编译 Eion-tools (Go/Eino 无状态执行 SDK) -> bin\eion_bin\eion-tools-server.exe
+    # Erlang 侧 bridge_manager 通过 erlang:open_port({spawn, eion_tools_bin}) 拉起该独立进程,
+    # stdin/stdout 4字节大端长度前缀 + protobuf 帧通信。缺失则 agent_fsm 的 LLM/工具调用全失败。
+    Write-Host "[make] ==> 编译 Eion-tools -> $EionBin ..."
+    New-Item -ItemType Directory -Force -Path $EionBin | Out-Null
+    $eionToolsDir = Join-Path $RootDir "Eion-tools"
+    $eionExe = Join-Path $EionBin "eion-tools-server.exe"
+    Push-Location $eionToolsDir
+    try {
+        & go build -o $eionExe ./cmd/server
+        if ($LASTEXITCODE -ne 0) { throw "go build eion-tools 失败 (exit $LASTEXITCODE)" }
+    }
+    finally { Pop-Location }
+
+    Write-Host "[make] ==> 完成. 已安装 OTP apps + config + Eion-tools server:"
+    Get-ChildItem -Path $ErlBin | ForEach-Object { Write-Host "    [erl_bin] $($_.Name)" }
+    Write-Host "    [eion_bin] eion-tools-server.exe"
     Write-Host "[make] ==> 启动: .\make.ps1 run  (开发模式, `$env:MODE='prod'; .\make.ps1 run 是发布模式)"
     Write-Host "[make] ==> 停止: .\make.ps1 stop"
 }

@@ -121,10 +121,14 @@ func (b *Bridge) Start(parentCtx context.Context) error {
 	// 注意: -App Key Value 中 Value 必须是合法 Erlang term。
 	// 字符串需用双引号包裹 (与 start.sh 的 \"\"$VAR\"\" 等价), 否则路径里的 / 会被当成语法错误。
 	mnesiaDir := filepath.Join(wDir, "data", "mnesia")
+	eionToolsBin := eionToolsBinPath()
 	args := []string{
 		"-noshell",
 		"-sname", "hermes_brains",
 		"-setcookie", "hermes_brains",
+		// eion_tools_bin: bridge_manager 在 init 时 erlang:open_port({spawn, 该路径})
+		// 拉起 Eion-tools 子进程。用绝对路径, 避免 erl cwd (bin/erl_bin) 解析相对路径错误。
+		"-hermes_brains", "eion_tools_bin", `"` + eionToolsBin + `"`,
 		"-hermes_brains", "mnesia_dir", `"` + mnesiaDir + `"`,
 		"-hermes_brains", "snapshot_interval_ms", "60000",
 		"-config", sysConfig,
@@ -395,6 +399,26 @@ func erlBinaryPath() string {
 		return v
 	}
 	return "erl"
+}
+
+// eionToolsBinPath 返回 Eion-tools server 可执行文件的绝对路径。
+//   - 开发期: <repo>/bin/eion_bin/eion-tools-server.exe (由 make agent 的 go build 产出)
+//   - 生产期: Wails app bundle 内的 Resources/eion_bin (TODO)
+//
+// 由 -hermes_brains eion_tools_bin 注入到 app env, bridge_manager 在 init 时
+// erlang:open_port({spawn, 该路径}) 拉起 Eion-tools 子进程 (protobuf 帧通信)。
+// 用绝对路径, 避免 erl cwd (bin/erl_bin) 导致相对路径解析错误。
+func eionToolsBinPath() string {
+	if v := os.Getenv("HERMES_EION_TOOLS_BIN"); v != "" {
+		return v
+	}
+	// 假设 Wails-v3 与 bin/eion_bin 同级, 编译产物在 bin/eion_bin
+	wd, _ := os.Getwd()
+	p := filepath.Join(wd, "..", "bin", "eion_bin", "eion-tools-server.exe")
+	if abs, err := filepath.Abs(p); err == nil {
+		return abs
+	}
+	return p
 }
 
 // findSysConfig 找 sys.config 文件路径:

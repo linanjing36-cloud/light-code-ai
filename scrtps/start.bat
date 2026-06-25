@@ -28,7 +28,7 @@ if "%MODE%"=="dev" (
     set "WORK_DIR=%AGENT_DIR%"
     set "DEFAULT_MNESIA_DIR=%AGENT_DIR%\config\mnesia"
     set "DEFAULT_LOG_DIR=%AGENT_DIR%\log"
-    set "DEFAULT_EION_TOOLS_BIN=%ROOT_DIR%\Eion-tools\cmd\server\eion-tools-server.exe"
+    set "DEFAULT_EION_TOOLS_BIN=%EION_BIN_DIR%\eion-tools-server.exe"
     set "DEFAULT_SYS_CONFIG=%AGENT_DIR%\config\sys.config"
 )
 if "%MODE%"=="prod" (
