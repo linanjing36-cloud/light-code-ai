@@ -109,9 +109,16 @@ func (s *HermesService) ApproveToolCall(reqID string, allow bool) error {
 // BrainStatus 返回 Erlang 大脑的运行状态。
 // 返回字段: state (idle/thinking/acting), loop_count, max_loops, history_len。
 func (s *HermesService) BrainStatus(sessionID string) (map[string]any, error) {
-	return s.brain.Call("brain_status", map[string]any{
+	out, err := s.brain.Call("brain_status", map[string]any{
 		"session_id": sessionID,
 	})
+	if err != nil {
+		return nil, err
+	}
+	if m, ok := out.(map[string]any); ok {
+		return m, nil
+	}
+	return nil, fmt.Errorf("brain: invalid brain_status response: %T", out)
 }
 
 // ---- Brain 控制 ----

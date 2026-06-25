@@ -101,9 +101,11 @@ func (b *Bridge) Start(parentCtx context.Context) error {
 	ctx, cancel := context.WithCancel(parentCtx)
 	b.ctx, b.cancel = ctx, cancel
 
-	// 数据目录: 优先 HERMES_DATA_DIR 环境变量, 默认 ~/Library/Application Support/Hermes
-	dataDir := dataDir()
-	_ = os.MkdirAll(dataDir, 0o755)
+	// 工作目录: 与 bin/start.sh prod 模式一致, erl 在 bin/erl_bin/ 启动。
+	// 这样 lager log_root="log" 落到 bin/erl_bin/log/, mnesia 落到 bin/erl_bin/data/mnesia/。
+	// 优先 HERMES_DATA_DIR env, 默认 <repo>/bin/erl_bin。
+	wDir := workDir()
+	_ = os.MkdirAll(wDir, 0o755)
 
 	erlLibs := agentBrainsLibDir()
 	erlBin := erlBinaryPath()
@@ -111,20 +113,27 @@ func (b *Bridge) Start(parentCtx context.Context) error {
 	// 若不存在 (开发期 make agent 未跑) 退化到源码 config/sys.config。
 	sysConfig := findSysConfig(erlLibs)
 
+	// hermes_brains 应用 env (与 bin/start.sh prod 模式对齐):
+	//   mnesia_dir           —— 绝对路径, 避免 erl cwd 切换后相对路径歧义
+	//   snapshot_interval_ms —— 60s 周期快照
+	// snapshot_tables 是 list 类型, 命令行不好设, 在 -eval 里 set_env。
+	mnesiaDir := filepath.Join(wDir, "data", "mnesia")
 	args := []string{
 		"-noshell",
 		"-sname", "hermes_brains",
 		"-setcookie", "hermes_brains",
+		"-hermes_brains", "mnesia_dir", mnesiaDir,
+		"-hermes_brains", "snapshot_interval_ms", "60000",
 		"-config", sysConfig,
-		"-eval", "application:ensure_all_started(hermes_brains), hermes_brains_app:serve().",
+		"-eval", "application:set_env(hermes_brains, snapshot_tables, [hermes_brains_state]), {ok, _} = application:ensure_all_started(hermes_brains), hermes_brains_app:serve().",
 	}
 
 	cmd := exec.CommandContext(ctx, erlBin, args...)
-	cmd.Dir = dataDir // 让 Erlang 的相对路径 (log/, mnesia/) 都落在 dataDir
+	cmd.Dir = wDir // erl cwd = bin/erl_bin, 让 lager log_root="log" 落对地方
 	cmd.Env = append(os.Environ(),
-		"ERL_LIBS="+erlLibs,         // 让 erl 把 bin/erl_bin 当作 OTP 应用根
-		"HERMES_DATA_DIR="+dataDir,  // Erlang 侧 mnesia_store 读取
-		"MODE=prod",                  // 用 prod 默认路径 (除非外部覆盖)
+		"ERL_LIBS="+erlLibs,        // 让 erl 把 bin/erl_bin 当作 OTP 应用根
+		"HERMES_DATA_DIR="+wDir,    // Erlang 侧 mnesia_store 读取 (兜底)
+		"MODE=prod",                 // 用 prod 默认路径 (除非外部覆盖)
 	)
 
 	// stdout 用于解析 "PANEL_PORT:<port>" 行, stderr 转发到主进程便于调试
@@ -349,14 +358,18 @@ func drainReader(r io.Reader) {
 	}
 }
 
-// dataDir: 用户数据目录 (mnesia/log/sys.config 落地点)。
-// 优先 HERMES_DATA_DIR env, 默认 ~/Library/Application Support/Hermes (macOS 惯例)。
-func dataDir() string {
+// workDir 返回 Erlang 子进程的工作目录 (erl 的 cwd)。
+// 与 bin/start.sh prod 模式一致: 工作目录在 bin/erl_bin/,
+// 这样 lager 的 log_root="log" 落到 bin/erl_bin/log/,
+// mnesia_dir 默认 "data/mnesia" 落到 bin/erl_bin/data/mnesia/。
+// 优先 HERMES_DATA_DIR env, 默认 <repo>/bin/erl_bin。
+func workDir() string {
 	if v := os.Getenv("HERMES_DATA_DIR"); v != "" {
 		return v
 	}
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, "Library", "Application Support", "Hermes")
+	// 与 agentBrainsLibDir 同目录: <repo>/bin/erl_bin
+	wd, _ := os.Getwd()
+	return filepath.Join(wd, "..", "bin", "erl_bin")
 }
 
 // agentBrainsLibDir 返回 Agent-brains 的 OTP lib 根目录。
