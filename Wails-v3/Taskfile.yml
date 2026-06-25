@@ -2,7 +2,8 @@ version: '3'
 
 vars:
   APP_NAME: "hermes"
-  BIN_DIR: "bin"
+  # 输出目录: <repo>/bin/wails_v3_bin/ (与 erl_bin / eion_bin 并列, 整个 bin/ 已被 .gitignore)
+  BIN_DIR: "../bin/wails_v3_bin"
   PACKAGE_MANAGER: '{{.PACKAGE_MANAGER | default "npm"}}'
   VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
 
