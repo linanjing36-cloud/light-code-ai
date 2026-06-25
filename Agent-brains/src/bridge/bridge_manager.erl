@@ -2,52 +2,69 @@
 -behaviour(gen_server).
 
 %%====================================================================
-%% Bridge_Manager —— Go 侧 Eion-tools 连接管理器 (端口模式)
+%% Bridge_Manager —— Go 侧 Eion-tools 连接管理器 (TCP 连接池模式)
 %%====================================================================
 %%
+%% 架构变更: 从 open_port spawn 子进程改为 TCP 连接池连接独立运行的
+%% Eion-tools server。Eion-tools 现在是独立进程, listen TCP(Windows)/
+%% UDS(Unix), 本模块作为客户端建立连接池。
+%%
 %% 职责:
-%%   - 在 init 时用 erlang:open_port 拉起 Eion-tools server 子进程
-%%   - 维护一个 FIFO 请求队列: 业务请求经 pb_codec 编码为 Protobuf 二进制后排队
-%%   - 串行投递: 一次只发一条请求到 Port, 等到响应再发下一条
-%%     (Go 侧 server 也是串行 read-frame / write-frame, 二者节奏匹配)
-%%   - 监听 Port 的 {data, Bin} 响应, 解码后按 Ref 投回对应 FSM
-%%   - 超时管理: 单次原子请求超时即失败上报, 不在 Go 侧重试 (无状态原则)
-%%   - Port 异常退出: 通知所有等待中的 FSM ({bridge_disconnect})
+%%   - init 时建立 N 个 gen_tcp 连接到 Eion-tools server (连接池)
+%%   - 维护 FIFO 请求队列: 业务请求经 pb_codec 编码为 Protobuf 二进制后排队
+%%   - 连接池分发: 取 idle 连接发请求, 收到响应后连接回 idle, 发下一条
+%%   - 监听 {tcp, Socket, Bin} 响应, 解码后按 Ref 投回对应 FSM
+%%   - 超时管理: 单次原子请求超时即失败上报
+%%   - 连接断开: 通知等待中的 FSM, 异步重连
 %%
 %% 接口语义: 全部异步 (cast)。返回 Ref 供 FSM 匹配响应。
 %%   call_llm(FsmPid, Req)          -> Ref          响应回投 {llm_response, Ref, Resp}
 %%   call_tool_batch(FsmPid, TCs)   -> ok           每条响应回投 {tool_result, ToolCallId, Resp}
 %%
-%% 凭证处理: api_base / api_key 由本进程从 app env 注入, 不进入 FSM 状态,
-%% 也不经过 context_assembler, 以缩小秘密的暴露面。
+%% 凭证处理: api_base / api_key 由本进程从 app env 注入, 不进入 FSM 状态。
 %%
 %% 帧格式 (与 Eion-tools cmd/server/main.go 对齐):
 %%   4 字节大端长度前缀 + protobuf 负载
-%%   erlang:open_port([binary, {packet, 4}, use_stdio]) 自动处理 4 字节长度前缀
+%%   gen_tcp {packet, 4} 自动处理 4 字节长度前缀
+%%
+%% 地址发现 (优先级):
+%%   1. app env eion_tools_addr (直接地址, 如 "127.0.0.1:12345")
+%%   2. app env eion_tools_addr_file (端口文件路径, 读文件取地址)
+%%   3. 默认 "127.0.0.1:7891"
 %%====================================================================
 
 %% 对外接口
 -export([start_link/0, call_llm/2, call_tool_batch/2, call_tool/2,
-         port_info/0, queue_len/0]).
+         pool_info/0]).
 %% gen_server 回调
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
--define(LLM_TIMEOUT, 60000).   %% 单次 LLM 推理超时 (v4-pro 推理模型可能较慢)
--define(TOOL_TIMEOUT, 15000).  %% 单次工具执行超时
+-define(LLM_TIMEOUT, 60000).        %% 单次 LLM 推理超时 (v4-pro 推理模型可能较慢)
+-define(TOOL_TIMEOUT, 15000).       %% 单次工具执行超时
+-define(DEFAULT_POOL_SIZE, 4).      %% 连接池大小
+-define(RECONNECT_DELAY, 2000).     %% 重连间隔 (ms)
+-define(DEFAULT_ADDR, "127.0.0.1:7891").
+
+-record(conn, {
+    socket :: gen_tcp:socket() | undefined,
+    state :: idle | busy
+}).
 
 -record(state, {
-    %% Eion-tools server 的 Port 句柄
-    port :: port() | undefined,
-    %% FIFO 队列: 等待发送的请求 {Ref, FsmPid, Kind, ReqId, Payload, Timeout}
-    %%   Kind = llm | tool ; ReqId = tool_call.id (tool) | undefined (llm)
+    addr :: string(),
+    pool_size :: pos_integer(),
+    conns = [] :: [#conn{}],
+    %% FIFO 队列: 等待 idle 连接的请求
+    %%   {Ref, FsmPid, Kind, ReqId, Payload, Timeout}
     queue = queue:new() :: queue:queue({reference(), pid(), llm | tool,
                                         binary() | undefined, binary(),
                                         non_neg_integer()}),
-    %% 当前在途请求 (已发到 Port, 等响应)
-    current :: {reference(), pid(), llm | tool, binary() | undefined} | undefined,
-    %% 当前在途请求的超时计时器
-    timer :: reference() | undefined
+    %% socket -> 等待响应的请求 {Ref, FsmPid, Kind, ReqId}
+    pending = #{} :: #{gen_tcp:socket() => {reference(), pid(), llm | tool,
+                                             binary() | undefined}},
+    %% socket -> 超时计时器
+    timers = #{} :: #{gen_tcp:socket() => reference()}
 }).
 
 %%%===================================================================
@@ -65,7 +82,6 @@ call_llm(FsmPid, Req) ->
     Ref.
 
 %% 批量并行派发工具调用 (每个 ToolCall 一条异步请求)
-%% 注意: 端口模式下, 实际是串行入队, 但对 FSM 来说是 fire-and-forget
 call_tool_batch(FsmPid, ToolCalls) when is_list(ToolCalls) ->
     [call_tool(FsmPid, TC) || TC <- ToolCalls],
     ok.
@@ -76,42 +92,34 @@ call_tool(FsmPid, #{id := Id, name := Name, arguments := Args}) ->
     gen_server:cast(?MODULE, {call_tool, FsmPid, Ref, Id, Name, Args}),
     Ref.
 
-%% 调试用: 查看 Port 状态
-port_info() ->
-    gen_server:call(?MODULE, port_info).
-
-%% 调试用: 查看队列长度
-queue_len() ->
-    gen_server:call(?MODULE, queue_len).
+%% 调试用: 查看连接池状态
+pool_info() ->
+    gen_server:call(?MODULE, pool_info).
 
 %%%===================================================================
 %%% gen_server 回调
 %%%===================================================================
 
 init([]) ->
-    ServerBin = application:get_env(hermes_brains, eion_tools_bin,
-                                    "eion-tools-server"),
-    lager:info("opening port to eion-tools server: ~s", [ServerBin]),
-    %% 拉起 Eion-tools server 子进程
-    %% {packet, 4}: Erlang 自动处理 4 字节大端长度前缀 (与 Go 侧 readFrame 对齐)
-    %% use_stdio + binary: 用 stdin/stdout 通信, 数据以 binary 传输
-    %% 注意: 不开 stderr_to_stdout —— 否则 Go 侧 zap 输出的非 framed 文本
-    %%       会污染 stdout 的 packet 流, 破坏 {packet,4} 解析。Go 的 stderr 直接
-    %%       继承到调用进程的 stderr, 在终端里仍可见, 不影响端口数据流。
-    Port = erlang:open_port({spawn, ServerBin},
-                            [binary, {packet, 4}, use_stdio, exit_status]),
-    lager:info("port opened successfully", []),
-    {ok, #state{port = Port}}.
+    {Addr, PoolSize} = resolve_addr(),
+    lager:info("bridge_manager init: addr=~s pool_size=~p", [Addr, PoolSize]),
+    %% 异步建立连接池 (不阻塞 init)
+    self() ! connect_all,
+    {ok, #state{addr = Addr, pool_size = PoolSize}}.
 
-handle_call(port_info, _From, #state{port = Port} = State) ->
-    {reply, Port, State};
-handle_call(queue_len, _From, State) ->
-    {reply, queue:len(State#state.queue), State};
+handle_call(pool_info, _From, State) ->
+    Info = #{addr => State#state.addr,
+             pool_size => State#state.pool_size,
+             connected => length([C || C <- State#state.conns, C#conn.socket =/= undefined]),
+             idle => length([C || C <- State#state.conns, C#conn.state =:= idle]),
+             busy => length([C || C <- State#state.conns, C#conn.state =:= busy]),
+             queue_len => queue:len(State#state.queue),
+             pending => maps:size(State#state.pending)},
+    {reply, Info, State};
 handle_call(_Request, _From, State) ->
     {reply, {error, not_implemented}, State}.
 
 handle_cast({call_llm, FsmPid, Ref, Req}, State) ->
-    %% 关键节点: LLM 推理请求入队 (异步)
     lager:info("call_llm queued, ref=~p, fsm_pid=~p", [Ref, FsmPid]),
     %% 注入凭证 (来自 app env, 不来自 FSM)
     ApiBase = application:get_env(hermes_brains, api_base, <<>>),
@@ -120,116 +128,305 @@ handle_cast({call_llm, FsmPid, Ref, Req}, State) ->
                   api_base => ApiBase,
                   api_key => ApiKey},
     Payload = pb_codec:encode_req(BizReq),
-    enqueue_and_maybe_send({Ref, FsmPid, llm, undefined, Payload, ?LLM_TIMEOUT},
-                           State);
+    Item = {Ref, FsmPid, llm, undefined, Payload, ?LLM_TIMEOUT},
+    {noreply, dispatch(State, Item)};
 
 handle_cast({call_tool, FsmPid, Ref, Id, Name, Args}, State) ->
-    lager:info("call_tool queued, ref=~p, tool=~s, req_id=~s",
-                [Ref, Name, Id]),
+    lager:info("call_tool queued, ref=~p, tool=~s, req_id=~s", [Ref, Name, Id]),
     BizReq = #{kind => tool_exec,
                req_id => Id,
                tool_name => Name,
                arguments_json => Args},
     Payload = pb_codec:encode_req(BizReq),
-    enqueue_and_maybe_send({Ref, FsmPid, tool, Id, Payload, ?TOOL_TIMEOUT},
-                           State);
+    Item = {Ref, FsmPid, tool, Id, Payload, ?TOOL_TIMEOUT},
+    {noreply, dispatch(State, Item)};
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
-%% Port 响应回包: {data, Bin} 是 {packet, 4} 模式下 Erlang 自动去掉长度前缀的负载
-handle_info({Port, {data, Bin}}, #state{port = Port,
-                                        current = {Ref, FsmPid, Kind, ReqId},
-                                        timer = TRef} = State) ->
-    lager:info("port data received: bytes=~p, ref=~p, kind=~p",
-                [byte_size(Bin), Ref, Kind]),
-    %% 取消当前在途请求的超时计时器
-    _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
-    %% 解码 protobuf 响应 -> 业务 Map
-    Resp = pb_codec:decode_resp(Bin),
-    lager:debug("decoded resp, kind=~p, content_size=~p",
-                [maps:get(kind, Resp, unknown),
-                 byte_size(maps:get(content, Resp, <<>>))]),
-    %% 按 Kind 投回对应 FSM
-    case Kind of
-        llm   -> gen_statem:cast(FsmPid, {llm_response, Ref, Resp});
-        tool  -> gen_statem:cast(FsmPid, {tool_result, ReqId, Resp})
+%% 建立整个连接池
+handle_info(connect_all, #state{addr = Addr, pool_size = N} = State) ->
+    Conns = lists:foldl(fun(_, Acc) ->
+        case connect_one(Addr) of
+            {ok, Sock} ->
+                [#conn{socket = Sock, state = idle} | Acc];
+            {error, Reason} ->
+                lager:warning("pool connect failed: ~p, will retry in ~pms",
+                              [Reason, ?RECONNECT_DELAY]),
+                timer:send_after(?RECONNECT_DELAY, reconnect),
+                Acc
+        end
+    end, [], lists:seq(1, N)),
+    lager:info("pool connected: ~p/~p connections", [length(Conns), N]),
+    %% 连接池建好后, 派发队列中等待的请求
+    State1 = State#state{conns = Conns},
+    {noreply, dispatch_next(State1)};
+
+%% 重连 (个别连接断开后重连)
+handle_info({reconnect, Idx}, #state{addr = Addr, conns = Conns} = State) ->
+    case connect_one(Addr) of
+        {ok, Sock} ->
+            NewConn = #conn{socket = Sock, state = idle},
+            %% 替换指定位置的连接 (Idx 从 1 开始)
+            Conns1 = lists:sublist(Conns, Idx - 1) ++ [NewConn] ++ lists:nthtail(Idx, Conns),
+            lager:info("reconnected pool slot ~p", [Idx]),
+            {noreply, dispatch_next(State#state{conns = Conns1})};
+        {error, Reason} ->
+            lager:warning("reconnect slot ~p failed: ~p, retry in ~pms",
+                          [Idx, Reason, ?RECONNECT_DELAY]),
+            timer:send_after(?RECONNECT_DELAY, {reconnect, Idx}),
+            {noreply, State}
+    end;
+
+%% 全局重连 (init 时全部失败)
+handle_info(reconnect, #state{addr = Addr, pool_size = N} = State) ->
+    case connect_one(Addr) of
+        {ok, Sock} ->
+            %% 第一个连接成功, 尝试建立剩余
+            Conns = [#conn{socket = Sock, state = idle}],
+            self() ! {connect_rest, 2, N},
+            lager:info("first connection established, building rest of pool"),
+            {noreply, dispatch_next(State#state{conns = Conns})};
+        {error, Reason} ->
+            lager:warning("reconnect failed: ~p, retry in ~pms",
+                          [Reason, ?RECONNECT_DELAY]),
+            timer:send_after(?RECONNECT_DELAY, reconnect),
+            {noreply, State}
+    end;
+
+%% 逐步建立剩余连接
+handle_info({connect_rest, Idx, N}, #state{addr = Addr, conns = Conns} = State) when Idx =< N ->
+    case connect_one(Addr) of
+        {ok, Sock} ->
+            Conns1 = Conns ++ [#conn{socket = Sock, state = idle}],
+            self() ! {connect_rest, Idx + 1, N},
+            {noreply, dispatch_next(State#state{conns = Conns1})};
+        {error, _Reason} ->
+            %% 单个失败不影响整体, 跳过继续
+            self() ! {connect_rest, Idx + 1, N},
+            {noreply, State}
+    end;
+handle_info({connect_rest, _Idx, _N}, State) ->
+    {noreply, State};
+
+%% TCP 响应: {tcp, Socket, Bin} 是 {packet, 4} 模式下自动去掉长度前缀的负载
+handle_info({tcp, Sock, Bin}, #state{pending = Pending, timers = Timers} = State) ->
+    case maps:get(Sock, Pending, undefined) of
+        {Ref, FsmPid, Kind, ReqId} ->
+            TRef = maps:get(Sock, Timers, undefined),
+            _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
+            %% 解码 protobuf 响应 -> 业务 Map
+            Resp = pb_codec:decode_resp(Bin),
+            lager:info("tcp response received: bytes=~p, ref=~p, kind=~p",
+                        [byte_size(Bin), Ref, Kind]),
+            %% 按 Kind 投回对应 FSM
+            case Kind of
+                llm  -> gen_statem:cast(FsmPid, {llm_response, Ref, Resp});
+                tool -> gen_statem:cast(FsmPid, {tool_result, ReqId, Resp})
+            end,
+            %% 连接回 idle
+            Conns = mark_conn(State#state.conns, Sock, idle),
+            NewState = State#state{conns = Conns,
+                                   pending = maps:remove(Sock, Pending),
+                                   timers = maps:remove(Sock, Timers)},
+            %% 发下一条排队请求
+            {noreply, dispatch_next(NewState)};
+        undefined ->
+            %% 未知 socket 的数据, 忽略
+            lager:warning("tcp data from unknown socket, ignoring"),
+            {noreply, State}
+    end;
+
+%% 连接断开
+handle_info({tcp_closed, Sock}, #state{pending = Pending, timers = Timers, conns = Conns} = State) ->
+    lager:warning("tcp connection closed: socket=~p", [Sock]),
+    %% 通知等待中的 FSM 断连
+    case maps:get(Sock, Pending, undefined) of
+        {Ref, FsmPid, _Kind, _ReqId} ->
+            TRef = maps:get(Sock, Timers, undefined),
+            _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
+            gen_statem:cast(FsmPid, {bridge_disconnect});
+        undefined ->
+            ok
     end,
-    %% 发下一条排队请求
-    {noreply, dispatch_next(State#state{current = undefined, timer = undefined})};
+    %% 标记连接为断开 (socket=undefined), 异步重连
+    Idx = index_of_conn(Conns, Sock),
+    Conns1 = case Idx of
+        0 -> Conns;
+        _ -> lists:sublist(Conns, Idx - 1) ++
+             [#conn{socket = undefined, state = idle}] ++
+             lists:nthtail(Idx, Conns)
+    end,
+    case Idx of
+        0 -> ok;
+        _ -> timer:send_after(?RECONNECT_DELAY, {reconnect, Idx})
+    end,
+    {noreply, State#state{conns = Conns1,
+                          pending = maps:remove(Sock, Pending),
+                          timers = maps:remove(Sock, Timers)}};
 
-%% 调试: 收到任何 Port 消息但 current 不匹配时打印
-handle_info({Port, Other}, #state{port = Port} = State) ->
-    lager:warning("unexpected port msg: ~p", [Other]),
-    {noreply, State};
+%% TCP 错误
+handle_info({tcp_error, Sock, Reason}, State) ->
+    lager:warning("tcp error: socket=~p reason=~p", [Sock, Reason]),
+    %% 当作 closed 处理
+    handle_info({tcp_closed, Sock}, State);
 
-%% Port 进程退出: Go 侧崩溃, 通知所有等待中的 FSM 并尝试重启 Port
-handle_info({Port, {exit_status, Status}}, #state{port = Port} = State) ->
-    lager:warning("eion-tools server exited: status=~p, restarting port", [Status]),
-    notify_all_disconnect(State),
-    ServerBin = application:get_env(hermes_brains, eion_tools_bin,
-                                    "eion-tools-server"),
-    NewPort = erlang:open_port({spawn, ServerBin},
-                               [binary, {packet, 4}, use_stdio, exit_status]),
-    lager:info("port reopened, new port=~p", [NewPort]),
-    {noreply, #state{port = NewPort}};
+%% 当前在途请求超时: 通知对应 FSM 断连, 连接回 idle
+handle_info({timeout, TRef, {req, Sock, Ref}}, #state{timers = Timers,
+                                                       pending = Pending} = State) ->
+    case maps:get(Sock, Timers, undefined) of
+        TRef ->
+            case maps:get(Sock, Pending, undefined) of
+                {Ref, FsmPid, _Kind, _ReqId} ->
+                    lager:warning("request timeout, ref=~p, notifying fsm=~p", [Ref, FsmPid]),
+                    gen_statem:cast(FsmPid, {bridge_disconnect});
+                _ ->
+                    ok
+            end,
+            Conns = mark_conn(State#state.conns, Sock, idle),
+            {noreply, dispatch_next(State#state{conns = Conns,
+                                                pending = maps:remove(Sock, Pending),
+                                                timers = maps:remove(Sock, Timers)})};
+        _ ->
+            {noreply, State}
+    end;
 
-%% 当前在途请求超时: 通知对应 FSM 断连, 发下一条
-handle_info({timeout, TRef, {req, Ref}}, #state{timer = TRef,
-                                                 current = {Ref, FsmPid, _Kind, _ReqId}} = State) ->
-    lager:warning("request timeout, ref=~p, notifying fsm=~p", [Ref, FsmPid]),
-    gen_statem:cast(FsmPid, {bridge_disconnect}),
-    {noreply, dispatch_next(State#state{current = undefined, timer = undefined})};
-
-%% 兜底: 已取消的超时消息等
-handle_info({timeout, _TRef, {req, _Ref}}, State) ->
-    {noreply, State};
-
+%% 兜底
 handle_info(_Info, State) ->
     {noreply, State}.
+
+terminate(_Reason, State) ->
+    %% 关闭所有连接
+    lists:foreach(fun(#conn{socket = Sock}) ->
+        case Sock of
+            undefined -> ok;
+            _ -> catch gen_tcp:close(Sock)
+        end
+    end, State#state.conns),
+    ok.
+
+code_change(_OldVsn, State, _Extra) ->
+    {ok, State}.
 
 %%%===================================================================
 %%% 内部函数
 %%%===================================================================
 
-%% 入队请求: 如果当前无在途请求, 立即发送; 否则排到队列尾部
-enqueue_and_maybe_send(Item, #state{current = undefined} = State) ->
-    {noreply, send_item(Item, State)};
-enqueue_and_maybe_send(Item, #state{queue = Q} = State) ->
-    {noreply, State#state{queue = queue:in(Item, Q)}}.
+%% 解析 Eion-tools server 地址
+resolve_addr() ->
+    Addr = case application:get_env(hermes_brains, eion_tools_addr) of
+        {ok, A} when is_list(A), A =/= "" -> A;
+        _ ->
+            case application:get_env(hermes_brains, eion_tools_addr_file) of
+                {ok, File} when is_list(File), File =/= "" -> read_addr_file(File);
+                _ -> ?DEFAULT_ADDR
+            end
+    end,
+    PoolSize = application:get_env(hermes_brains, eion_tools_pool_size, ?DEFAULT_POOL_SIZE),
+    {Addr, PoolSize}.
 
-%% 实际发送: 把 Payload 写到 Port, 启动超时计时器, 设置 current。
-%% 返回新的 State (不包 {noreply, ...}, 由调用方按需包装)。
-send_item({Ref, FsmPid, Kind, ReqId, Payload, TimeoutMs}, #state{port = Port} = State) ->
-    Port ! {self(), {command, Payload}},
-    TRef = erlang:start_timer(TimeoutMs, self(), {req, Ref}),
-    State#state{current = {Ref, FsmPid, Kind, ReqId}, timer = TRef}.
+%% 从端口文件读取地址 (文件内容: "127.0.0.1:12345" 或 "/tmp/xxx.sock")
+read_addr_file(File) ->
+    case file:read_file(File) of
+        {ok, Bin} ->
+            Addr = string:trim(binary_to_list(Bin)),
+            lager:info("read addr from file ~s: ~s", [File, Addr]),
+            Addr;
+        {error, Reason} ->
+            lager:warning("read addr file ~s failed: ~p, using default", [File, Reason]),
+            ?DEFAULT_ADDR
+    end.
 
-%% 派发下一条排队请求 (current 已清空时调用)
-dispatch_next(#state{queue = Q} = State) ->
-    case queue:out(Q) of
-        {{value, Item}, Q1} ->
-            send_item(Item, State#state{queue = Q1});
-        {empty, _Q} ->
-            %% 队列空, 进入空闲
+%% 建立一个 TCP 连接到 Eion-tools server
+%% {packet, 4}: Erlang 自动处理 4 字节大端长度前缀 (与 Go 侧 readFrame 对齐)
+%% {active, true}: gen_server 收 {tcp, Socket, Bin} 消息
+connect_one(Addr) ->
+    {Host, Port} = parse_addr(Addr),
+    Opts = [binary, {packet, 4}, {active, true}, {nodelay, true}],
+    gen_tcp:connect(Host, Port, Opts, 5000).
+
+%% 解析地址 "127.0.0.1:12345" -> {"127.0.0.1", 12345}
+parse_addr(Addr) ->
+    case string:split(Addr, ":") of
+        [Host, PortStr] ->
+            {Host, list_to_integer(PortStr)};
+        _ ->
+            %% 兜底: 整个当 host, 默认端口
+            {Addr, 7891}
+    end.
+
+%% 分发: 如果有 idle 连接, 立即发送; 否则排到队列尾部
+dispatch(#state{conns = Conns} = State, Item) ->
+    case find_idle_conn(Conns) of
+        {ok, Sock, Conns1} ->
+            send_item(Item, Sock, Conns1, State);
+        none ->
+            %% 无 idle 连接, 入队
+            State#state{queue = queue:in(Item, State#state.queue)}
+    end.
+
+%% 派发下一条排队请求 (有 idle 连接时)
+dispatch_next(#state{queue = Q, conns = Conns} = State) ->
+    case find_idle_conn(Conns) of
+        {ok, Sock, Conns1} ->
+            case queue:out(Q) of
+                {{value, Item}, Q1} ->
+                    send_item(Item, Sock, Conns1, State#state{queue = Q1});
+                {empty, _} ->
+                    State#state{conns = Conns1}
+            end;
+        none ->
             State
     end.
 
-%% 通知所有等待中的 FSM 断连 (包括在途请求 + 队列中的请求)
-notify_all_disconnect(#state{current = Current, queue = Q}) ->
-    PendingFsms = case Current of
-                      {_Ref, FsmPid, _Kind, _ReqId} -> [FsmPid];
-                      undefined -> []
-                  end,
-    QueuedFsms = [FsmPid || {_Ref, FsmPid, _Kind, _ReqId, _Payload, _Timeout} <-
-                            queue:to_list(Q)],
-    lists:foreach(fun(FsmPid) -> gen_statem:cast(FsmPid, {bridge_disconnect}) end,
-                  PendingFsms ++ QueuedFsms).
+%% 实际发送: 把 Payload 写到 Socket, 启动超时计时器, 记录 pending。
+send_item({Ref, FsmPid, Kind, ReqId, Payload, TimeoutMs}, Sock, Conns, State) ->
+    case gen_tcp:send(Sock, Payload) of
+        ok ->
+            TRef = erlang:start_timer(TimeoutMs, self(), {req, Sock, Ref}),
+            Conns1 = mark_conn(Conns, Sock, busy),
+            State#state{conns = Conns1,
+                        pending = maps:put(Sock, {Ref, FsmPid, Kind, ReqId}, State#state.pending),
+                        timers = maps:put(Sock, TRef, State#state.timers)};
+        {error, Reason} ->
+            lager:warning("send failed: ~p, notifying fsm=~p", [Reason, FsmPid]),
+            gen_statem:cast(FsmPid, {bridge_disconnect}),
+            %% 连接标记为断开, 触发重连
+            Idx = index_of_conn(Conns, Sock),
+            case Idx of
+                0 -> State;
+                _ ->
+                    Conns2 = lists:sublist(Conns, Idx - 1) ++
+                             [#conn{socket = undefined, state = idle}] ++
+                             lists:nthtail(Idx, Conns),
+                    timer:send_after(?RECONNECT_DELAY, {reconnect, Idx}),
+                    State#state{conns = Conns2}
+            end
+    end.
 
-terminate(_Reason, #state{port = Port}) ->
-    %% 优雅关闭 Port (发送 exit 给 Go 进程)
-    catch erlang:port_close(Port),
-    ok.
+%% 找第一个 idle 且有 socket 的连接, 返回 {ok, Sock, Conns1} (Conns1 已标记 busy)
+find_idle_conn(Conns) ->
+    find_idle_conn(Conns, 1, []).
 
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
+find_idle_conn([#conn{socket = Sock, state = idle} = C | Rest], Idx, Acc) when Sock =/= undefined ->
+    Conns1 = lists:reverse(Acc) ++ [C#conn{state = busy}] ++ Rest,
+    {ok, Sock, Conns1};
+find_idle_conn([C | Rest], Idx, Acc) ->
+    find_idle_conn(Rest, Idx + 1, [C | Acc]);
+find_idle_conn([], _Idx, _Acc) ->
+    none.
+
+%% 标记指定 socket 的连接状态
+mark_conn(Conns, Sock, NewState) ->
+    [case C#conn.socket of
+        Sock -> C#conn{state = NewState};
+        _ -> C
+     end || C <- Conns].
+
+%% 找指定 socket 在连接池中的索引 (1-based), 0 = 未找到
+index_of_conn(Conns, Sock) ->
+    index_of_conn(Conns, Sock, 1).
+
+index_of_conn([#conn{socket = S} | _], Sock, Idx) when S =:= Sock -> Idx;
+index_of_conn([_ | Rest], Sock, Idx) -> index_of_conn(Rest, Sock, Idx + 1);
+index_of_conn([], _Sock, _Idx) -> 0.

@@ -1,12 +1,15 @@
 // Command server 是 Eion-tools 的入口。
 //
-// 它初始化 dispatcher、注册示例工具，并启动一个 stdin/stdout 二进制帧循环，
-// 作为 Erlang 端口通信的占位实现：
+// 它初始化 dispatcher、注册示例工具, 并启动一个 TCP(Windows)/UDS(Unix) 服务,
+// 接受连接, 每个连接独立 goroutine 跑二进制帧循环:
 //
 //	读取 4 字节大端长度前缀 + protobuf 负载 → dispatch → 写回同样格式的响应。
 //
-// 设计原则：Go 侧无状态、无内部循环；每帧对应一次原子请求 → 一次响应。
-// TODO: 后续将替换为真实的 Erlang port driver / 异步 IPC。
+// 设计原则: Go 侧无状态、无内部循环; 每帧对应一次原子请求 → 一次响应。
+// 多连接并发: Agent(Erlang) 侧用连接池, 多个请求可并行走不同连接。
+//
+// 地址发现: listen 后把实际地址写入端口文件 (默认 bin/run/eion-tools.addr,
+// 由 EION_TOOLS_ADDR_FILE 覆盖), 供客户端读取连接。
 package main
 
 import (
@@ -15,7 +18,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"os"
+	"os/signal"
+	"runtime"
 
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
@@ -30,20 +36,104 @@ func main() {
 	logging.Init()
 	defer func() { _ = logging.Logger.Sync() }()
 
-	// 1. 初始化 dispatcher，注册示例工具 get_weather
+	// 1. 初始化 dispatcher, 注册示例工具 get_weather
 	d := dispatcher.New()
 	name, desc, params, handler := tool.GetWeatherHandler()
 	d.ToolWrapper().Register(name, desc, params, handler)
 
-	// 2. 启动 stdin/stdout 二进制帧循环（Erlang 端口通信占位实现）
-	logging.Logger.Info("eion-tools server: stdin/stdout framing loop started")
-	if err := runFramingLoop(os.Stdin, os.Stdout, d); err != nil {
-		logging.Logger.Fatal("framing loop exited", zap.Error(err))
+	// 2. 解析监听地址 (环境变量 EION_TOOLS_ADDR 覆盖默认值)
+	addr := os.Getenv("EION_TOOLS_ADDR")
+	if addr == "" {
+		addr = defaultAddr()
+	}
+
+	// 3. Unix UDS: listen 前清理旧 socket 文件 (否则 "address already in use")
+	if network() == "unix" {
+		_ = os.Remove(addr)
+	}
+
+	// 4. listen
+	ln, err := net.Listen(network(), addr)
+	if err != nil {
+		logging.Logger.Fatal("listen failed", zap.String("net", network()), zap.String("addr", addr), zap.Error(err))
+	}
+	defer ln.Close()
+
+	// 5. 取实际地址 (port 0 -> ephemeral) 写入端口文件, 供客户端发现
+	actualAddr := ln.Addr().String()
+	if err := writeAddrFile(actualAddr); err != nil {
+		logging.Logger.Warn("write addr file failed", zap.Error(err))
+	}
+
+	logging.Logger.Info("eion-tools server listening",
+		zap.String("net", network()),
+		zap.String("addr", actualAddr),
+		zap.String("runtime", runtime.GOOS),
+	)
+
+	// 6. accept 循环 (每连接一个 goroutine, 支持连接池并发)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		for {
+			conn, err := ln.Accept()
+			if err != nil {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					logging.Logger.Error("accept failed", zap.Error(err))
+					return
+				}
+			}
+			logging.Logger.Info("connection accepted", zap.String("remote", conn.RemoteAddr().String()))
+			go handleConn(ctx, conn, d)
+		}
+	}()
+
+	// 7. 等待信号优雅关闭
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt)
+	if sig := sigForTerm(); sig != nil {
+		signal.Notify(sigCh, sig)
+	}
+	sig := <-sigCh
+	logging.Logger.Info("shutting down on signal", zap.String("signal", sig.String()))
+	cancel()
+	ln.Close()
+}
+
+// handleConn 处理单个连接: 跑帧循环直到连接关闭。
+func handleConn(ctx context.Context, conn net.Conn, d *dispatcher.Command_Dispatcher) {
+	defer conn.Close()
+	// 用 done chan 让 ctx 取消时关闭 conn
+	done := make(chan struct{})
+	defer close(done)
+	go func() {
+		select {
+		case <-ctx.Done():
+			_ = conn.Close()
+		case <-done:
+		}
+	}()
+	if err := runFramingLoop(conn, conn, d); err != nil {
+		logging.Logger.Info("connection framing loop ended", zap.Error(err))
 	}
 }
 
-// runFramingLoop 读取 4 字节大端长度前缀 + protobuf 负载，dispatch 后回写同样格式的响应。
-// 这是与 Erlang 端口通信的最简占位实现；后续将替换为真实的 Erlang port driver。
+// writeAddrFile 把实际监听地址写入端口文件, 供客户端发现。
+// 文件路径: EION_TOOLS_ADDR_FILE 环境变量, 默认 "eion-tools.addr" (相对 cwd)。
+func writeAddrFile(addr string) error {
+	path := os.Getenv("EION_TOOLS_ADDR_FILE")
+	if path == "" {
+		path = "eion-tools.addr"
+	}
+	return os.WriteFile(path, []byte(addr), 0644)
+}
+
+// runFramingLoop 读取 4 字节大端长度前缀 + protobuf 负载, dispatch 后回写同样格式的响应。
+// r/w 通常是同一个 net.Conn (服务端) 或 os.Stdin/Stdout (兼容旧 stdin 模式)。
 func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) error {
 	for {
 		req, err := readFrame(r)
@@ -58,7 +148,7 @@ func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) 
 		agentReq := &hermes.AgentRequest{}
 		if err := proto.Unmarshal(req, agentReq); err != nil {
 			logging.Logger.Error("unmarshal failed", zap.Error(err))
-			// 解码失败：构造一个错误响应回写，避免 Erlang 端阻塞等待
+			// 解码失败: 构造一个错误响应回写, 避免客户端阻塞等待
 			errResp := &hermes.AgentResponse{
 				Payload: &hermes.AgentResponse_ToolExec{
 					ToolExec: &hermes.ToolExecResponse{
@@ -87,7 +177,7 @@ func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) 
 			)
 		}
 
-		// dispatcher 内部已有 Panic_Guard，理论上不会 panic 出来
+		// dispatcher 内部已有 Panic_Guard, 理论上不会 panic 出来
 		resp := d.Dispatch(context.Background(), agentReq)
 		if resp == nil {
 			resp = &hermes.AgentResponse{
@@ -104,7 +194,7 @@ func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) 
 	}
 }
 
-// readFrame 读取 4 字节大端长度前缀，再读取对应长度的负载。
+// readFrame 读取 4 字节大端长度前缀, 再读取对应长度的负载。
 func readFrame(r io.Reader) ([]byte, error) {
 	var lenBuf [4]byte
 	if _, err := io.ReadFull(r, lenBuf[:]); err != nil {
@@ -135,7 +225,7 @@ func writeFrame(w io.Writer, msg proto.Message) error {
 	if _, err := w.Write(buf); err != nil {
 		return err
 	}
-	// 对 os.Stdout 等可 Sync 的目标进行 flush，确保 Erlang 端能及时读到一帧完整数据
+	// 对可 Sync 的目标进行 flush (net.Conn 无 Sync, os.Stdout 有)
 	if f, ok := w.(interface{ Sync() error }); ok {
 		_ = f.Sync()
 	}

@@ -352,7 +352,14 @@ function Invoke-Agent {
 
     # 拷贝 _build\default\lib\ 下所有 OTP app (含 hermes_brains + deps) 到 erl_bin\
     $libDir = Join-Path $AgentDir "_build\default\lib"
-    Copy-Item -Path "$libDir\*" -Destination $ErlBin -Recurse -Force
+    # 用 robocopy 而非 Copy-Item -Recurse: rebar3 在 _build 下用 junction (ReparsePoint) 链接
+    # src/include/priv 到源码目录, 其中 priv junction 可能指向不存在的目标 (hermes_brains 无 priv),
+    # Copy-Item 会报 FileNotFound 中断; robocopy /XJ 跳过所有 junction, 只拷贝真实文件。
+    # erl 运行时只需 ebin/*.beam + .app, 不需 src/include/priv, 跳过 junction 不影响运行。
+    # robocopy exit code: 0=无变化 1=拷贝成功 2=多余文件 3=1+2; >=8 才是真正错误。
+    & robocopy $libDir $ErlBin /E /XJ /NFL /NDL /NJH /NJS /NP | Out-Null
+    if ($LASTEXITCODE -ge 8) { throw "robocopy _build\lib -> erl_bin 失败 (exit $LASTEXITCODE)" }
+    $global:LASTEXITCODE = 0
     # 拷贝 sys.config (给 prod 模式)
     Copy-Item -Path (Join-Path $AgentDir "config\sys.config") `
               -Destination (Join-Path $ErlBin "config\sys.config") -Force

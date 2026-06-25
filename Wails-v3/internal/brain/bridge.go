@@ -122,6 +122,11 @@ func (b *Bridge) Start(parentCtx context.Context) error {
 	// 字符串需用双引号包裹 (与 start.sh 的 \"\"$VAR\"\" 等价), 否则路径里的 / 会被当成语法错误。
 	mnesiaDir := filepath.Join(wDir, "data", "mnesia")
 	eionToolsBin := eionToolsBinPath()
+	// 传给 erl 命令行 (-hermes_brains ... "路径") 的路径会被 Erlang 当 string literal 解析,
+	// Windows 反斜杠是转义字符会损坏路径。统一转成 Erlang 安全形式 (见 toErlangPath)。
+	mnesiaDir = toErlangPath(mnesiaDir)
+	eionToolsBin = toErlangPath(eionToolsBin)
+	sysConfig = toErlangPath(sysConfig)
 	args := []string{
 		"-noshell",
 		"-sname", "hermes_brains",
