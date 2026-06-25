@@ -1,0 +1,17 @@
+{application, hermes_brains,
+ [{description, "Agent-brains: Hermes Agent 系统的 Erlang/OTP 编排大脑"},
+  {vsn, "0.1.0"},
+  {registered, [hermes_brains_sup]},
+  {mod, {hermes_brains_app, []}},
+  {applications, [kernel, stdlib]},
+  {modules, [hermes_brains_app, hermes_brains_sup, agent_sup, agent_fsm,
+             context_assembler, bridge_manager, pb_codec, state_store]},
+  {env, [
+      %% Go 侧 Eion-tools 的连接配置 (分布式节点名 / 端口)
+      {go_node, 'eion_tools@localhost'},
+      %% LLM provider 凭证 (由 bridge_manager 注入, 不进入 FSM 状态)
+      {api_base, <<>>},
+      {api_key, <<>>}
+  ]},
+  {licenses, ["Apache-2.0"]}
+ ]}.

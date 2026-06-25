@@ -1,0 +1,20 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "hermes",
+  "outputfilename": "Hermes",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "light-code-ai",
+    "email": ""
+  },
+  "info": {
+    "companyName": "Hermes",
+    "productName": "Hermes Agent Workbench",
+    "productVersion": "0.1.0",
+    "copyright": "Copyright © 2026",
+    "comments": "Single-brain agent workbench — Erlang orchestrates, Go/Eino executes."
+  }
+}
