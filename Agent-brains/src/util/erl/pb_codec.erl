@@ -72,7 +72,9 @@ to_struct(#{kind := llm_infer} = M) ->
                api_base => maps:get(api_base, M, <<>>),
                api_key => maps:get(api_key, M, <<>>),
                messages => Messages,
-               tools => Tools},
+               tools => Tools,
+               %% Task 4: stream=true 让 Go 侧用 Eino Stream API 按 chunk 流式输出
+               stream => maps:get(stream, M, false)},
     #{llm_infer => LlmReq};
 to_struct(#{kind := tool_exec} = M) ->
     %% ToolExecRequest 包装进 AgentRequest.tool_exec
@@ -111,7 +113,7 @@ tool_desc_to_struct(T) ->
 
 -spec from_struct(map()) -> map().
 from_struct(#{llm_infer := Resp}) ->
-    %% LLMInferResponse 分支
+    %% LLMInferResponse 分支 (终态: stream=true 时的最终响应, 或 stream=false 的完整响应)
     %% 注意: reasoning_content 是 v4-pro 推理模型新增字段，可能在普通模型响应中缺失
     #{kind => llm_infer,
       content => maps:get(content, Resp, <<>>),
@@ -119,6 +121,12 @@ from_struct(#{llm_infer := Resp}) ->
       prompt_tokens => maps:get(prompt_tokens, Resp, 0),
       completion_tokens => maps:get(completion_tokens, Resp, 0),
       reasoning_content => maps:get(reasoning_content, Resp, <<>>)};
+from_struct(#{llm_chunk := Chunk}) ->
+    %% Task 4: LlmChunk 流式增量 (非终态, 紧随其后必有 llm_infer 终态)
+    %% bridge_manager 收到后转发 {llm_chunk, Ref, ChunkMap} 给 FSM, 不释放连接
+    #{kind => llm_chunk,
+      content => maps:get(content, Chunk, <<>>),
+      reasoning_content => maps:get(reasoning_content, Chunk, <<>>)};
 from_struct(#{tool_exec := Resp}) ->
     %% ToolExecResponse 分支 (error 非空表示失败)
     #{kind => tool_exec,

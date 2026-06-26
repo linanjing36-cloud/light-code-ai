@@ -223,27 +223,56 @@ handle_info({connect_rest, _Idx, _N}, State) ->
     {noreply, State};
 
 %% TCP 响应: {tcp, Socket, Bin} 是 {packet, 4} 模式下自动去掉长度前缀的负载
+%%
+%% Task 4 流式: 收到的可能是 llm_chunk (非终态) 或终态 (llm_infer / tool_exec)。
+%%   - llm_chunk: 转发 {llm_chunk, Ref, ChunkMap} 给 FSM, 不取消 timer, 不释放连接
+%%   - llm_infer (终态): 转发 {llm_response, Ref, Resp}, 取消 timer, 释放连接, dispatch_next
+%%   - tool_exec (终态): 转发 {tool_result, ReqId, Resp}, 取消 timer, 释放连接, dispatch_next
 handle_info({tcp, Sock, Bin}, #state{pending = Pending, timers = Timers} = State) ->
     case maps:get(Sock, Pending, undefined) of
         {Ref, FsmPid, Kind, ReqId} ->
-            TRef = maps:get(Sock, Timers, undefined),
-            _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
-            %% 解码 protobuf 响应 -> 业务 Map
             Resp = pb_codec:decode_resp(Bin),
-            lager:info("tcp response received: socket=~p bytes=~p ref=~p kind=~p req_id=~p",
-                        [Sock, byte_size(Bin), Ref, Kind, ReqId]),
-            %% 按 Kind 投回对应 FSM
-            case Kind of
-                llm  -> gen_statem:cast(FsmPid, {llm_response, Ref, Resp});
-                tool -> gen_statem:cast(FsmPid, {tool_result, ReqId, Resp})
-            end,
-            %% 连接回 idle
-            Conns = mark_conn(State#state.conns, Sock, idle),
-            NewState = State#state{conns = Conns,
-                                   pending = maps:remove(Sock, Pending),
-                                   timers = maps:remove(Sock, Timers)},
-            %% 发下一条排队请求
-            {noreply, dispatch_next(NewState)};
+            RespKind = maps:get(kind, Resp, unknown),
+            lager:info("tcp response received: socket=~p bytes=~p ref=~p kind=~p req_id=~p resp_kind=~p",
+                        [Sock, byte_size(Bin), Ref, Kind, ReqId, RespKind]),
+            case {Kind, RespKind} of
+                {llm, llm_chunk} ->
+                    %% 流式 chunk (非终态): 转发, 保持连接 busy, 不动 timer
+                    gen_statem:cast(FsmPid, {llm_chunk, Ref, Resp}),
+                    {noreply, State};
+                {llm, llm_infer} ->
+                    %% LLM 终态: 取消 timer, 释放连接, 转发终态响应
+                    TRef = maps:get(Sock, Timers, undefined),
+                    _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
+                    gen_statem:cast(FsmPid, {llm_response, Ref, Resp}),
+                    Conns = mark_conn(State#state.conns, Sock, idle),
+                    NewState = State#state{conns = Conns,
+                                           pending = maps:remove(Sock, Pending),
+                                           timers = maps:remove(Sock, Timers)},
+                    {noreply, dispatch_next(NewState)};
+                {tool, tool_exec} ->
+                    %% 工具终态: 取消 timer, 释放连接, 转发结果
+                    TRef = maps:get(Sock, Timers, undefined),
+                    _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
+                    gen_statem:cast(FsmPid, {tool_result, ReqId, Resp}),
+                    Conns = mark_conn(State#state.conns, Sock, idle),
+                    NewState = State#state{conns = Conns,
+                                           pending = maps:remove(Sock, Pending),
+                                           timers = maps:remove(Sock, Timers)},
+                    {noreply, dispatch_next(NewState)};
+                _Other ->
+                    %% 类型不匹配 (如 llm 请求收到 tool_exec 响应): 当作异常, 释放连接
+                    lager:warning("unexpected response kind=~p for request kind=~p, releasing conn",
+                                  [RespKind, Kind]),
+                    TRef = maps:get(Sock, Timers, undefined),
+                    _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
+                    gen_statem:cast(FsmPid, {bridge_disconnect}),
+                    Conns = mark_conn(State#state.conns, Sock, idle),
+                    NewState = State#state{conns = Conns,
+                                           pending = maps:remove(Sock, Pending),
+                                           timers = maps:remove(Sock, Timers)},
+                    {noreply, dispatch_next(NewState)}
+            end;
         undefined ->
             %% 未知 socket 的数据, 忽略
             lager:warning("tcp data from unknown socket, ignoring"),

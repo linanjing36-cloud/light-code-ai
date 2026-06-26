@@ -7,7 +7,7 @@
 
 %% 顶层监督者: rest_for_one 策略。
 %%
-%% 子进程顺序: timing_wheel -> mnesia_store -> state_store -> bridge_manager -> agent_sup
+%% 子进程顺序: timing_wheel -> mnesia_store -> state_store -> bridge_manager -> agent_sup -> case_store
 %% 选择 rest_for_one 的理由:
 %%   - timing_wheel 崩溃 → 所有周期/一次性事件丢失, mnesia_store 的 snapshot tick
 %%     也来自这里, 所以后续全部要重启重新注册 timer。
@@ -17,6 +17,9 @@
 %%     因此 bridge_manager / agent_sup 及其下所有 FSM 必须一起重启
 %%     (state_store 重启后会从 mnesia_store 恢复 ETS 快照)。
 %%   - 反之 agent_sup 崩溃不会影响 state_store 的 ETS 表。
+%%   - case_store 置于末尾: 它崩溃仅自重启 (其 Mnesia 表 disc_copies 持久化,
+%%     重启不丢数据), 不影响 agent_sup 下面的 FSM。agent_fsm 查询 case_store
+%%     走防御性匹配 ({error,_} -> 跳过注入), 所以 case_store 短暂不可用不影响 ReAct。
 
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
@@ -70,6 +73,16 @@ init([]) ->
                  type => supervisor,
                  modules => [agent_sup]},
 
-    %% 启动顺序: timing_wheel -> mnesia_store -> state_store -> bridge_manager -> agent_sup
+    %% Case_Store: 失败案例库 (Task 1 负面案例记忆)
+    %% 置于末尾: 崩溃仅自重启, 不影响 agent_sup 下的 FSM。
+    %% 依赖 mnesia app (mnesia_store 已先行启动), init 调 create_table (幂等)。
+    CaseStore = #{id => case_store,
+                  start => {case_store, start_link, []},
+                  restart => permanent,
+                  shutdown => 5000,
+                  type => worker,
+                  modules => [case_store]},
+
+    %% 启动顺序: timing_wheel -> mnesia_store -> state_store -> bridge_manager -> agent_sup -> case_store
     %% rest_for_one: 任何前置崩溃, 后续全部重启
-    {ok, {SupFlags, [TimingWheel, MnesiaStore, StateStore, BridgeManager, AgentSup]}}.
+    {ok, {SupFlags, [TimingWheel, MnesiaStore, StateStore, BridgeManager, AgentSup, CaseStore]}}.

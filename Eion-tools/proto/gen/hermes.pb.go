@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v6.33.0
-// source: hermes.proto
+// source: proto/hermes.proto
 
 package hermes
 
@@ -34,7 +34,7 @@ type Message struct {
 
 func (x *Message) Reset() {
 	*x = Message{}
-	mi := &file_hermes_proto_msgTypes[0]
+	mi := &file_proto_hermes_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -46,7 +46,7 @@ func (x *Message) String() string {
 func (*Message) ProtoMessage() {}
 
 func (x *Message) ProtoReflect() protoreflect.Message {
-	mi := &file_hermes_proto_msgTypes[0]
+	mi := &file_proto_hermes_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -59,7 +59,7 @@ func (x *Message) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Message.ProtoReflect.Descriptor instead.
 func (*Message) Descriptor() ([]byte, []int) {
-	return file_hermes_proto_rawDescGZIP(), []int{0}
+	return file_proto_hermes_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Message) GetRole() string {
@@ -102,7 +102,7 @@ type ToolCall struct {
 
 func (x *ToolCall) Reset() {
 	*x = ToolCall{}
-	mi := &file_hermes_proto_msgTypes[1]
+	mi := &file_proto_hermes_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -114,7 +114,7 @@ func (x *ToolCall) String() string {
 func (*ToolCall) ProtoMessage() {}
 
 func (x *ToolCall) ProtoReflect() protoreflect.Message {
-	mi := &file_hermes_proto_msgTypes[1]
+	mi := &file_proto_hermes_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -127,7 +127,7 @@ func (x *ToolCall) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ToolCall.ProtoReflect.Descriptor instead.
 func (*ToolCall) Descriptor() ([]byte, []int) {
-	return file_hermes_proto_rawDescGZIP(), []int{1}
+	return file_proto_hermes_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *ToolCall) GetId() string {
@@ -163,7 +163,7 @@ type ToolDesc struct {
 
 func (x *ToolDesc) Reset() {
 	*x = ToolDesc{}
-	mi := &file_hermes_proto_msgTypes[2]
+	mi := &file_proto_hermes_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -175,7 +175,7 @@ func (x *ToolDesc) String() string {
 func (*ToolDesc) ProtoMessage() {}
 
 func (x *ToolDesc) ProtoReflect() protoreflect.Message {
-	mi := &file_hermes_proto_msgTypes[2]
+	mi := &file_proto_hermes_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -188,7 +188,7 @@ func (x *ToolDesc) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ToolDesc.ProtoReflect.Descriptor instead.
 func (*ToolDesc) Descriptor() ([]byte, []int) {
-	return file_hermes_proto_rawDescGZIP(), []int{2}
+	return file_proto_hermes_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ToolDesc) GetName() string {
@@ -221,13 +221,14 @@ type LLMInferRequest struct {
 	ApiKey        string                 `protobuf:"bytes,3,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
 	Messages      []*Message             `protobuf:"bytes,4,rep,name=messages,proto3" json:"messages,omitempty"`
 	Tools         []*ToolDesc            `protobuf:"bytes,5,rep,name=tools,proto3" json:"tools,omitempty"`
+	Stream        bool                   `protobuf:"varint,6,opt,name=stream,proto3" json:"stream,omitempty"` // true: Go 侧按 chunk 流式输出 (LlmChunk) + 终态 LLMInferResponse; false: 一次性返回
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *LLMInferRequest) Reset() {
 	*x = LLMInferRequest{}
-	mi := &file_hermes_proto_msgTypes[3]
+	mi := &file_proto_hermes_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -239,7 +240,7 @@ func (x *LLMInferRequest) String() string {
 func (*LLMInferRequest) ProtoMessage() {}
 
 func (x *LLMInferRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_hermes_proto_msgTypes[3]
+	mi := &file_proto_hermes_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -252,7 +253,7 @@ func (x *LLMInferRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMInferRequest.ProtoReflect.Descriptor instead.
 func (*LLMInferRequest) Descriptor() ([]byte, []int) {
-	return file_hermes_proto_rawDescGZIP(), []int{3}
+	return file_proto_hermes_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *LLMInferRequest) GetModel() string {
@@ -290,7 +291,14 @@ func (x *LLMInferRequest) GetTools() []*ToolDesc {
 	return nil
 }
 
-// LLM 推理响应。
+func (x *LLMInferRequest) GetStream() bool {
+	if x != nil {
+		return x.Stream
+	}
+	return false
+}
+
+// LLM 推理响应 (一次性, 或 stream=true 时的终态)。
 type LLMInferResponse struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	Content          string                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
@@ -304,7 +312,7 @@ type LLMInferResponse struct {
 
 func (x *LLMInferResponse) Reset() {
 	*x = LLMInferResponse{}
-	mi := &file_hermes_proto_msgTypes[4]
+	mi := &file_proto_hermes_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -316,7 +324,7 @@ func (x *LLMInferResponse) String() string {
 func (*LLMInferResponse) ProtoMessage() {}
 
 func (x *LLMInferResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_hermes_proto_msgTypes[4]
+	mi := &file_proto_hermes_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -329,7 +337,7 @@ func (x *LLMInferResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LLMInferResponse.ProtoReflect.Descriptor instead.
 func (*LLMInferResponse) Descriptor() ([]byte, []int) {
-	return file_hermes_proto_rawDescGZIP(), []int{4}
+	return file_proto_hermes_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *LLMInferResponse) GetContent() string {
@@ -367,6 +375,60 @@ func (x *LLMInferResponse) GetReasoningContent() string {
 	return ""
 }
 
+// LLM 流式 chunk (仅 stream=true 时输出, 增量内容)。
+// 紧随其后必有终态 LLMInferResponse (在 AgentResponse.llm_infer 分支) 标志流结束。
+type LlmChunk struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Content          string                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`                                           // 增量正文 (与上一段拼接)
+	ReasoningContent string                 `protobuf:"bytes,2,opt,name=reasoning_content,json=reasoningContent,proto3" json:"reasoning_content,omitempty"` // 增量推理过程
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *LlmChunk) Reset() {
+	*x = LlmChunk{}
+	mi := &file_proto_hermes_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LlmChunk) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LlmChunk) ProtoMessage() {}
+
+func (x *LlmChunk) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_hermes_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LlmChunk.ProtoReflect.Descriptor instead.
+func (*LlmChunk) Descriptor() ([]byte, []int) {
+	return file_proto_hermes_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *LlmChunk) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *LlmChunk) GetReasoningContent() string {
+	if x != nil {
+		return x.ReasoningContent
+	}
+	return ""
+}
+
 // 工具执行请求。
 // req_id 用作 dispatcher 的幂等缓存键，避免同一请求被重复执行。
 type ToolExecRequest struct {
@@ -380,7 +442,7 @@ type ToolExecRequest struct {
 
 func (x *ToolExecRequest) Reset() {
 	*x = ToolExecRequest{}
-	mi := &file_hermes_proto_msgTypes[5]
+	mi := &file_proto_hermes_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -392,7 +454,7 @@ func (x *ToolExecRequest) String() string {
 func (*ToolExecRequest) ProtoMessage() {}
 
 func (x *ToolExecRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_hermes_proto_msgTypes[5]
+	mi := &file_proto_hermes_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -405,7 +467,7 @@ func (x *ToolExecRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ToolExecRequest.ProtoReflect.Descriptor instead.
 func (*ToolExecRequest) Descriptor() ([]byte, []int) {
-	return file_hermes_proto_rawDescGZIP(), []int{5}
+	return file_proto_hermes_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ToolExecRequest) GetReqId() string {
@@ -441,7 +503,7 @@ type ToolExecResponse struct {
 
 func (x *ToolExecResponse) Reset() {
 	*x = ToolExecResponse{}
-	mi := &file_hermes_proto_msgTypes[6]
+	mi := &file_proto_hermes_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -453,7 +515,7 @@ func (x *ToolExecResponse) String() string {
 func (*ToolExecResponse) ProtoMessage() {}
 
 func (x *ToolExecResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_hermes_proto_msgTypes[6]
+	mi := &file_proto_hermes_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -466,7 +528,7 @@ func (x *ToolExecResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ToolExecResponse.ProtoReflect.Descriptor instead.
 func (*ToolExecResponse) Descriptor() ([]byte, []int) {
-	return file_hermes_proto_rawDescGZIP(), []int{6}
+	return file_proto_hermes_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ToolExecResponse) GetResultJson() string {
@@ -497,7 +559,7 @@ type AgentRequest struct {
 
 func (x *AgentRequest) Reset() {
 	*x = AgentRequest{}
-	mi := &file_hermes_proto_msgTypes[7]
+	mi := &file_proto_hermes_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -509,7 +571,7 @@ func (x *AgentRequest) String() string {
 func (*AgentRequest) ProtoMessage() {}
 
 func (x *AgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_hermes_proto_msgTypes[7]
+	mi := &file_proto_hermes_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -522,7 +584,7 @@ func (x *AgentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentRequest.ProtoReflect.Descriptor instead.
 func (*AgentRequest) Descriptor() ([]byte, []int) {
-	return file_hermes_proto_rawDescGZIP(), []int{7}
+	return file_proto_hermes_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *AgentRequest) GetPayload() isAgentRequest_Payload {
@@ -566,13 +628,15 @@ func (*AgentRequest_LlmInfer) isAgentRequest_Payload() {}
 
 func (*AgentRequest_ToolExec) isAgentRequest_Payload() {}
 
-// 顶层响应包装：与 AgentRequest 的 oneof 分支一一对应。
+// 顶层响应包装：与 AgentRequest 的 oneof 分支一一对应, 加 llm_chunk 流式分支。
+// stream=true 时, Go 侧先发若干 AgentResponse{llm_chunk: ...}, 最后发 AgentResponse{llm_infer: ...} 终态。
 type AgentResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Payload:
 	//
 	//	*AgentResponse_LlmInfer
 	//	*AgentResponse_ToolExec
+	//	*AgentResponse_LlmChunk
 	Payload       isAgentResponse_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -580,7 +644,7 @@ type AgentResponse struct {
 
 func (x *AgentResponse) Reset() {
 	*x = AgentResponse{}
-	mi := &file_hermes_proto_msgTypes[8]
+	mi := &file_proto_hermes_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -592,7 +656,7 @@ func (x *AgentResponse) String() string {
 func (*AgentResponse) ProtoMessage() {}
 
 func (x *AgentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_hermes_proto_msgTypes[8]
+	mi := &file_proto_hermes_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -605,7 +669,7 @@ func (x *AgentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentResponse.ProtoReflect.Descriptor instead.
 func (*AgentResponse) Descriptor() ([]byte, []int) {
-	return file_hermes_proto_rawDescGZIP(), []int{8}
+	return file_proto_hermes_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *AgentResponse) GetPayload() isAgentResponse_Payload {
@@ -633,6 +697,15 @@ func (x *AgentResponse) GetToolExec() *ToolExecResponse {
 	return nil
 }
 
+func (x *AgentResponse) GetLlmChunk() *LlmChunk {
+	if x != nil {
+		if x, ok := x.Payload.(*AgentResponse_LlmChunk); ok {
+			return x.LlmChunk
+		}
+	}
+	return nil
+}
+
 type isAgentResponse_Payload interface {
 	isAgentResponse_Payload()
 }
@@ -645,15 +718,21 @@ type AgentResponse_ToolExec struct {
 	ToolExec *ToolExecResponse `protobuf:"bytes,2,opt,name=tool_exec,json=toolExec,proto3,oneof"`
 }
 
+type AgentResponse_LlmChunk struct {
+	LlmChunk *LlmChunk `protobuf:"bytes,3,opt,name=llm_chunk,json=llmChunk,proto3,oneof"` // 流式 chunk (非终态, 仅 stream=true)
+}
+
 func (*AgentResponse_LlmInfer) isAgentResponse_Payload() {}
 
 func (*AgentResponse_ToolExec) isAgentResponse_Payload() {}
 
-var File_hermes_proto protoreflect.FileDescriptor
+func (*AgentResponse_LlmChunk) isAgentResponse_Payload() {}
 
-const file_hermes_proto_rawDesc = "" +
+var File_proto_hermes_proto protoreflect.FileDescriptor
+
+const file_proto_hermes_proto_rawDesc = "" +
 	"\n" +
-	"\fhermes.proto\x12\x06hermes\"\x8a\x01\n" +
+	"\x12proto/hermes.proto\x12\x06hermes\"\x8a\x01\n" +
 	"\aMessage\x12\x12\n" +
 	"\x04role\x18\x01 \x01(\tR\x04role\x12\x18\n" +
 	"\acontent\x18\x02 \x01(\tR\acontent\x12/\n" +
@@ -668,20 +747,24 @@ const file_hermes_proto_rawDesc = "" +
 	"\bToolDesc\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12'\n" +
-	"\x0fparameters_json\x18\x03 \x01(\tR\x0eparametersJson\"\xb0\x01\n" +
+	"\x0fparameters_json\x18\x03 \x01(\tR\x0eparametersJson\"\xc8\x01\n" +
 	"\x0fLLMInferRequest\x12\x14\n" +
 	"\x05model\x18\x01 \x01(\tR\x05model\x12\x19\n" +
 	"\bapi_base\x18\x02 \x01(\tR\aapiBase\x12\x17\n" +
 	"\aapi_key\x18\x03 \x01(\tR\x06apiKey\x12+\n" +
 	"\bmessages\x18\x04 \x03(\v2\x0f.hermes.MessageR\bmessages\x12&\n" +
-	"\x05tools\x18\x05 \x03(\v2\x10.hermes.ToolDescR\x05tools\"\xdc\x01\n" +
+	"\x05tools\x18\x05 \x03(\v2\x10.hermes.ToolDescR\x05tools\x12\x16\n" +
+	"\x06stream\x18\x06 \x01(\bR\x06stream\"\xdc\x01\n" +
 	"\x10LLMInferResponse\x12\x18\n" +
 	"\acontent\x18\x01 \x01(\tR\acontent\x12/\n" +
 	"\n" +
 	"tool_calls\x18\x02 \x03(\v2\x10.hermes.ToolCallR\ttoolCalls\x12#\n" +
 	"\rprompt_tokens\x18\x03 \x01(\x05R\fpromptTokens\x12+\n" +
 	"\x11completion_tokens\x18\x04 \x01(\x05R\x10completionTokens\x12+\n" +
-	"\x11reasoning_content\x18\x05 \x01(\tR\x10reasoningContent\"l\n" +
+	"\x11reasoning_content\x18\x05 \x01(\tR\x10reasoningContent\"Q\n" +
+	"\bLlmChunk\x12\x18\n" +
+	"\acontent\x18\x01 \x01(\tR\acontent\x12+\n" +
+	"\x11reasoning_content\x18\x02 \x01(\tR\x10reasoningContent\"l\n" +
 	"\x0fToolExecRequest\x12\x15\n" +
 	"\x06req_id\x18\x01 \x01(\tR\x05reqId\x12\x1b\n" +
 	"\ttool_name\x18\x02 \x01(\tR\btoolName\x12%\n" +
@@ -693,80 +776,84 @@ const file_hermes_proto_rawDesc = "" +
 	"\fAgentRequest\x126\n" +
 	"\tllm_infer\x18\x01 \x01(\v2\x17.hermes.LLMInferRequestH\x00R\bllmInfer\x126\n" +
 	"\ttool_exec\x18\x02 \x01(\v2\x17.hermes.ToolExecRequestH\x00R\btoolExecB\t\n" +
-	"\apayload\"\x8c\x01\n" +
+	"\apayload\"\xbd\x01\n" +
 	"\rAgentResponse\x127\n" +
 	"\tllm_infer\x18\x01 \x01(\v2\x18.hermes.LLMInferResponseH\x00R\bllmInfer\x127\n" +
-	"\ttool_exec\x18\x02 \x01(\v2\x18.hermes.ToolExecResponseH\x00R\btoolExecB\t\n" +
+	"\ttool_exec\x18\x02 \x01(\v2\x18.hermes.ToolExecResponseH\x00R\btoolExec\x12/\n" +
+	"\tllm_chunk\x18\x03 \x01(\v2\x10.hermes.LlmChunkH\x00R\bllmChunkB\t\n" +
 	"\apayloadB6Z4github.com/light-code-ai/eion-tools/proto/gen;hermesb\x06proto3"
 
 var (
-	file_hermes_proto_rawDescOnce sync.Once
-	file_hermes_proto_rawDescData []byte
+	file_proto_hermes_proto_rawDescOnce sync.Once
+	file_proto_hermes_proto_rawDescData []byte
 )
 
-func file_hermes_proto_rawDescGZIP() []byte {
-	file_hermes_proto_rawDescOnce.Do(func() {
-		file_hermes_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_hermes_proto_rawDesc), len(file_hermes_proto_rawDesc)))
+func file_proto_hermes_proto_rawDescGZIP() []byte {
+	file_proto_hermes_proto_rawDescOnce.Do(func() {
+		file_proto_hermes_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_hermes_proto_rawDesc), len(file_proto_hermes_proto_rawDesc)))
 	})
-	return file_hermes_proto_rawDescData
+	return file_proto_hermes_proto_rawDescData
 }
 
-var file_hermes_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
-var file_hermes_proto_goTypes = []any{
+var file_proto_hermes_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_proto_hermes_proto_goTypes = []any{
 	(*Message)(nil),          // 0: hermes.Message
 	(*ToolCall)(nil),         // 1: hermes.ToolCall
 	(*ToolDesc)(nil),         // 2: hermes.ToolDesc
 	(*LLMInferRequest)(nil),  // 3: hermes.LLMInferRequest
 	(*LLMInferResponse)(nil), // 4: hermes.LLMInferResponse
-	(*ToolExecRequest)(nil),  // 5: hermes.ToolExecRequest
-	(*ToolExecResponse)(nil), // 6: hermes.ToolExecResponse
-	(*AgentRequest)(nil),     // 7: hermes.AgentRequest
-	(*AgentResponse)(nil),    // 8: hermes.AgentResponse
+	(*LlmChunk)(nil),         // 5: hermes.LlmChunk
+	(*ToolExecRequest)(nil),  // 6: hermes.ToolExecRequest
+	(*ToolExecResponse)(nil), // 7: hermes.ToolExecResponse
+	(*AgentRequest)(nil),     // 8: hermes.AgentRequest
+	(*AgentResponse)(nil),    // 9: hermes.AgentResponse
 }
-var file_hermes_proto_depIdxs = []int32{
+var file_proto_hermes_proto_depIdxs = []int32{
 	1, // 0: hermes.Message.tool_calls:type_name -> hermes.ToolCall
 	0, // 1: hermes.LLMInferRequest.messages:type_name -> hermes.Message
 	2, // 2: hermes.LLMInferRequest.tools:type_name -> hermes.ToolDesc
 	1, // 3: hermes.LLMInferResponse.tool_calls:type_name -> hermes.ToolCall
 	3, // 4: hermes.AgentRequest.llm_infer:type_name -> hermes.LLMInferRequest
-	5, // 5: hermes.AgentRequest.tool_exec:type_name -> hermes.ToolExecRequest
+	6, // 5: hermes.AgentRequest.tool_exec:type_name -> hermes.ToolExecRequest
 	4, // 6: hermes.AgentResponse.llm_infer:type_name -> hermes.LLMInferResponse
-	6, // 7: hermes.AgentResponse.tool_exec:type_name -> hermes.ToolExecResponse
-	8, // [8:8] is the sub-list for method output_type
-	8, // [8:8] is the sub-list for method input_type
-	8, // [8:8] is the sub-list for extension type_name
-	8, // [8:8] is the sub-list for extension extendee
-	0, // [0:8] is the sub-list for field type_name
+	7, // 7: hermes.AgentResponse.tool_exec:type_name -> hermes.ToolExecResponse
+	5, // 8: hermes.AgentResponse.llm_chunk:type_name -> hermes.LlmChunk
+	9, // [9:9] is the sub-list for method output_type
+	9, // [9:9] is the sub-list for method input_type
+	9, // [9:9] is the sub-list for extension type_name
+	9, // [9:9] is the sub-list for extension extendee
+	0, // [0:9] is the sub-list for field type_name
 }
 
-func init() { file_hermes_proto_init() }
-func file_hermes_proto_init() {
-	if File_hermes_proto != nil {
+func init() { file_proto_hermes_proto_init() }
+func file_proto_hermes_proto_init() {
+	if File_proto_hermes_proto != nil {
 		return
 	}
-	file_hermes_proto_msgTypes[7].OneofWrappers = []any{
+	file_proto_hermes_proto_msgTypes[8].OneofWrappers = []any{
 		(*AgentRequest_LlmInfer)(nil),
 		(*AgentRequest_ToolExec)(nil),
 	}
-	file_hermes_proto_msgTypes[8].OneofWrappers = []any{
+	file_proto_hermes_proto_msgTypes[9].OneofWrappers = []any{
 		(*AgentResponse_LlmInfer)(nil),
 		(*AgentResponse_ToolExec)(nil),
+		(*AgentResponse_LlmChunk)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_hermes_proto_rawDesc), len(file_hermes_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_hermes_proto_rawDesc), len(file_proto_hermes_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_hermes_proto_goTypes,
-		DependencyIndexes: file_hermes_proto_depIdxs,
-		MessageInfos:      file_hermes_proto_msgTypes,
+		GoTypes:           file_proto_hermes_proto_goTypes,
+		DependencyIndexes: file_proto_hermes_proto_depIdxs,
+		MessageInfos:      file_proto_hermes_proto_msgTypes,
 	}.Build()
-	File_hermes_proto = out.File
-	file_hermes_proto_goTypes = nil
-	file_hermes_proto_depIdxs = nil
+	File_proto_hermes_proto = out.File
+	file_proto_hermes_proto_goTypes = nil
+	file_proto_hermes_proto_depIdxs = nil
 }

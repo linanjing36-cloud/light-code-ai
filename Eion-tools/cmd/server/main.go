@@ -162,7 +162,7 @@ func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) 
 					},
 				},
 			}
-			if err := writeFrame(w, errResp); err != nil {
+			if err := writeAgentFrame(w, errResp); err != nil {
 				return fmt.Errorf("write error frame: %w", err)
 			}
 			continue
@@ -175,6 +175,7 @@ func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) 
 				zap.String("model", p.LlmInfer.GetModel()),
 				zap.Int("msgs", len(p.LlmInfer.GetMessages())),
 				zap.Int("tools", len(p.LlmInfer.GetTools())),
+				zap.Bool("stream", p.LlmInfer.GetStream()),
 			)
 		case *hermes.AgentRequest_ToolExec:
 			logging.Logger.Debug("dispatch: tool_exec",
@@ -183,18 +184,15 @@ func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) 
 			)
 		}
 
-		// dispatcher 内部已有 Panic_Guard, 理论上不会 panic 出来
-		resp := d.Dispatch(context.Background(), agentReq)
-		if resp == nil {
-			resp = &hermes.AgentResponse{
-				Payload: &hermes.AgentResponse_ToolExec{
-					ToolExec: &hermes.ToolExecResponse{Error: "nil response from dispatcher"},
-				},
-			}
+		// writeAgent 闭包: 由 dispatcher 内部按需多次调用
+		// (流式: 若干 llm_chunk + 终态 llm_infer; 非流式/tool_exec: 单次响应)。
+		// dispatcher 内部已有 Panic_Guard, 理论上不会 panic 出来。
+		writeAgent := func(resp *hermes.AgentResponse) error {
+			logging.Logger.Debug("sending response frame", zap.Int("bytes", proto.Size(resp)))
+			return writeAgentFrame(w, resp)
 		}
 
-		logging.Logger.Info("sending response frame", zap.Int("bytes", proto.Size(resp)))
-		if err := writeFrame(w, resp); err != nil {
+		if err := d.DispatchStream(context.Background(), agentReq, writeAgent); err != nil {
 			return fmt.Errorf("write frame: %w", err)
 		}
 	}
@@ -236,4 +234,10 @@ func writeFrame(w io.Writer, msg proto.Message) error {
 		_ = f.Sync()
 	}
 	return nil
+}
+
+// writeAgentFrame 写入一个 AgentResponse 帧 (4 字节大端长度前缀 + protobuf 负载)。
+// 是 writeFrame 的类型化包装, 供 dispatcher 流式回调按帧下发使用。
+func writeAgentFrame(w io.Writer, resp *hermes.AgentResponse) error {
+	return writeFrame(w, resp)
 }

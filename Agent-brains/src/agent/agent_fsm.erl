@@ -20,6 +20,12 @@
 %%                将 observation 追加进历史, 计数+1, 判断循环上限
 %%
 %% 循环上限: ?MAX_LOOPS (默认 10), 防止 LLM 死循环耗尽资源。
+%%
+%% 失败案例记忆 (Task 1):
+%%   thinking(enter) 前经 case_store:query 拿最近 5 条失败案例, 经
+%%   context_assembler 注入 System Prompt 作"负面案例", 让 LLM 少踩坑。
+%%   5 个失败点 (工具失败/循环耗尽×2/断连×2) 经 record_case/1 写入 case_store,
+%%   防御性调用 —— case_store 不可用不阻断主流程。
 %%====================================================================
 
 %% 对外接口
@@ -31,6 +37,8 @@
 
 %% ReAct 循环上限: 防止 LLM 在 acting<->thinking 间无限震荡
 -define(MAX_LOOPS, 10).
+%% 失败案例注入条数 (System Prompt 末尾的"负面案例"段)
+-define(CASE_INJECT_LIMIT, 5).
 
 -record(data, {
     session_id :: binary(),
@@ -136,7 +144,7 @@ idle(_EventType, _EventContent, _Data) ->
 
 %%%===================================================================
 %%% 状态: thinking
-%%%   组装上下文 (System Prompt + 历史 + 工具描述) -> 经 Bridge_Manager
+%%%   组装上下文 (System Prompt + 历史 + 工具描述 + 失败案例) -> 经 Bridge_Manager
 %%%   异步发 LLMInferRequest -> 等待 {llm_response, Ref, Response}
 %%%   Response = #{content, tool_calls, prompt_tokens, completion_tokens}
 %%%===================================================================
@@ -145,15 +153,27 @@ thinking(enter, _OldState, Data) ->
     lager:info("thinking(enter) fired, model=~p, history_len=~p, loop=~p/~p",
                 [Data#data.model, length(Data#data.history),
                  Data#data.loop_count, Data#data.max_loops]),
+    %% 查询最近失败案例注入 System Prompt (负面案例记忆, Task 1)
+    Cases = query_cases(),
     Req = context_assembler:build(Data#data.model, #{
         history => Data#data.history,
-        tools => Data#data.tools
+        tools => Data#data.tools,
+        failure_cases => Cases
     }),
     lager:debug("calling bridge_manager:call_llm"),
     %% 异步投递 (经 pb_codec 编码为 Protobuf 二进制后发往 Go 侧)
     Ref = bridge_manager:call_llm(self(), Req),
     lager:info("llm request dispatched, ref=~p", [Ref]),
     {keep_state, Data#data{llm_ref = Ref}};
+thinking(cast, {llm_chunk, Ref, Chunk},
+         #data{llm_ref = Ref} = Data) ->
+    %% Task 4 流式: LLM 增量 chunk 透传到 panel_server, 推给前端
+    %% Chunk = #{kind => llm_chunk, content, reasoning_content}
+    panel_server:push_chunk(Data#data.session_id, #{
+        content => maps:get(content, Chunk, <<>>),
+        reasoning_content => maps:get(reasoning_content, Chunk, <<>>)
+    }),
+    {keep_state, Data};
 thinking(cast, {llm_response, Ref, Response},
          #data{llm_ref = Ref} = Data) ->
     %% 关键节点: LLM 响应回链 (可能是含 tool_calls 的中间轮, 也可能是最终答案)
@@ -174,11 +194,29 @@ thinking(cast, {llm_response, Ref, Response},
         {[], _NoTools} ->
             %% LLM 未要求工具调用 -> 视为最终答案, 会话结束
             lager:info("final answer ready, transitioning thinking -> idle"),
+            %% Task 4: 推送 final 终态到前端 (告知流结束)
+            panel_server:push_final(Data1#data.session_id, #{
+                content => Content,
+                prompt_tokens => maps:get(prompt_tokens, Response, 0),
+                completion_tokens => maps:get(completion_tokens, Response, 0),
+                loop_count => Data1#data.loop_count
+            }),
             {next_state, idle, Data1};
         {_ToolCalls, true} ->
             %% 仍有工具调用但已达循环上限 -> 强制结束 (防 Eino 控制权泄漏/死循环)
             lager:warning("max_loops reached (~p/~p) with tool_calls pending, forcing idle",
                            [Data1#data.loop_count, Data1#data.max_loops]),
+            record_case(#{
+                session_id => Data1#data.session_id,
+                scenario => <<"loop_exhausted">>,
+                attempted => <<>>,
+                failure_reason => util:u("LLM 仍要求工具调用但已达循环上限"),
+                lesson => util:u("在达到上限前给出最终答案, 减少工具往返")
+            }),
+            %% Task 4: 推送 stream_err 终态告知前端流被中断
+            panel_server:push_stream_err(
+                Data1#data.session_id,
+                util:u("ReAct 循环达到上限, 已强制结束")),
             {next_state, idle, Data1};
         {ToolCalls, false} ->
             %% 进入执行阶段: 并行派发
@@ -195,6 +233,15 @@ thinking(cast, {bridge_disconnect}, Data) ->
     %% 让 LLM 决定道歉/重试/换路径, 而非直接结束会话。
     %% loop_count +1 防止断连反复重试导致死循环。
     lager:warning("bridge_disconnect in thinking, feeding as observation to LLM"),
+    record_case(#{
+        session_id => Data#data.session_id,
+        scenario => <<"bridge_disconnect">>,
+        attempted => <<>>,
+        failure_reason => util:u("Bridge 断连, LLM 推理中断"),
+        lesson => util:u("Bridge 不稳定时减少请求或换路径")
+    }),
+    %% Task 4: 这一轮 LLM 推理中断, 不立即给前端推 stream_err
+    %% (因为 continue_after_observe 可能回 thinking 再发起新一轮 LLM 调用, 流未真正结束)
     ObsMsg = #{role => <<"system">>,
                content => <<"Bridge disconnected during LLM inference. "
                             "Please retry the request or adjust strategy.">>},
@@ -240,12 +287,24 @@ acting(cast, {bridge_disconnect}, Data) ->
     %% 已收的部分结果保留, 未收的标记为 interrupted。
     lager:warning("bridge_disconnect in acting, marking ~p pending tools as interrupted",
                    [length(Data#data.pending_tool_calls) - map_size(Data#data.tool_results)]),
+    Interrupted = [TC || TC <- Data#data.pending_tool_calls,
+                         not maps:is_key(maps:get(id, TC, <<>>),
+                                         Data#data.tool_results)],
     FailedMsgs = [tool_msg(TC,
                            #{result_json => <<>>,
                              error => <<"bridge disconnected, tool execution interrupted">>})
-                  || TC <- Data#data.pending_tool_calls,
-                     not maps:is_key(maps:get(id, TC, <<>>),
-                                     Data#data.tool_results)],
+                  || TC <- Interrupted],
+    %% 记录断连案例 (Task 1): 每个中断的工具一条
+    lists:foreach(fun(TC) ->
+        record_case(#{
+            session_id => Data#data.session_id,
+            tool_name => maps:get(name, TC, <<>>),
+            scenario => <<"bridge_disconnect">>,
+            attempted => maps:get(arguments, TC, <<>>),
+            failure_reason => util:u("Bridge 断连, 工具执行中断"),
+            lesson => util:u("Bridge 不稳定时减少工具调用或换路径")
+        })
+    end, Interrupted),
     Data1 = lists:foldl(fun(M, D) -> append_observation(D, M) end,
                         Data, FailedMsgs),
     continue_after_observe(Data1#data{pending_tool_calls = [],
@@ -266,6 +325,23 @@ observe_and_transition(Data) ->
                                       Data#data.tool_results,
                                       #{result_json => <<>>, error => <<>>}))
                 || TC <- Data#data.pending_tool_calls],
+    %% 记录失败案例 (Task 1): 对每个 error 非空的工具调用写一条 tool_failed 案
+    lists:foreach(fun(TC) ->
+        Id = maps:get(id, TC, <<>>),
+        Resp = maps:get(Id, Data#data.tool_results, #{}),
+        case maps:get(error, Resp, <<>>) of
+            Err when Err =/= <<>> ->
+                record_case(#{
+                    session_id => Data#data.session_id,
+                    tool_name => maps:get(name, TC, <<>>),
+                    scenario => <<"tool_failed">>,
+                    attempted => maps:get(arguments, TC, <<>>),
+                    failure_reason => Err,
+                    lesson => util:u("检查参数格式或换用其他工具")
+                });
+            _ -> ok
+        end
+    end, Data#data.pending_tool_calls),
     Data1 = lists:foldl(fun(M, D) -> append_observation(D, M) end, Data, ToolMsgs),
     continue_after_observe(Data1#data{tool_results = #{},
                                       pending_tool_calls = [],
@@ -282,6 +358,17 @@ continue_after_observe(Data0) ->
         true ->
             lager:warning("continue_after_observe: loop_count=~p >= max_loops=~p, forcing idle",
                           [NewCount, Data#data.max_loops]),
+            record_case(#{
+                session_id => Data#data.session_id,
+                scenario => <<"loop_exhausted">>,
+                attempted => <<>>,
+                failure_reason => util:u("ReAct 循环达到上限"),
+                lesson => util:u("减少工具往返次数, 避免重复调用")
+            }),
+            %% Task 4: 推送 stream_err 终态告知前端流被中断
+            panel_server:push_stream_err(
+                Data#data.session_id,
+                util:u("ReAct 循环达到上限, 已强制结束")),
             {next_state, idle, Data};
         false ->
             lager:info("continue_after_observe: loop=~p/~p, back to thinking for LLM to decide",
@@ -314,6 +401,22 @@ tool_msg(_ToolCall, Resp) ->
 snapshot(Data) ->
     state_store:put_snapshot(Data#data.session_id, Data),
     ok.
+
+%% 查询最近失败案例注入 System Prompt (防御性: case_store 不可用则返回 [])
+query_cases() ->
+    try case_store:query(#{limit => ?CASE_INJECT_LIMIT}) of
+        {ok, Cases} -> Cases;
+        {error, _} -> []
+    catch _:_ -> []
+    end.
+
+%% 记录失败案例 (防御性: 写入失败不阻断 FSM 主流程)
+record_case(CaseMap) ->
+    try case_store:record(CaseMap) of
+        ok -> ok;
+        {error, _} -> ok
+    catch _:_ -> ok
+    end.
 
 terminate(_Reason, _State, _Data) ->
     ok.

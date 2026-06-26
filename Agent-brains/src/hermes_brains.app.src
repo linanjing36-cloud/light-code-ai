@@ -12,7 +12,7 @@
   {modules, [hermes_brains_app, hermes_brains_sup, agent_sup, agent_fsm,
              agent_demo, context_assembler, bridge_manager, bridge_ping,
              pb_codec, state_store, cache, util, mnesia_store, timing_wheel, hermes,
-             panel_server]},
+             panel, panel_server, panel_pb_codec, case_store]},
   {env, [
       %% Go 侧 Eion-tools server 可执行文件路径
       %% 由 bridge_manager 在 init 时 spawn (erlang:open_port + 4 字节大端长度前缀帧)

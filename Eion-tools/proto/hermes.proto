@@ -43,15 +43,23 @@ message LLMInferRequest {
   string api_key = 3;
   repeated Message messages = 4;
   repeated ToolDesc tools = 5;
+  bool stream = 6;  // true: Go 侧按 chunk 流式输出 (LlmChunk) + 终态 LLMInferResponse; false: 一次性返回
 }
 
-// LLM 推理响应。
+// LLM 推理响应 (一次性, 或 stream=true 时的终态)。
 message LLMInferResponse {
   string content = 1;
   repeated ToolCall tool_calls = 2;
   int32 prompt_tokens = 3;
   int32 completion_tokens = 4;
   string reasoning_content = 5;  // 推理模型的思考过程（v4-pro 等），正文仍在 content
+}
+
+// LLM 流式 chunk (仅 stream=true 时输出, 增量内容)。
+// 紧随其后必有终态 LLMInferResponse (在 AgentResponse.llm_infer 分支) 标志流结束。
+message LlmChunk {
+  string content = 1;            // 增量正文 (与上一段拼接)
+  string reasoning_content = 2;  // 增量推理过程
 }
 
 // 工具执行请求。
@@ -77,10 +85,12 @@ message AgentRequest {
   }
 }
 
-// 顶层响应包装：与 AgentRequest 的 oneof 分支一一对应。
+// 顶层响应包装：与 AgentRequest 的 oneof 分支一一对应, 加 llm_chunk 流式分支。
+// stream=true 时, Go 侧先发若干 AgentResponse{llm_chunk: ...}, 最后发 AgentResponse{llm_infer: ...} 终态。
 message AgentResponse {
   oneof payload {
     LLMInferResponse llm_infer = 1;
     ToolExecResponse tool_exec = 2;
+    LlmChunk llm_chunk = 3;  // 流式 chunk (非终态, 仅 stream=true)
   }
 }

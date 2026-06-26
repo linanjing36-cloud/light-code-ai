@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package panel;
+
+option go_package = "github.com/hermes/panel;panelpb";
+
+// Panel ↔ Erlang 通道协议 (Wails ↔ Agent-brains panel_server)。
+//
+// 帧格式: 4 字节大端长度前缀 + PanelFrame 的 Protobuf 二进制。
+// 通信模型:
+//   - client (Wails brain.Bridge) 永远发 PanelFrame{request: ...}
+//   - server (Erlang panel_server) 在同一连接上回 PanelFrame{response: ...}
+//     或对 send 方法持续 push PanelFrame{stream: ...} 直到 final/error
+//
+// 设计原则: 无 method 字符串 dispatch 歧义; args/result 用 bytes 嵌套编码,
+// 让 panel_server 按 method 字符串选对应 Args/Result message 解码/编码。
+
+// 顶层帧包装。
+message PanelFrame {
+  oneof payload {
+    PanelRequest request = 1;    // client -> server
+    PanelResponse response = 2;  // server -> client (一次性响应)
+    PanelStream stream = 3;      // server -> client (流式 push, 仅 send 方法)
+  }
+}
+
+// 一次性请求。
+message PanelRequest {
+  uint64 id = 1;          // 请求 ID (用于 response 路由匹配, stream 不复用此 id)
+  string method = 2;      // start_session / send / list_tools / approve / brain_status / stop
+  bytes args_bytes = 3;   // 方法对应 Args message 的 Protobuf 编码
+}
+
+// 一次性响应 (与 PanelRequest.id 一一对应)。
+message PanelResponse {
+  uint64 id = 1;
+  oneof payload {
+    bytes result_bytes = 2;  // 方法对应 Result message 的 Protobuf 编码
+    string error = 3;        // 错误描述 (非空表示失败)
+  }
+}
+
+// 流式 push 帧 (server 在 send 方法的原连接上连续推)。
+message PanelStream {
+  string stream_id = 1;       // 关联 send 返回的 stream_id
+  oneof payload {
+    LlmChunk chunk = 2;       // LLM 流式增量 (非终态)
+    ToolEvent tool_event = 3; // 工具事件 (开始/结束, 非终态)
+    FinalAnswer final = 4;    // 终态: 最终答案就绪
+    StreamError error = 5;    // 终态: 流式错误
+  }
+}
+
+// LLM 流式 chunk: 增量内容, 前端累加渲染。
+message LlmChunk {
+  string content = 1;            // 增量正文 (与上一段拼接)
+  string reasoning_content = 2;  // 增量推理过程 (v4-pro 等推理模型)
+}
+
+// 工具事件: 告知前端当前轮工具执行进度。
+message ToolEvent {
+  string tool_call_id = 1;
+  string name = 2;
+  string arguments_json = 3;
+  string result_json = 4;   // 完成时填
+  string error = 5;          // 失败时填
+  bool finished = 6;         // true=已结束 (有 result 或 error), false=已开始
+}
+
+// 最终答案 (ReAct 循环结束, FSM 回到 idle)。
+message FinalAnswer {
+  string content = 1;
+  int32 prompt_tokens = 2;
+  int32 completion_tokens = 3;
+  int32 loop_count = 4;     // 本次 ReAct 总循环数
+}
+
+// 流式错误 (终态): 告知前端流被异常中断。
+message StreamError {
+  string message = 1;
+}
+
+// ---- 方法参数 ----
+message StartSessionArgs { string system_prompt = 1; }
+message SendArgs { string session_id = 1; string message = 2; }
+message ApproveArgs { string req_id = 1; bool allow = 2; }
+message BrainStatusArgs { string session_id = 1; }
+
+// ---- 方法结果 ----
+message StartSessionResult { string session_id = 1; }
+message SendResult { string stream_id = 1; }
+
+message ListToolsResult {
+  repeated ToolDesc tools = 1;
+}
+message ToolDesc {
+  string name = 1;
+  string description = 2;
+  string parameters_json = 3;
+}
+
+message ApproveResult { bool ok = 1; }
+
+message BrainStatusResult {
+  string state = 1;
+  int32 loop_count = 2;
+  int32 max_loops = 3;
+  int32 history_len = 4;
+}
+
+message StopResult { bool ok = 1; }

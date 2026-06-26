@@ -93,6 +93,71 @@ func (d *Command_Dispatcher) Dispatch(ctx context.Context, req *hermes.AgentRequ
 	}
 }
 
+// DispatchStream 是支持流式的分发入口：
+//   - llm_infer 且 stream=true：先发若干 AgentResponse{llm_chunk: ...} 增量，最后发 AgentResponse{llm_infer: ...} 终态
+//   - 其他（stream=false 或 tool_exec）：等价于 Dispatch，writeFrame 一次
+//
+// writeFrame 由调用方传入（负责长度前缀编码 + 写连接）；返回 error 表示写失败，
+// DispatchStream 会中断并向上返回，调用方据此关闭连接。
+//
+// Panic_Guard：defer/recover 将 panic 转为错误响应并 writeFrame，保证 Erlang 端口不卡死。
+func (d *Command_Dispatcher) DispatchStream(ctx context.Context, req *hermes.AgentRequest, writeFrame func(*hermes.AgentResponse) error) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			logging.Logger.Error("dispatcher stream panic recovered", zap.Any("panic", r))
+			errResp := &hermes.AgentResponse{}
+			switch req.GetPayload().(type) {
+			case *hermes.AgentRequest_LlmInfer:
+				// 流式分支即使 panic 也必须以 llm_infer 终态收尾，否则 Erlang 端会一直等流结束
+				errResp.Payload = &hermes.AgentResponse_LlmInfer{LlmInfer: &hermes.LLMInferResponse{}}
+			default:
+				errResp.Payload = &hermes.AgentResponse_ToolExec{
+					ToolExec: &hermes.ToolExecResponse{Error: fmt.Sprintf("panic: %v", r)},
+				}
+			}
+			_ = writeFrame(errResp)
+		}
+	}()
+
+	// 仅 llm_infer + stream=true 走流式分支
+	if p, ok := req.GetPayload().(*hermes.AgentRequest_LlmInfer); ok && p.LlmInfer.GetStream() {
+		return d.handleLLMStream(ctx, p.LlmInfer, writeFrame)
+	}
+
+	// 其他情况：复用 Dispatch 单次响应（Dispatch 内部已有 Panic_Guard）
+	resp := d.Dispatch(ctx, req)
+	if resp == nil {
+		resp = &hermes.AgentResponse{
+			Payload: &hermes.AgentResponse_ToolExec{
+				ToolExec: &hermes.ToolExecResponse{Error: "nil response from dispatcher"},
+			},
+		}
+	}
+	return writeFrame(resp)
+}
+
+// handleLLMStream 路由到 model.Stream：增量 chunk 走 llm_chunk 分支，终态走 llm_infer 分支。
+// 出错时下发一个空 LLMInferResponse 作为终态，标志流结束（避免 Erlang 端无限等待）。
+func (d *Command_Dispatcher) handleLLMStream(ctx context.Context, req *hermes.LLMInferRequest, writeFrame func(*hermes.AgentResponse) error) error {
+	// onChunk：把增量内容包成 llm_chunk 帧下发（非终态）
+	onChunk := func(chunk *hermes.LlmChunk) error {
+		return writeFrame(&hermes.AgentResponse{
+			Payload: &hermes.AgentResponse_LlmChunk{LlmChunk: chunk},
+		})
+	}
+
+	out, err := d.modelW.Stream(ctx, req, onChunk)
+	if err != nil {
+		logging.Logger.Error("llm stream error", zap.Error(err))
+		out = &hermes.LLMInferResponse{}
+	}
+
+	// 终态：包成 llm_infer 帧下发，标志流结束
+	return writeFrame(&hermes.AgentResponse{
+		Payload: &hermes.AgentResponse_LlmInfer{LlmInfer: out},
+	})
+}
+
 // handleLLM 路由到 model 包装器。无缓存、无重试、无循环。
 func (d *Command_Dispatcher) handleLLM(ctx context.Context, req *hermes.LLMInferRequest) *hermes.LLMInferResponse {
 	out, err := d.modelW.Infer(ctx, req)
