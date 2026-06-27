@@ -500,19 +500,20 @@ dispatch(#state{conns = Conns, queue = Q} = State, Item) ->
             State#state{queue = queue:in(Item, Q)}
     end.
 
-%% 派发下一条排队请求 (有 idle 连接时)
+%% 派发下一条排队请求 (队列非空且有 idle 连接时)
 dispatch_next(#state{queue = Q, conns = Conns} = State) ->
-    case find_idle_conn(Conns) of
-        {ok, Sock, Conns1} ->
-            case queue:out(Q) of
-                {{value, Item}, Q1} ->
+    case queue:out(Q) of
+        {empty, _} ->
+            State;
+        {{value, Item}, Q1} ->
+            case find_idle_conn(Conns) of
+                {ok, Sock, Conns1} ->
                     lager:info("dispatching queued request: remaining_queue=~p", [queue:rlen(Q1)]),
                     send_item(Item, Sock, Conns1, State#state{queue = Q1});
-                {empty, _} ->
-                    State#state{conns = Conns1}
-            end;
-        none ->
-            State
+                none ->
+                    %% 仍无 idle 连接: 把 Item 放回队首, 等下次释放后再 dispatch
+                    State#state{queue = queue:in_r(Item, Q1)}
+            end
     end.
 
 %% 实际发送: 把 Payload 写到 Socket, 启动超时计时器, 记录 pending。

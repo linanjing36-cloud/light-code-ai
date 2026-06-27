@@ -224,33 +224,31 @@ accept_loop(Sock) ->
     end.
 
 %%====================================================================
-%% 内部: connection receive loop (每连接一个进程, passive recv)
-%%   - {packet, 4}: gen_tcp:recv(Sock, 0) 读一帧 Protobuf 负载
-%%   - push_stream 走 mailbox (send 流式阶段; 与 recv 阻塞互斥, 后续可改 active once)
+%% 内部: connection receive loop (每连接一个进程, active once)
+%%   - {packet, 4}: {tcp, Sock, Bin} 为一帧 Protobuf 负载
+%%   - push_stream 走 mailbox, 与 tcp 在同一 receive 中 multiplex
 %%====================================================================
 
 connection_recv_loop(Sock, Remote) ->
-    ok = inet:setopts(Sock, [{packet, 4}, {active, false}]),
+    ok = inet:setopts(Sock, [{packet, 4}, {active, once}]),
     ?log("connection handler ready: remote=~s pid=~p", [Remote, self()]),
-    connection_passive_loop(Sock, Remote).
+    connection_active_loop(Sock, Remote).
 
-connection_passive_loop(Sock, Remote) ->
+connection_active_loop(Sock, Remote) ->
     receive
         {push_stream, FrameBin} ->
             send_frame(Sock, FrameBin),
-            connection_passive_loop(Sock, Remote)
-    after 0 -> ok
-    end,
-    case gen_tcp:recv(Sock, 0) of
-        {ok, Bin} ->
+            connection_active_loop(Sock, Remote);
+        {tcp, Sock, Bin} ->
             handle_client_frame(Sock, Remote, Bin),
-            connection_passive_loop(Sock, Remote);
-        {error, closed} ->
+            ok = inet:setopts(Sock, [{active, once}]),
+            connection_active_loop(Sock, Remote);
+        {tcp_closed, Sock} ->
             ?log("connection handler exiting: remote=~s closed by peer", [Remote]),
             cleanup_streams_for_self(),
             ok;
-        {error, Reason} ->
-            ?log_warning("connection handler exiting: remote=~s recv_error=~p", [Remote, Reason]),
+        {tcp_error, Sock, Reason} ->
+            ?log_warning("connection handler exiting: remote=~s tcp_error=~p", [Remote, Reason]),
             cleanup_streams_for_self(),
             ok
     end.

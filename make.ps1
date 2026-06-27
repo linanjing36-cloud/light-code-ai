@@ -520,6 +520,29 @@ function Apply-MemoryEnv {
     if (-not $env:HERMES_EMBEDDING_DIM) { $env:HERMES_EMBEDDING_DIM = "1536" }
 }
 
+function Test-TcpAddrReachable {
+    param([string]$Addr, [int]$TimeoutMs = 800)
+    if ([string]::IsNullOrWhiteSpace($Addr)) { return $false }
+    $parts = $Addr.Trim().Split(":", 2)
+    if ($parts.Count -ne 2) { return $false }
+    $hostName = $parts[0]
+    $port = 0
+    if (-not [int]::TryParse($parts[1], [ref]$port)) { return $false }
+    try {
+        $client = New-Object System.Net.Sockets.TcpClient
+        $iar = $client.BeginConnect($hostName, $port, $null, $null)
+        if (-not $iar.AsyncWaitHandle.WaitOne($TimeoutMs, $false)) {
+            $client.Close()
+            return $false
+        }
+        $client.EndConnect($iar) | Out-Null
+        $client.Close()
+        return $true
+    } catch {
+        return $false
+    }
+}
+
 function Test-AgentHealthy {
     param([string]$PanelAddrFile)
     if (-not (Test-Path $PanelAddrFile)) { return $false }
@@ -606,6 +629,16 @@ function Invoke-StartAll {
     Write-Host ""
 
     $toolsRunning = [bool](Get-Process -Name "eion-tools-server" -ErrorAction SilentlyContinue)
+    $eionAddrKnown = $null
+    if ($toolsRunning -and (Test-Path $EionAddrFile)) {
+        $eionAddrKnown = (Get-Content $EionAddrFile -Raw).Trim()
+        if (-not (Test-TcpAddrReachable -Addr $eionAddrKnown)) {
+            Write-Host "[1/3] Eion-tools 进程在跑但 addr 不可达 ($eionAddrKnown), 将重启..."
+            Invoke-StopAll -Force
+            Start-Sleep -Seconds 2
+            $toolsRunning = $false
+        }
+    }
     if (-not $toolsRunning) {
         Write-Host "[1/3] 启动 Eion-tools (bin/eion_bin) ..."
         Remove-Item $EionAddrFile -ErrorAction SilentlyContinue

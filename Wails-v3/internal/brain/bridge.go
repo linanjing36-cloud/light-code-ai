@@ -182,9 +182,20 @@ func (b *Bridge) callInternal(ctx context.Context, method string, args map[strin
 		return resp.result, resp.err
 	case <-ctx.Done():
 		return nil, fmt.Errorf("brain: %s: %w", method, ctx.Err())
-	case <-time.After(30 * time.Second):
-		return nil, fmt.Errorf("brain: %s: timeout (30s)", method)
+	case <-time.After(callTimeout(method)):
+		return nil, fmt.Errorf("brain: %s: timeout (%s)", method, callTimeout(method))
 	}
+}
+
+func callTimeout(method string) time.Duration {
+	if method == "send" {
+		return 120 * time.Second
+	}
+	return 30 * time.Second
+}
+
+func isStreamTerminal(stream *panelpb.PanelStream) bool {
+	return stream.GetFinal() != nil || stream.GetError() != nil
 }
 
 // connWorker: 从全局队列取请求, 在本连接上写帧, 读帧直到匹配 id (跳过 stream push)。
@@ -203,6 +214,7 @@ func (b *Bridge) connWorker(ctx context.Context, conn net.Conn, reader *bufio.Re
 		}
 
 		var result callResult
+		gotResponse := false
 		for {
 			frame, err := readPanelFrame(reader)
 			if err != nil {
@@ -215,13 +227,22 @@ func (b *Bridge) connWorker(ctx context.Context, conn net.Conn, reader *bufio.Re
 				if resp.GetId() == req.id {
 					r, decErr := decodePanelResponse(req.method, resp)
 					result = callResult{result: r, err: decErr}
-					break
+					gotResponse = true
+					// send 的 PanelResponse 立即返回; 流式 chunk/final 仍在同连接上推送,
+					// 必须继续读直到 final/error, 否则 worker 阻塞在 queue 上导致流事件丢失。
+					if req.method != "send" {
+						break
+					}
+					continue
 				}
 				log.Printf("[brain] worker skip orphan response id=%d want=%d", resp.GetId(), req.id)
 				continue
 			}
 			if stream := frame.GetStream(); stream != nil {
 				emitPanelStream(stream)
+				if gotResponse && req.method == "send" && isStreamTerminal(stream) {
+					break
+				}
 				continue
 			}
 		}
