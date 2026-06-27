@@ -1,7 +1,7 @@
 @echo off
-REM run-memory-tool-test.bat - Go memory store/search 联调
-REM   默认: VM Redis Stack integration 测试
-REM   本地 dev: run-memory-tool-test.bat dev
+REM run-memory-tool-test.bat - Go memory store/search ???
+REM   ???: VM Redis Stack integration ???
+REM   ??? dev: run-memory-tool-test.bat dev
 
 set "SCRIPT_DIR=%~dp0"
 

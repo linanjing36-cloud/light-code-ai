@@ -202,3 +202,33 @@ tool_list_roundtrip_test() ->
     ?assertEqual(tool_list, maps:get(kind, BizResp)),
     ?assertEqual(1, length(maps:get(tools, BizResp))),
     ok.
+
+%%--------------------------------------------------------------------
+%% CapabilityList 请求/响应 round-trip
+%%--------------------------------------------------------------------
+capability_list_roundtrip_test() ->
+    Bin = pb_codec:encode_req(#{kind => capability_list}),
+    DecodedReq = hermes:decode_msg(Bin, 'AgentRequest'),
+    ?assertMatch(#{capability_list := _}, DecodedReq),
+
+    Inner = #{capabilities => [#{name => <<"repo_map">>,
+                                 kind => <<"plugin">>,
+                                 source => <<"local">>,
+                                 version => <<"v1">>,
+                                 description => util:u("仓库结构摘要"),
+                                 input_schema_json => <<"{\"type\":\"object\"}">>,
+                                 output_schema_json => <<"{\"type\":\"object\"}">>,
+                                 streaming => false,
+                                 risk_level => <<"safe">>,
+                                 cost_hint => <<"low">>,
+                                 tags => [<<"plugin">>, <<"workspace">>]}]},
+    AgentResp = #{capability_list => Inner},
+    BizResp = pb_codec:decode_resp(hermes:encode_msg(AgentResp, 'AgentResponse')),
+    ?assertEqual(capability_list, maps:get(kind, BizResp)),
+    Caps = maps:get(capabilities, BizResp),
+    ?assertEqual(1, length(Caps)),
+    [Cap] = Caps,
+    ?assertEqual(<<"repo_map">>, maps:get(name, Cap)),
+    ?assertEqual(<<"plugin">>, maps:get(kind, Cap)),
+    ?assertEqual(<<"local">>, maps:get(source, Cap)),
+    ok.

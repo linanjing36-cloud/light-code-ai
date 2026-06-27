@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
-REM run-memory-recall-demo.bat - Step 4.1 多轮记忆召回验收
-REM 前置: VM Redis Stack + start-tools.bat (HERMES_MEMORY_BACKEND=redis)
+REM run-memory-recall-demo.bat - Step 4.1 ????????????
+REM ???: VM Redis Stack + start-tools.bat (HERMES_MEMORY_BACKEND=redis)
 
 set "SCRIPT_DIR=%~dp0"
 set "ROOT_DIR=%SCRIPT_DIR%.."

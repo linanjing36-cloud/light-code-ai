@@ -24,10 +24,9 @@ fetch_tool_descs() ->
     end.
 
 fetch_capability_descs() ->
-    try bridge_manager:list_tools(?LIST_TOOLS_TIMEOUT) of
-        {ok, Tools} when is_list(Tools), Tools =/= [] ->
-            [tool_desc_to_capability_desc(normalize_desc(T), <<"eion-tools">>)
-             || T <- Tools, not is_internal_tool(T)];
+    try bridge_manager:list_capabilities(?LIST_TOOLS_TIMEOUT) of
+        {ok, Caps} when is_list(Caps), Caps =/= [] ->
+            [normalize_capability_desc(C) || C <- Caps, not is_internal_capability(C)];
         _ ->
             default_capability_descs()
     catch _:_ ->
@@ -38,16 +37,32 @@ is_internal_tool(T) when is_map(T) ->
     maps:get(name, T, <<>>) =:= <<"memory_purge_session">>;
 is_internal_tool(_) -> false.
 
+is_internal_capability(C) when is_map(C) ->
+    maps:get(name, C, <<>>) =:= <<"memory_purge_session">>;
+is_internal_capability(_) -> false.
+
 normalize_desc(T) when is_map(T) ->
     #{name => maps:get(name, T, <<>>),
       description => maps:get(description, T, <<>>),
       parameters_json => maps:get(parameters_json, T, <<>>)}.
 
+normalize_capability_desc(C) when is_map(C) ->
+    #{name => maps:get(name, C, <<>>),
+      kind => non_empty(maps:get(kind, C, <<>>), <<"tool">>),
+      source => non_empty(maps:get(source, C, <<>>), <<"builtin">>),
+      version => non_empty(maps:get(version, C, <<>>), <<"v1">>),
+      description => maps:get(description, C, <<>>),
+      parameters_json => maps:get(input_schema_json, C, <<>>),
+      streaming => maps:get(streaming, C, false),
+      risk_level => non_empty(maps:get(risk_level, C, <<>>), <<"safe">>),
+      cost_hint => non_empty(maps:get(cost_hint, C, <<>>), <<"low">>),
+      tags => maps:get(tags, C, [])}.
+
 tool_desc_to_capability_desc(T, Source) ->
     Name = maps:get(name, T, <<>>),
     #{name => Name,
-      kind => <<"tool">>,
-      source => Source,
+      kind => capability_kind(Name),
+      source => capability_source(Name, Source),
       version => <<"v1">>,
       description => maps:get(description, T, <<>>),
       parameters_json => maps:get(parameters_json, T, <<>>),
@@ -59,10 +74,33 @@ tool_desc_to_capability_desc(T, Source) ->
 default_risk_level(_Name) ->
     <<"safe">>.
 
+capability_kind(<<"repo_map">>) ->
+    <<"plugin">>;
+capability_kind(<<"code_search">>) ->
+    <<"plugin">>;
+capability_kind(<<"github_repo_overview">>) ->
+    <<"plugin">>;
+capability_kind(<<"github_diff_summary">>) ->
+    <<"plugin">>;
+capability_kind(_) ->
+    <<"tool">>.
+
+capability_source(<<"repo_map">>, _Default) ->
+    <<"local">>;
+capability_source(<<"code_search">>, _Default) ->
+    <<"local">>;
+capability_source(<<"github_repo_overview">>, _Default) ->
+    <<"local">>;
+capability_source(<<"github_diff_summary">>, _Default) ->
+    <<"local">>;
+capability_source(_, Default) ->
+    Default.
+
 default_cost_hint(Name) ->
     case Name of
         <<"memory_import">> -> <<"medium">>;
         <<"repo_map">> -> <<"medium">>;
+        <<"github_diff_summary">> -> <<"medium">>;
         _ -> <<"low">>
     end.
 
@@ -78,8 +116,17 @@ default_tags(<<"repo_map">>) ->
     [<<"plugin">>, <<"workspace">>, <<"token-saving">>];
 default_tags(<<"code_search">>) ->
     [<<"plugin">>, <<"code">>, <<"search">>, <<"token-saving">>];
+default_tags(<<"github_repo_overview">>) ->
+    [<<"plugin">>, <<"github">>, <<"git">>, <<"token-saving">>];
+default_tags(<<"github_diff_summary">>) ->
+    [<<"plugin">>, <<"github">>, <<"git">>, <<"diff">>, <<"token-saving">>];
 default_tags(_) ->
     [<<"tool">>].
+
+non_empty(<<>>, Default) ->
+    Default;
+non_empty(Value, _Default) ->
+    Value.
 
 get_weather_desc() ->
     #{name => <<"get_weather">>,

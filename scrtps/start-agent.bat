@@ -97,7 +97,7 @@ echo    SYS_CONFIG         = %SYS_CONFIG%
 echo    PANEL_ADDR_FILE    = %PANEL_ADDR_FILE%
 echo    EION_TOOLS_ADDR    = %EION_TOOLS_ADDR_FILE%
 if "%HERMES_EXEC_VIA_PANEL%"=="1" (
-    echo    HERMES_EXEC_VIA_PANEL = 1 ^(Phase B: LLM/工具经 panel exec^)
+    echo    HERMES_EXEC_VIA_PANEL = 1 ^(Phase B: LLM/?????panel exec^)
     set "EXEC_VIA_PANEL_ARG=-hermes_brains exec_via_panel true"
 ) else (
     set "EXEC_VIA_PANEL_ARG="

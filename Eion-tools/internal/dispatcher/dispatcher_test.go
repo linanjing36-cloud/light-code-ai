@@ -123,3 +123,24 @@ func TestDispatch_ToolList(t *testing.T) {
 		t.Fatalf("unexpected tool name: %s", tl.GetTools()[0].GetName())
 	}
 }
+
+func TestDispatch_CapabilityList(t *testing.T) {
+	d := New()
+	d.ToolWrapper().Register("get_weather", "weather tool", `{}`, func(_ context.Context, _ string) (string, error) {
+		return `{"ok":true}`, nil
+	})
+
+	resp := d.Dispatch(context.Background(), &hermes.AgentRequest{
+		Payload: &hermes.AgentRequest_CapabilityList{CapabilityList: &hermes.CapabilityListRequest{}},
+	})
+	cl := resp.GetCapabilityList()
+	if cl == nil {
+		t.Fatal("expected capability_list response")
+	}
+	if len(cl.GetCapabilities()) != 1 {
+		t.Fatalf("expected 1 capability, got %d", len(cl.GetCapabilities()))
+	}
+	if got := cl.GetCapabilities()[0]; got.GetName() != "get_weather" || got.GetKind() != "tool" {
+		t.Fatalf("unexpected capability: %#v", got)
+	}
+}

@@ -35,7 +35,7 @@
 
 %% 对外接口
 -export([start_link/0, call_llm/2, call_tool_batch/2, call_tool/2, call_tool_sync/2,
-         list_tools/1, pool_info/0, inject_llm_creds/1]).
+         list_tools/1, list_capabilities/1, pool_info/0, inject_llm_creds/1]).
 %% gen_server 回调
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
@@ -58,11 +58,11 @@
     conns = [] :: [#conn{}],
     %% FIFO 队列: 等待 idle 连接的请求
     %%   {Ref, FsmPid, Kind, ReqId, Payload, Timeout}
-    queue = queue:new() :: queue:queue({reference(), pid() | undefined, llm | tool | tool_list,
+    queue = queue:new() :: queue:queue({reference(), pid() | undefined, llm | tool | tool_list | capability_list,
                                         binary() | undefined, binary(),
                                         non_neg_integer()}),
     %% socket -> 等待响应的请求 {Ref, FsmPid, Kind, ReqId}
-    pending = #{} :: #{gen_tcp:socket() => {reference(), pid() | undefined, llm | tool | tool_list,
+    pending = #{} :: #{gen_tcp:socket() => {reference(), pid() | undefined, llm | tool | tool_list | capability_list,
                                              binary() | undefined}},
     %% socket -> 超时计时器
     timers = #{} :: #{gen_tcp:socket() => reference()},
@@ -105,6 +105,10 @@ call_tool_sync(#{id := Id, name := Name, arguments := Args}, TimeoutMs)
 list_tools(TimeoutMs) when is_integer(TimeoutMs), TimeoutMs > 0 ->
     gen_server:call(?MODULE, {list_tools, TimeoutMs}, TimeoutMs + 2000).
 
+%% 同步查询 Eion-tools 注册的统一能力列表 -> {ok, [CapabilityDescMap]} | {error, Reason}
+list_capabilities(TimeoutMs) when is_integer(TimeoutMs), TimeoutMs > 0 ->
+    gen_server:call(?MODULE, {list_capabilities, TimeoutMs}, TimeoutMs + 2000).
+
 %% 调试用: 查看连接池状态
 pool_info() ->
     gen_server:call(?MODULE, pool_info).
@@ -141,12 +145,22 @@ handle_call({call_tool_sync, Id, Name, Args, TimeoutMs}, From, State) ->
     {noreply, dispatch(State1, Item)};
 handle_call({list_tools, TimeoutMs}, _From, #state{exec_via_panel = true} = State) ->
     {reply, go_exec:list_tools(TimeoutMs), State};
+handle_call({list_capabilities, TimeoutMs}, _From, #state{exec_via_panel = true} = State) ->
+    {reply, go_exec:list_capabilities(TimeoutMs), State};
 handle_call({list_tools, TimeoutMs}, From, State) ->
     lager:info("list_tools queued, timeout=~pms", [TimeoutMs]),
     Id = iolist_to_binary(["list-", integer_to_binary(erlang:unique_integer([positive]))]),
     Payload = pb_codec:encode_req(#{kind => tool_list}),
     Ref = make_ref(),
     Item = {Ref, undefined, tool_list, Id, Payload, TimeoutMs},
+    State1 = State#state{sync_waiters = maps:put(Id, From, State#state.sync_waiters)},
+    {noreply, dispatch(State1, Item)};
+handle_call({list_capabilities, TimeoutMs}, From, State) ->
+    lager:info("list_capabilities queued, timeout=~pms", [TimeoutMs]),
+    Id = iolist_to_binary(["caps-", integer_to_binary(erlang:unique_integer([positive]))]),
+    Payload = pb_codec:encode_req(#{kind => capability_list}),
+    Ref = make_ref(),
+    Item = {Ref, undefined, capability_list, Id, Payload, TimeoutMs},
     State1 = State#state{sync_waiters = maps:put(Id, From, State#state.sync_waiters)},
     {noreply, dispatch(State1, Item)};
 handle_call(pool_info, _From, #state{exec_via_panel = true} = State) ->
@@ -309,6 +323,12 @@ handle_info({tcp, Sock, Bin}, #state{pending = Pending, timers = Timers} = State
                     Conns = mark_conn(State#state.conns, Sock, idle),
                     NewState = reply_tool_list_result(State, ReqId, Resp, Conns, Sock, Pending, Timers),
                     {noreply, dispatch_next(NewState)};
+                {capability_list, capability_list} ->
+                    TRef = maps:get(Sock, Timers, undefined),
+                    _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
+                    Conns = mark_conn(State#state.conns, Sock, idle),
+                    NewState = reply_capability_list_result(State, ReqId, Resp, Conns, Sock, Pending, Timers),
+                    {noreply, dispatch_next(NewState)};
                 _Other ->
                     %% 类型不匹配 (如 llm 请求收到 tool_exec 响应): 当作异常, 释放连接
                     lager:warning("unexpected response kind=~p for request kind=~p, releasing conn",
@@ -449,6 +469,25 @@ reply_tool_list_result(#state{sync_waiters = Sync} = State, ReqId, Resp, Conns, 
                             {error, Err};
                         _ ->
                             {ok, maps:get(tools, Resp, [])}
+                    end,
+            gen_server:reply(From, Reply),
+            Base#state{sync_waiters = maps:remove(ReqId, Sync)}
+    end.
+
+reply_capability_list_result(#state{sync_waiters = Sync} = State, ReqId, Resp, Conns, Sock, Pending, Timers) ->
+    Base = State#state{conns = Conns,
+                       pending = maps:remove(Sock, Pending),
+                       timers = maps:remove(Sock, Timers)},
+    case maps:get(ReqId, Sync, undefined) of
+        undefined ->
+            lager:warning("capability_list response without sync waiter req_id=~s", [ReqId]),
+            Base;
+        From ->
+            Reply = case maps:get(error, Resp, <<>>) of
+                        Err when Err =/= <<>> ->
+                            {error, Err};
+                        _ ->
+                            {ok, maps:get(capabilities, Resp, [])}
                     end,
             gen_server:reply(From, Reply),
             Base#state{sync_waiters = maps:remove(ReqId, Sync)}

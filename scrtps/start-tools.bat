@@ -31,7 +31,7 @@ if not exist "%RUN_DIR%" mkdir "%RUN_DIR%"
 REM Eion-tools server reads EION_TOOLS_ADDR_FILE env to know where to write addr
 set "EION_TOOLS_ADDR_FILE=%RUN_DIR%\eion-tools.addr"
 
-REM 默认连接 VM Redis Stack；本地 dev 后端: set HERMES_MEMORY_BACKEND=dev
+REM ?????? VM Redis Stack?????dev ???: set HERMES_MEMORY_BACKEND=dev
 call "%SCRIPT_DIR%memory-env.bat"
 
 echo [tools] Starting Eion-tools server - standalone TCP mode

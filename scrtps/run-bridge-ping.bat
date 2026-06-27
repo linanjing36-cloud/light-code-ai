@@ -1,8 +1,8 @@
 @echo off
-REM run-bridge-ping.bat - Step 1.3 联调: Erlang bridge_manager -> Eion-tools LLM 单点 ping
+REM run-bridge-ping.bat - Step 1.3 ???: Erlang bridge_manager -> Eion-tools LLM ??? ping
 REM
-REM 前置: scrtps\start-tools.bat 已运行 (写入 bin\run\eion-tools.addr)
-REM 凭证: 项目根 api-key.json 或环境变量 API_KEY_FILE
+REM ???: scrtps\start-tools.bat ?????(??? bin\run\eion-tools.addr)
+REM ???: ?????api-key.json ????????API_KEY_FILE
 REM
 REM Usage: scrtps\run-bridge-ping.bat
 

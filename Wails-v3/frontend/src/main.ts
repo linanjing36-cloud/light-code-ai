@@ -90,6 +90,7 @@ interface CapabilityView {
     description: string;
     kind: string;
     source: string;
+    streaming: boolean;
     risk_level: string;
     cost_hint: string;
     tags?: string[];
@@ -439,6 +440,7 @@ function normalizeCapability(raw: Record<string, unknown>): CapabilityView {
         description: String(raw.description || ""),
         kind: String(raw.kind || "tool"),
         source: String(raw.source || "builtin"),
+        streaming: Boolean(raw.streaming),
         risk_level: String(raw.risk_level || "safe"),
         cost_hint: String(raw.cost_hint || "low"),
         tags: Array.isArray(raw.tags) ? raw.tags.map((tag) => String(tag)) : [],
@@ -463,7 +465,7 @@ function renderCapabilities(caps: CapabilityView[]): void {
                     <span class="dot"></span>
                     <div class="tool-mini-body">
                         <span class="tool-name">${escapeHtml(cap.name)}</span>
-                        <span class="tool-meta">${escapeHtml(cap.kind)} · ${escapeHtml(cap.source)} · ${escapeHtml(cap.risk_level)}</span>
+                        <span class="tool-meta">${escapeHtml(cap.kind)} · ${escapeHtml(cap.source)} · ${escapeHtml(cap.streaming ? "stream" : "non-stream")} · ${escapeHtml(cap.risk_level)}</span>
                     </div>
                 </div>`
         )
@@ -484,6 +486,14 @@ function defaultCapabilityArgs(name: string): string {
             return JSON.stringify({ max_depth: 3, max_entries: 40, include_files: false }, null, 2);
         case "code_search":
             return JSON.stringify({ query: "panel_server", max_results: 8, case_sensitive: false }, null, 2);
+        case "workspace_briefing":
+            return JSON.stringify({ query: "panel_server", search_max_results: 6 }, null, 2);
+        case "github_repo_overview":
+            return JSON.stringify({ recent_commit_count: 5 }, null, 2);
+        case "github_diff_summary":
+            return JSON.stringify({ max_files: 20, include_name_status: true }, null, 2);
+        case "mcp_echo":
+            return JSON.stringify({ text: "hello-from-mcp" }, null, 2);
         default:
             return "{}";
     }

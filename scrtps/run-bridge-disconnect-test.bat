@@ -1,11 +1,11 @@
 @echo off
-REM run-bridge-disconnect-test.bat - Phase 3.2: 强杀 Eion-tools 验证 bridge_disconnect 降级
+REM run-bridge-disconnect-test.bat - Phase 3.2: ??? Eion-tools ??? bridge_disconnect ???
 REM
-REM 架构: LLM 推理由 Eion-tools (Eino) 执行; Erlang 经 bridge_manager 发 LLMInferRequest。
-REM 本脚本在 thinking 等待 Eion-tools 响应时杀掉 eion-tools-server.exe。
+REM ???: LLM ?????Eion-tools (Eino) ???; Erlang ??bridge_manager ??LLMInferRequest??
+REM ?????? thinking ??? Eion-tools ????????eion-tools-server.exe??
 REM
-REM 前置: scrtps\start-tools.bat + api-key.json
-REM 测试后: 必须重新 scrtps\start-tools.bat (本脚本会终止 Eion-tools)
+REM ???: scrtps\start-tools.bat + api-key.json
+REM ????? ?????? scrtps\start-tools.bat (????????? Eion-tools)
 REM
 REM Usage: scrtps\run-bridge-disconnect-test.bat
 

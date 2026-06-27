@@ -11,7 +11,7 @@ make.ps1 - Hermes Agent 大脑构建与运行 (Windows / PowerShell 版, Makefil
   .\make.ps1 run      启动 Agent 大脑 (前台, 优化参数, Ctrl+C 退出)
   .\make.ps1 stop     优雅停止 Agent 大脑 (rpc init:stop 触发 app terminate)
   .\make.ps1 clean    清理编译产物与 bin\erl_bin\
-  .\make.ps1 test      跑 Eion-tools go test + Agent-brains eunit
+  .\make.ps1 test      跑 Eion-tools go test + Agent-brains eunit + panel capability e2e
   .\make.ps1 help      显示帮助
 
 模式切换 (run 时):
@@ -49,6 +49,37 @@ $SdkWailsPkg  = "github.com/wailsapp/wails/v3/cmd/wails3@latest"
 # --- env 辅助函数 ---
 function Test-CommandExists($name) {
     return [bool](Get-Command $name -ErrorAction SilentlyContinue)
+}
+
+function Add-PathFront($pathValue) {
+    if (-not $pathValue -or -not (Test-Path $pathValue)) { return }
+    $parts = @($env:PATH -split ';' | Where-Object { $_ })
+    $parts = @($pathValue) + @($parts | Where-Object { $_ -ne $pathValue })
+    $env:PATH = ($parts -join ';')
+}
+
+function Ensure-LocalSdkPaths {
+    $localGoRoot = Join-Path $EnvDir "go"
+    $localGoBin = Join-Path $localGoRoot "bin"
+    $localErlBin = Join-Path $EnvDir "erlang\bin"
+    $localNodeBin = Join-Path $EnvDir "nodejs"
+    $localProtocBin = Join-Path $EnvDir "protoc\bin"
+    $localGoPath = Join-Path $EnvDir "gopath"
+
+    foreach ($candidate in @($EnvDir, $localProtocBin, $localNodeBin, $localErlBin, $localGoBin)) {
+        Add-PathFront $candidate
+    }
+
+    if (Test-GoRootUsable $localGoRoot) {
+        $env:GOROOT = $localGoRoot
+    } elseif ($env:GOROOT -eq $localGoRoot) {
+        Remove-Item Env:GOROOT -ErrorAction SilentlyContinue
+    }
+
+    if (Test-Path $localGoPath) {
+        $env:GOPATH = $localGoPath
+    }
+    $env:GOPROXY = "https://goproxy.cn,direct"
 }
 
 function Invoke-Wails3Compat {
@@ -105,6 +136,21 @@ function Get-GoVersion {
         if ($line -match 'go(\d+\.\d+(?:\.\d+)?)') { return $Matches[1] }
     } catch {}
     return $null
+}
+function Get-GoVersionAt($goExe) {
+    if (-not $goExe -or -not (Test-Path $goExe)) { return $null }
+    try {
+        $line = (& $goExe version 2>$null) -join ' '
+        if ($line -match 'go(\d+\.\d+(?:\.\d+)?)') { return $Matches[1] }
+    } catch {}
+    return $null
+}
+function Test-GoRootUsable($goRoot) {
+    if (-not $goRoot) { return $false }
+    $goExe = Join-Path $goRoot "bin\go.exe"
+    $contextDir = Join-Path $goRoot "src\context"
+    $fmtDir = Join-Path $goRoot "src\fmt"
+    return (Test-Path $goExe) -and (Test-Path $contextDir) -and (Test-Path $fmtDir)
 }
 function Get-NodeVersion {
     if (-not (Test-CommandExists "node")) { return $null }
@@ -186,6 +232,13 @@ function Install-Go {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     [System.IO.Compression.ZipFile]::ExtractToDirectory($zip, $EnvDir)   # 产生 bin\env\go\
     Remove-Item $zip -Force
+    if (-not (Test-GoRootUsable $goRoot)) {
+        throw "Go 安装后不完整: $goRoot (缺少 bin\\go.exe 或标准库目录 context/fmt)"
+    }
+    $installedVer = Get-GoVersionAt (Join-Path $goRoot "bin\go.exe")
+    if (-not (Test-VersionGe $installedVer "1.26.0")) {
+        throw "Go 安装版本异常: found=$installedVer want>=$SdkGoVer"
+    }
     return (Join-Path $goRoot "bin")    # go.exe
 }
 
@@ -264,11 +317,26 @@ function Install-Wails3 {
 function Write-ActivateScripts($envPaths, $goRoot, $goPath) {
     if (-not $envPaths -or $envPaths.Count -eq 0) { return }
     $pathsJoined = $envPaths -join ';'
+    $goExe = $null
+    $goContextDir = $null
+    $goFmtDir = $null
+    if ($goRoot) {
+        $goExe = Join-Path $goRoot "bin\go.exe"
+        $goContextDir = Join-Path $goRoot "src\context"
+        $goFmtDir = Join-Path $goRoot "src\fmt"
+    }
     # activate.ps1 (给 PowerShell 会话)
     $psLines = @()
     $psLines += '# 由 make.ps1 env 自动生成 — 在当前 PowerShell 会话激活本地 env'
     $psLines += '$env:PATH = "' + $pathsJoined + ';" + $env:PATH'
-    if ($goRoot) { $psLines += '$env:GOROOT = "' + $goRoot + '"' }
+    if ($goRoot) {
+        $psLines += 'if ((Test-Path "' + $goExe + '") -and (Test-Path "' + $goContextDir + '") -and (Test-Path "' + $goFmtDir + '")) {'
+        $psLines += '    $env:GOROOT = "' + $goRoot + '"'
+        $psLines += '} else {'
+        $psLines += '    if ($env:GOROOT -eq "' + $goRoot + '") { Remove-Item Env:GOROOT -ErrorAction SilentlyContinue }'
+        $psLines += '    Write-Host "[make] skip broken local GOROOT: ' + $goRoot + '"'
+        $psLines += '}'
+    }
     if ($goPath) { $psLines += '$env:GOPATH = "' + $goPath + '"' }
     $psLines += '$env:GOPROXY = "https://goproxy.cn,direct"'
     Set-Content -Path (Join-Path $EnvDir "activate.ps1") -Value $psLines -Encoding UTF8
@@ -276,7 +344,13 @@ function Write-ActivateScripts($envPaths, $goRoot, $goPath) {
     $batLines = @()
     $batLines += '@echo off'
     $batLines += 'set "PATH=' + $pathsJoined + ';%PATH%"'
-    if ($goRoot) { $batLines += 'set "GOROOT=' + $goRoot + '"' }
+    if ($goRoot) {
+        $batLines += 'if exist "' + $goExe + '" if exist "' + $goContextDir + '" if exist "' + $goFmtDir + '" ('
+        $batLines += '  set "GOROOT=' + $goRoot + '"'
+        $batLines += ') else ('
+        $batLines += '  echo [make] skip broken local GOROOT: ' + $goRoot
+        $batLines += ')'
+    }
     if ($goPath) { $batLines += 'set "GOPATH=' + $goPath + '"' }
     $batLines += 'set "GOPROXY=https://goproxy.cn,direct"'
     Set-Content -Path (Join-Path $EnvDir "activate.bat") -Value $batLines -Encoding ASCII
@@ -303,13 +377,24 @@ function Invoke-Env {
 
     # --- Go 1.26 ---
     $gVer = Get-GoVersion
-    if (Test-VersionGe $gVer "1.26.0") {
-        Write-Host "  [OK]      Go $gVer (>= 1.26)"
+    $localGoRoot = Join-Path $EnvDir "go"
+    $localGoVer = Get-GoVersionAt (Join-Path $localGoRoot "bin\go.exe")
+    $localGoUsable = Test-GoRootUsable $localGoRoot
+    if ($localGoUsable -and (Test-VersionGe $localGoVer "1.26.0")) {
+        Write-Host "  [OK]      本地 Go $localGoVer 可用 ($localGoRoot)"
+        $envPaths += (Join-Path $localGoRoot "bin")
+        $goRoot = $localGoRoot
+    } elseif (Test-VersionGe $gVer "1.26.0") {
+        Write-Host "  [OK]      系统 Go $gVer (>= 1.26)"
     } else {
-        $found = if ($gVer) { $gVer } else { "无" }
-        Write-Host "  [缺失/低]  Go (found: $found) -> 安装 Go $SdkGoVer 到 bin\env"
+        if ((Test-Path $localGoRoot) -and (-not $localGoUsable)) {
+            Write-Host "  [损坏]    本地 Go 不完整 -> 重新安装到 $localGoRoot"
+        } else {
+            $found = if ($gVer) { $gVer } else { "无" }
+            Write-Host "  [缺失/低]  Go (found: $found) -> 安装 Go $SdkGoVer 到 bin\env"
+        }
         $envPaths += (Install-Go)
-        $goRoot = Join-Path $EnvDir "go"
+        $goRoot = $localGoRoot
     }
 
     # --- Node.js ---
@@ -568,8 +653,99 @@ function Invoke-Stop {
     & $stopBat
 }
 
-# eunit + Eion-tools go test
+# Eion-tools go test + Agent-brains eunit + panel capability e2e
+function Invoke-PanelCapabilityE2E {
+    Apply-MemoryEnv
+
+    $wailsDir = Join-Path $RootDir "Wails-v3"
+    $RunDir = Join-Path $BinDir "run"
+    $PanelAddrFile = Join-Path $RunDir "panel.addr"
+    $EionAddrFile = Join-Path $RunDir "eion-tools.addr"
+    $StartAgentBat = Join-Path $ScrtpsDir "start-agent.bat"
+    $startedTempAgent = $false
+    $panelAddr = ""
+
+    if (Test-AgentHealthy -PanelAddrFile $PanelAddrFile) {
+        $panelAddr = (Get-Content $PanelAddrFile -Raw).Trim()
+        Write-Host "[make] ==> panel capability e2e (复用当前 Agent-brains @ $panelAddr)..."
+    } else {
+        if (Test-ErlProcessRunning) {
+            Write-Host "[make] ==> 检测到残留 erl，先清理后再做 panel capability e2e..."
+            Invoke-StopAll -Force
+            Start-Sleep -Seconds 2
+        }
+
+        Write-Host "[make] ==> 当前无健康 Agent-brains，先安装最新 beams..."
+        Invoke-Agent
+
+        if (-not (Test-Path $StartAgentBat)) {
+            throw "未找到 $StartAgentBat"
+        }
+
+        Write-Host "[make] ==> 启动临时 Agent-brains (HERMES_EXEC_VIA_PANEL=1) ..."
+        Remove-Item $PanelAddrFile -ErrorAction SilentlyContinue
+        $savedExecViaPanel = $env:HERMES_EXEC_VIA_PANEL
+        try {
+            $env:HERMES_EXEC_VIA_PANEL = "1"
+            Start-Process -FilePath "cmd.exe" `
+                -ArgumentList "/k", "`"$StartAgentBat`"" `
+                -WorkingDirectory $ScrtpsDir `
+                -WindowStyle Normal | Out-Null
+            $panelAddr = Wait-AddrFile -Path $PanelAddrFile -TimeoutSec 45 -Label "panel_server"
+            $startedTempAgent = $true
+            Write-Host "       panel_server @ $panelAddr"
+        }
+        finally {
+            if ($null -eq $savedExecViaPanel) {
+                Remove-Item Env:HERMES_EXEC_VIA_PANEL -ErrorAction SilentlyContinue
+            } else {
+                $env:HERMES_EXEC_VIA_PANEL = $savedExecViaPanel
+            }
+        }
+    }
+
+    Push-Location $wailsDir
+    try {
+        $savedQuietStdLog = $env:HERMES_PANEL_E2E_QUIET_RUNTIME_LOGS
+        $savedQuietEionLog = $env:HERMES_EION_QUIET_LOGS
+        try {
+            $env:HERMES_PANEL_E2E_QUIET_RUNTIME_LOGS = "1"
+            $env:HERMES_EION_QUIET_LOGS = "1"
+            & go run ./cmd/panel_capability_e2e
+            if ($LASTEXITCODE -ne 0) { throw "panel_capability_e2e 失败 (exit $LASTEXITCODE)" }
+        }
+        finally {
+            if ($null -eq $savedQuietStdLog) {
+                Remove-Item Env:HERMES_PANEL_E2E_QUIET_RUNTIME_LOGS -ErrorAction SilentlyContinue
+            } else {
+                $env:HERMES_PANEL_E2E_QUIET_RUNTIME_LOGS = $savedQuietStdLog
+            }
+            if ($null -eq $savedQuietEionLog) {
+                Remove-Item Env:HERMES_EION_QUIET_LOGS -ErrorAction SilentlyContinue
+            } else {
+                $env:HERMES_EION_QUIET_LOGS = $savedQuietEionLog
+            }
+        }
+    }
+    finally {
+        Pop-Location
+        if ($startedTempAgent) {
+            Write-Host "[make] ==> 停止临时 Agent-brains ..."
+            try {
+                Invoke-Stop
+                Start-Sleep -Seconds 1
+                Remove-Item $PanelAddrFile -ErrorAction SilentlyContinue
+                Remove-Item $EionAddrFile -ErrorAction SilentlyContinue
+            } catch {
+                Write-Host "[make] ==> 停止临时 Agent-brains 失败: $($_.Exception.Message)"
+            }
+        }
+    }
+}
+
 function Invoke-Test {
+    Apply-MemoryEnv
+
     $eionToolsDir = Join-Path $RootDir "Eion-tools"
     Write-Host "[make] ==> Eion-tools go test..."
     Push-Location $eionToolsDir
@@ -586,6 +762,8 @@ function Invoke-Test {
         if ($LASTEXITCODE -ne 0) { throw "rebar3 eunit 失败 (exit $LASTEXITCODE)" }
     }
     finally { Pop-Location }
+
+    Invoke-PanelCapabilityE2E
 }
 
 # 清理编译产物与 bin\erl_bin\
@@ -891,7 +1069,7 @@ function Show-Help {
     Write-Host "  stop-all -Force  强制停止 (等同 stop-all.bat -f)"
     Write-Host "  status   查看进程与端口文件状态"
     Write-Host "  clean    清理编译产物与 bin\erl_bin\"
-    Write-Host "  test     跑 Eion-tools go test + Agent-brains eunit"
+    Write-Host "  test     跑 Eion-tools go test + Agent-brains eunit + panel capability e2e"
     Write-Host "  help     显示此帮助"
     Write-Host ""
     Write-Host "模式切换 (run 时):"
@@ -901,7 +1079,24 @@ function Show-Help {
 # 自动加载本地 env (若 make env 已生成 activate.ps1), 让后续 target 复用 bin\env 下的工具
 $activatePs1 = Join-Path $EnvDir "activate.ps1"
 if ((Test-Path $activatePs1) -and $Target -ne "env") {
-    . $activatePs1
+    $localGoRoot = Join-Path $EnvDir "go"
+    if ((Test-Path $localGoRoot) -and (-not (Test-GoRootUsable $localGoRoot))) {
+        Write-Host "[make] skip broken local Go env: $localGoRoot"
+        $savedGoRoot = $env:GOROOT
+        $savedPath = $env:PATH
+        . $activatePs1
+        if ($savedGoRoot) {
+            $env:GOROOT = $savedGoRoot
+        } else {
+            Remove-Item Env:GOROOT -ErrorAction SilentlyContinue
+        }
+        $env:PATH = (($env:PATH -split ';' | Where-Object { $_ -and ($_ -ne (Join-Path $localGoRoot "bin")) }) -join ';')
+    } else {
+        . $activatePs1
+    }
+}
+if ($Target -ne "env") {
+    Ensure-LocalSdkPaths
 }
 
 # === 目标分发 ===

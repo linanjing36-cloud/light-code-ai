@@ -5,7 +5,9 @@
 package logging
 
 import (
+	"io"
 	"os"
+	"strings"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -22,9 +24,19 @@ var Logger *zap.Logger
 func Init() {
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	sink := os.Stderr
+	if strings.TrimSpace(os.Getenv("HERMES_EION_QUIET_LOGS")) == "1" {
+		sink = nil
+	}
+	var writer zapcore.WriteSyncer
+	if sink == nil {
+		writer = zapcore.AddSync(io.Discard)
+	} else {
+		writer = zapcore.AddSync(sink)
+	}
 	core := zapcore.NewCore(
 		zapcore.NewJSONEncoder(encoderConfig),
-		zapcore.AddSync(os.Stderr),
+		writer,
 		zapcore.DebugLevel,
 	)
 	Logger = zap.New(core)

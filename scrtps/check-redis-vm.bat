@@ -1,5 +1,5 @@
 @echo off
-REM check-redis-vm.bat - 检测 VM Redis Stack 是否可达
+REM check-redis-vm.bat - ????VM Redis Stack ??????
 
 setlocal
 

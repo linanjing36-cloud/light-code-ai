@@ -33,6 +33,21 @@ message ToolDesc {
   string parameters_json = 3;  // JSON Schema 字符串
 }
 
+// 统一能力描述（供管理台、策略层、验收链路使用）。
+message CapabilityDesc {
+  string name = 1;
+  string kind = 2;
+  string source = 3;
+  string version = 4;
+  string description = 5;
+  string input_schema_json = 6;
+  string output_schema_json = 7;
+  bool streaming = 8;
+  string risk_level = 9;
+  string cost_hint = 10;
+  repeated string tags = 11;
+}
+
 // LLM 推理请求。
 // 所有 provider 配置（model / api_base / api_key）都由请求携带 —— Go 侧不缓存 provider 配置。
 message LLMInferRequest {
@@ -83,12 +98,21 @@ message ToolListResponse {
   string error = 2;
 }
 
+// 能力列表查询（无参，返回统一 capability registry）。
+message CapabilityListRequest {}
+
+message CapabilityListResponse {
+  repeated CapabilityDesc capabilities = 1;
+  string error = 2;
+}
+
 // 顶层请求包装：通过 oneof 区分请求类型。
 message AgentRequest {
   oneof payload {
     LLMInferRequest llm_infer = 1;
     ToolExecRequest tool_exec = 2;
     ToolListRequest tool_list = 3;
+    CapabilityListRequest capability_list = 4;
   }
 }
 
@@ -100,5 +124,6 @@ message AgentResponse {
     ToolExecResponse tool_exec = 2;
     LlmChunk llm_chunk = 3;  // 流式 chunk (非终态, 仅 stream=true)
     ToolListResponse tool_list = 4;
+    CapabilityListResponse capability_list = 5;
   }
 }

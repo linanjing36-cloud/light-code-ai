@@ -57,6 +57,8 @@ func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) 
 			)
 		case *hermes.AgentRequest_ToolList:
 			logging.Logger.Debug("dispatch: tool_list")
+		case *hermes.AgentRequest_CapabilityList:
+			logging.Logger.Debug("dispatch: capability_list")
 		}
 
 		writeAgent := func(resp *hermes.AgentResponse) error {

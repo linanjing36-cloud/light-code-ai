@@ -12,6 +12,7 @@ import (
 
 	"github.com/light-code-ai/eion-tools/internal/dispatcher"
 	"github.com/light-code-ai/eion-tools/internal/logging"
+	"github.com/light-code-ai/eion-tools/internal/mcp"
 	"github.com/light-code-ai/eion-tools/internal/memory"
 	"github.com/light-code-ai/eion-tools/internal/tool"
 	codesearch "github.com/light-code-ai/eion-tools/plugins/code_search"
@@ -33,6 +34,7 @@ type Options struct {
 type Server struct {
 	opts Options
 	d    *dispatcher.Command_Dispatcher
+	mcp  *mcp.Manager
 
 	mu     sync.Mutex
 	ln     net.Listener
@@ -66,7 +68,11 @@ func New(opts Options) (*Server, error) {
 		}
 	}
 
-	return &Server{opts: opts, d: d}, nil
+	cfgs, err := mcp.LoadConfigsFromEnv()
+	if err != nil {
+		return nil, err
+	}
+	return &Server{opts: opts, d: d, mcp: mcp.NewManager(cfgs)}, nil
 }
 
 // Dispatcher 返回进程内命令分发器 (Phase B: Router 经 Bridge exec 帧 in-process 调用)。
@@ -112,6 +118,16 @@ func (s *Server) Start(parent context.Context) (string, error) {
 	s.ln = ln
 	s.cancel = cancel
 
+	if s.mcp != nil {
+		if err := s.mcp.Start(ctx, s.d.ToolWrapper()); err != nil {
+			_ = ln.Close()
+			s.ln = nil
+			s.cancel = nil
+			cancel()
+			return "", fmt.Errorf("start mcp manager: %w", err)
+		}
+	}
+
 	logging.Logger.Info("eion-tools server listening",
 		zap.String("net", network()),
 		zap.String("addr", actual),
@@ -152,6 +168,9 @@ func (s *Server) Stop() error {
 
 	if ln != nil {
 		_ = ln.Close()
+	}
+	if s.mcp != nil {
+		s.mcp.Stop()
 	}
 	s.wg.Wait()
 	return nil

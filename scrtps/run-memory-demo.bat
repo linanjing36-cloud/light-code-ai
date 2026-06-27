@@ -1,11 +1,11 @@
 @echo off
-REM run-memory-demo.bat - Step 4.1a 端到端: ReAct + memory_store/memory_search
+REM run-memory-demo.bat - Step 4.1a ????? ReAct + memory_store/memory_search
 REM
-REM 前置:
-REM   1. VM Redis Stack 运行中 (192.168.59.129:6379)
+REM ???:
+REM   1. VM Redis Stack ?????(192.168.59.129:6379)
 REM   2. api-key.json (DeepSeek LLM)
 REM
-REM 本地 dev 后端: set HERMES_MEMORY_BACKEND=dev 后再运行
+REM ??? dev ???: set HERMES_MEMORY_BACKEND=dev ??????
 
 setlocal
 

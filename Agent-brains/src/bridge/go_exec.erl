@@ -2,7 +2,7 @@
 
 %% Phase B: Erlang bridge_manager 经 panel 连接让 Wails Go 进程内执行 LLM/工具。
 
--export([enabled/0, call_llm/3, call_tool/5, call_tool_sync/2, list_tools/1]).
+-export([enabled/0, call_llm/3, call_tool/5, call_tool_sync/2, list_tools/1, list_capabilities/1]).
 
 -define(LLM_TIMEOUT, 60000).
 -define(TOOL_TIMEOUT, 15000).
@@ -93,6 +93,23 @@ list_tools(TimeoutMs) ->
                     {error, Err};
                 _ ->
                     {ok, maps:get(tools, Resp, [])}
+            end;
+        {ok, []} ->
+            {error, empty_response};
+        {error, Reason} ->
+            {error, Reason}
+    end.
+
+list_capabilities(TimeoutMs) ->
+    Payload = pb_codec:encode_req(#{kind => capability_list}),
+    case panel_server:exec_agent(Payload, TimeoutMs) of
+        {ok, [Bin | _]} ->
+            Resp = pb_codec:decode_resp(Bin),
+            case maps:get(error, Resp, <<>>) of
+                Err when Err =/= <<>> ->
+                    {error, Err};
+                _ ->
+                    {ok, maps:get(capabilities, Resp, [])}
             end;
         {ok, []} ->
             {error, empty_response};

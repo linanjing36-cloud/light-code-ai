@@ -1,6 +1,6 @@
 @echo off
-REM run-fsm-crash-test.bat - Phase 3.1: kill agent_fsm 后 transient 重启续跑
-REM 前置: scrtps\start-tools.bat + api-key.json
+REM run-fsm-crash-test.bat - Phase 3.1: kill agent_fsm ??transient ??????
+REM ???: scrtps\start-tools.bat + api-key.json
 REM Usage: scrtps\run-fsm-crash-test.bat
 
 setlocal

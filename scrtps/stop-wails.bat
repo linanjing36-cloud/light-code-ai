@@ -1,13 +1,13 @@
 @echo off
-REM stop-wails.bat - 停止 Hermes Agent Workbench (Wails v3 桌面面板) - Windows
+REM stop-wails.bat - ??? Hermes Agent Workbench (Wails v3 ??????) - Windows
 REM
-REM 优雅停止: taskkill 发送 WM_CLOSE -> Wails shutdown -> bridge.ServiceShutdown
-REM           -> 关闭 Wails 与桥接连接；Agent 如需停止请单独执行 stop.bat / stop-all
-REM 强制模式 (-f): taskkill /F 直接杀 (Agent 进程可能仍在, 用 stop.bat 或 stop-all 清理)
+REM ??????: taskkill ????WM_CLOSE -> Wails shutdown -> bridge.ServiceShutdown
+REM           -> ??? Wails ?????????Agent ??????????????stop.bat / stop-all
+REM ?????? (-f): taskkill /F ????? (Agent ?????????, ??stop.bat ??stop-all ???)
 REM
-REM 用法:
-REM   bin\stop-wails.bat         REM 优雅停止
-REM   bin\stop-wails.bat -f      REM 强制杀
+REM ???:
+REM   bin\stop-wails.bat         REM ??????
+REM   bin\stop-wails.bat -f      REM ?????
 
 setlocal
 
@@ -15,31 +15,27 @@ set "FORCE=0"
 if "%~1"=="-f" set "FORCE=1"
 if "%~1"=="--force" set "FORCE=1"
 
-REM 检查 hermes.exe 是否在运行
-tasklist /FI "IMAGENAME eq hermes.exe" 2>nul | findstr "hermes.exe" >nul
+REM ????hermes.exe ????????tasklist /FI "IMAGENAME eq hermes.exe" 2>nul | findstr "hermes.exe" >nul
 if errorlevel 1 (
-    echo ==> Wails 桌面面板未运行
-    exit /b 0
+    echo ==> Wails ???????????    exit /b 0
 )
 
 if "%FORCE%"=="1" (
-    echo ==> [force] 强制杀死 Wails 进程...
+    echo ==> [force] ???????Wails ???...
     taskkill /F /IM hermes.exe >nul 2>&1
-    echo ==> 已强制杀死 (erl 子进程可能残留, 用 bin\stop.bat 清理)
+    echo ==> ????????(erl ??????????? ??bin\stop.bat ???)
     exit /b 0
 )
 
-echo ==> 优雅停止 Wails 桌面面板
-echo    [close] 发送 WM_CLOSE (触发 brain.Bridge.ServiceShutdown, 关闭 Wails)...
+echo ==> ?????? Wails ??????
+echo    [close] ????WM_CLOSE (??? brain.Bridge.ServiceShutdown, ??? Wails)...
 taskkill /IM hermes.exe >nul 2>&1
 
-REM 等 5s 让 Wails 正常退出
-set /a COUNT=0
+REM ??5s ??Wails ???????set /a COUNT=0
 :wait_loop
 tasklist /FI "IMAGENAME eq hermes.exe" 2>nul | findstr "hermes.exe" >nul
 if errorlevel 1 (
-    echo ==> Wails 已停止
-    exit /b 0
+    echo ==> Wails ?????    exit /b 0
 )
 set /a COUNT+=1
 if %COUNT% geq 10 goto force_kill
@@ -47,9 +43,9 @@ timeout /t 1 /nobreak >nul
 goto wait_loop
 
 :force_kill
-echo    [timeout] 5s 超时, 强制杀...
+echo    [timeout] 5s ???, ?????...
 taskkill /F /IM hermes.exe >nul 2>&1
-echo ==> 已强制杀死 Wails
-echo    提示: Agent 进程可能仍在, 用 bin\stop.bat 或 .\make.ps1 stop-all 清理
+echo ==> ????????Wails
+echo    ???: Agent ?????????, ??bin\stop.bat ??.\make.ps1 stop-all ???
 
 endlocal

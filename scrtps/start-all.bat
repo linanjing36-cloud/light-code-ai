@@ -1,7 +1,7 @@
 @echo off
-REM start-all.bat - 一键启动 Hermes (Windows, 薄包装)
-REM 推荐: .\make.ps1 start-all  或  .\make.ps1 start-all-ui
-REM 带 UI: start-all.bat wails
+REM start-all.bat - ???????Hermes (Windows, ?????
+REM ???: .\make.ps1 start-all  ?? .\make.ps1 start-all-ui
+REM ??UI: start-all.bat wails
 
 setlocal
 set "SCRIPT_DIR=%~dp0"

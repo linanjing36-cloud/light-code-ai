@@ -57,3 +57,4 @@ erl_crash.dump
 Agent-brains/config/mnesia/DECISION_TAB.LOG
 Agent-brains/config/mnesia/LATEST.LOG
 Agent-brains/config/mnesia/ets_snapshot.DCD
+Agent-brains/config/mnesia/DECISION_TAB.LOG

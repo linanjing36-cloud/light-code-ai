@@ -38,7 +38,7 @@ if exist "%WAILS_BIN_DIR%\hermes.exe" (
 if not exist "%RUN_DIR%" mkdir "%RUN_DIR%"
 if not exist "%WAILS_LOG_DIR%" mkdir "%WAILS_LOG_DIR%"
 
-REM Eion-tools 已嵌入 hermes.exe；写 addr 供 Agent-brains bridge_manager 发现。
+REM Embedded Eion-tools writes addr for Agent-brains bridge_manager discovery.
 set "EION_TOOLS_ADDR_FILE=%RUN_DIR%\eion-tools.addr"
 set "HERMES_EION_ADDR_FILE=%RUN_DIR%\eion-tools.addr"
 

@@ -1,6 +1,6 @@
 @echo off
-REM stop-all.bat - 一键停止 Hermes 三进程栈 (Windows)
-REM 推荐: .\make.ps1 stop-all
+REM stop-all.bat - ???????Hermes ?????? (Windows)
+REM ???: .\make.ps1 stop-all
 
 setlocal
 
@@ -9,7 +9,7 @@ set "FORCE=%~1"
 
 echo.
 echo ========================================
-echo   Hermes 一键停止
+echo   Hermes ???????
 echo ========================================
 echo.
 
@@ -18,10 +18,10 @@ call "%SCRIPT_DIR%stop-wails.bat" %FORCE%
 
 echo [2/3] Agent-brains ...
 call "%SCRIPT_DIR%stop.bat" %FORCE%
-REM 兜底: 仍有 erl 残留则强杀 (节点名 hermes_brains 占用会导致无法重启)
+REM ???: ??? erl ???????? (?????hermes_brains ??????????????
 tasklist /FI "IMAGENAME eq erl.exe" 2>nul | find /I "erl.exe" >nul
 if not errorlevel 1 (
-    echo        清理残留 erl.exe ...
+    echo        ?????? erl.exe ...
     taskkill /F /IM erl.exe >nul 2>&1
     taskkill /F /IM beam.smp.exe >nul 2>&1
 )
@@ -29,14 +29,14 @@ if not errorlevel 1 (
 echo [3/3] Eion-tools (bin/eion_bin) ...
 tasklist /FI "IMAGENAME eq eion-tools-server.exe" 2>nul | find /I "eion-tools-server.exe" >nul
 if errorlevel 1 (
-    echo        未运行
+    echo        ?????
 ) else (
     if /I "%FORCE%"=="-f" (
         taskkill /F /IM eion-tools-server.exe >nul 2>&1
     ) else (
         taskkill /IM eion-tools-server.exe >nul 2>&1
     )
-    echo        已发送停止信号
+    echo        ???????????
 )
 
 set "RUN_DIR=%SCRIPT_DIR%..\bin\run"
@@ -44,6 +44,6 @@ if exist "%RUN_DIR%\eion-tools.addr" del /q "%RUN_DIR%\eion-tools.addr" 2>nul
 if exist "%RUN_DIR%\panel.addr" del /q "%RUN_DIR%\panel.addr" 2>nul
 
 echo.
-echo [ok] 全部停止完成
+echo [ok] ?????????
 echo.
 endlocal

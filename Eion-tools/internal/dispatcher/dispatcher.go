@@ -63,6 +63,10 @@ func (d *Command_Dispatcher) Dispatch(ctx context.Context, req *hermes.AgentRequ
 				resp.Payload = &hermes.AgentResponse_ToolList{
 					ToolList: &hermes.ToolListResponse{Error: fmt.Sprintf("panic: %v", r)},
 				}
+			case *hermes.AgentRequest_CapabilityList:
+				resp.Payload = &hermes.AgentResponse_CapabilityList{
+					CapabilityList: &hermes.CapabilityListResponse{Error: fmt.Sprintf("panic: %v", r)},
+				}
 			default:
 				resp.Payload = &hermes.AgentResponse_ToolExec{
 					ToolExec: &hermes.ToolExecResponse{
@@ -90,6 +94,12 @@ func (d *Command_Dispatcher) Dispatch(ctx context.Context, req *hermes.AgentRequ
 		out := d.handleToolList(p.ToolList)
 		return &hermes.AgentResponse{
 			Payload: &hermes.AgentResponse_ToolList{ToolList: out},
+		}
+
+	case *hermes.AgentRequest_CapabilityList:
+		out := d.handleCapabilityList(p.CapabilityList)
+		return &hermes.AgentResponse{
+			Payload: &hermes.AgentResponse_CapabilityList{CapabilityList: out},
 		}
 
 	default:
@@ -227,6 +237,27 @@ func (d *Command_Dispatcher) handleToolList(_ *hermes.ToolListRequest) *hermes.T
 		})
 	}
 	return &hermes.ToolListResponse{Tools: tools}
+}
+
+func (d *Command_Dispatcher) handleCapabilityList(_ *hermes.CapabilityListRequest) *hermes.CapabilityListResponse {
+	descs := d.toolW.CapabilityDescs()
+	caps := make([]*hermes.CapabilityDesc, 0, len(descs))
+	for _, desc := range descs {
+		caps = append(caps, &hermes.CapabilityDesc{
+			Name:             desc.Name,
+			Kind:             string(desc.Kind),
+			Source:           desc.Source,
+			Version:          desc.Version,
+			Description:      desc.Description,
+			InputSchemaJson:  desc.InputSchema,
+			OutputSchemaJson: desc.OutputSchema,
+			Streaming:        desc.Streaming,
+			RiskLevel:        string(desc.RiskLevel),
+			CostHint:         string(desc.CostHint),
+			Tags:             append([]string(nil), desc.Tags...),
+		})
+	}
+	return &hermes.CapabilityListResponse{Capabilities: caps}
 }
 
 // cacheIdempotent 将工具执行结果存入幂等缓存（ReqId 为空则跳过）。

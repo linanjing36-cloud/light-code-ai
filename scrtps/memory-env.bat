@@ -1,6 +1,6 @@
 @echo off
-REM memory-env.bat - Memory 工具默认连接 Ubuntu VM 上的 Redis Stack
-REM 覆盖示例: set HERMES_REDIS_ADDR=127.0.0.1:6379 && set HERMES_MEMORY_BACKEND=dev
+REM memory-env.bat - Memory ????????? Ubuntu VM ??? Redis Stack
+REM ??????: set HERMES_REDIS_ADDR=127.0.0.1:6379 && set HERMES_MEMORY_BACKEND=dev
 
 if not defined HERMES_MEMORY_BACKEND set HERMES_MEMORY_BACKEND=redis
 if not defined HERMES_REDIS_ADDR set HERMES_REDIS_ADDR=192.168.59.129:6379

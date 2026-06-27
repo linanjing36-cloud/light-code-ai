@@ -36,6 +36,7 @@
 %% BizReq 形如:
 %%   #{kind => llm_infer,  model, api_base, api_key, messages, tools}
 %%   #{kind => tool_exec,  req_id, tool_name, arguments_json}
+%%   #{kind => capability_list}
 %%
 %% 返回: binary()  —— 直接发给 Go 侧 (Eion-tools) 的 4 字节长度前缀帧的 protobuf 负载
 -spec encode_req(map()) -> binary().
@@ -48,6 +49,7 @@ encode_req(BizReq) when is_map(BizReq) ->
 %% 返回形如:
 %%   #{kind => llm_infer, content, tool_calls, prompt_tokens, completion_tokens, reasoning_content}
 %%   #{kind => tool_exec, result_json, error}
+%%   #{kind => capability_list, capabilities, error}
 %%
 %% 注: reasoning_content 来自 v4-pro 等推理模型，正文仍在 content。
 -spec decode_resp(binary()) -> map().
@@ -82,6 +84,8 @@ to_struct(#{kind := tool_exec} = M) ->
                 tool_name => maps:get(tool_name, M, <<>>),
                 arguments_json => maps:get(arguments_json, M, <<>>)},
     #{tool_exec => ToolReq};
+to_struct(#{kind := capability_list}) ->
+    #{capability_list => #{}};
 to_struct(#{kind := tool_list}) ->
     #{tool_list => #{}}.
 
@@ -108,6 +112,19 @@ tool_desc_from_struct(T) ->
     #{name => maps:get(name, T, <<>>),
       description => maps:get(description, T, <<>>),
       parameters_json => maps:get(parameters_json, T, <<>>)}.
+
+capability_desc_from_struct(C) ->
+    #{name => maps:get(name, C, <<>>),
+      kind => maps:get(kind, C, <<>>),
+      source => maps:get(source, C, <<>>),
+      version => maps:get(version, C, <<>>),
+      description => maps:get(description, C, <<>>),
+      input_schema_json => maps:get(input_schema_json, C, <<>>),
+      output_schema_json => maps:get(output_schema_json, C, <<>>),
+      streaming => maps:get(streaming, C, false),
+      risk_level => maps:get(risk_level, C, <<>>),
+      cost_hint => maps:get(cost_hint, C, <<>>),
+      tags => maps:get(tags, C, [])}.
 
 %%%===================================================================
 %%% gpb 消息 Map -> 业务 Map (from_struct)
@@ -144,6 +161,11 @@ from_struct(#{tool_list := Resp}) ->
     #{kind => tool_list,
       tools => Tools,
       error => maps:get(error, Resp, <<>>)};
+from_struct(#{capability_list := Resp}) ->
+    Caps = [capability_desc_from_struct(C) || C <- maps:get(capabilities, Resp, [])],
+    #{kind => capability_list,
+      capabilities => Caps,
+      error => maps:get(error, Resp, <<>>) };
 from_struct(Other) ->
     %% 防御性兜底: 未知结构 (例如 Go 侧返回空 oneof 时 gpb 解出 #{})
     %% 直接原样返回，让调用方按需处理
