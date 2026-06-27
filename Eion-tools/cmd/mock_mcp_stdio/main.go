@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -80,31 +79,16 @@ func main() {
 }
 
 func readRPC(r *bufio.Reader) ([]byte, error) {
-	length := 0
-	for {
-		line, err := r.ReadString('\n')
-		if err != nil {
-			return nil, err
-		}
-		line = strings.TrimRight(line, "\r\n")
-		if line == "" {
-			break
-		}
-		var n int
-		if _, err := fmt.Sscanf(line, "Content-Length: %d", &n); err == nil {
-			length = n
-		} else if _, err := fmt.Sscanf(strings.ToLower(line), "content-length: %d", &n); err == nil {
-			length = n
-		}
-	}
-	if length <= 0 {
-		return nil, io.EOF
-	}
-	body := make([]byte, length)
-	if _, err := io.ReadFull(r, body); err != nil {
+	// MCP stdio 规范: newline-delimited JSON
+	line, err := r.ReadString('\n')
+	if err != nil && err != io.EOF {
 		return nil, err
 	}
-	return body, nil
+	line = strings.TrimRight(line, "\r\n")
+	if line == "" {
+		return nil, io.EOF
+	}
+	return []byte(line), nil
 }
 
 func writeResult(id int64, result map[string]any) {
@@ -127,8 +111,8 @@ func writeError(id int64, code int, msg string) {
 }
 
 func writeFrame(v map[string]any) {
+	// MCP stdio 规范: newline-delimited JSON
 	body, _ := json.Marshal(v)
-	header := fmt.Sprintf("Content-Length: %d\r\n\r\n", len(body))
-	_, _ = io.WriteString(os.Stdout, header)
 	_, _ = os.Stdout.Write(body)
+	_, _ = os.Stdout.Write([]byte("\n"))
 }

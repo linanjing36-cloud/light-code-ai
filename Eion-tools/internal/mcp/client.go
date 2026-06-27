@@ -277,17 +277,38 @@ func writeRPC(w io.Writer, payload any) error {
 	if err != nil {
 		return fmt.Errorf("marshal rpc: %w", err)
 	}
-	header := fmt.Sprintf("Content-Length: %d\r\n\r\n", len(body))
-	if _, err := io.WriteString(w, header); err != nil {
-		return fmt.Errorf("write rpc header: %w", err)
-	}
+	// MCP stdio 规范: newline-delimited JSON (每行一个 JSON-RPC 消息)
 	if _, err := w.Write(body); err != nil {
 		return fmt.Errorf("write rpc body: %w", err)
+	}
+	if _, err := w.Write([]byte("\n")); err != nil {
+		return fmt.Errorf("write rpc delimiter: %w", err)
 	}
 	return nil
 }
 
+// readRPC 自动检测两种传输格式:
+//   - MCP 标准: newline-delimited JSON (每行一个 JSON-RPC 消息)
+//   - LSP 风格: Content-Length: N\r\n\r\n + body (向后兼容旧 mock_mcp_stdio)
 func readRPC(r *bufio.Reader) (*jsonrpcResponse, error) {
+	first, err := r.Peek(1)
+	if err != nil {
+		return nil, fmt.Errorf("read rpc peek: %w", err)
+	}
+	// 以 '{' 开头 → newline-delimited JSON
+	if first[0] == '{' {
+		line, err := r.ReadString('\n')
+		if err != nil && err != io.EOF {
+			return nil, fmt.Errorf("read rpc line: %w", err)
+		}
+		line = strings.TrimRight(line, "\r\n")
+		var resp jsonrpcResponse
+		if err := json.Unmarshal([]byte(line), &resp); err != nil {
+			return nil, fmt.Errorf("decode rpc line: %w", err)
+		}
+		return &resp, nil
+	}
+	// 否则 → LSP 风格 Content-Length
 	length := 0
 	for {
 		line, err := r.ReadString('\n')

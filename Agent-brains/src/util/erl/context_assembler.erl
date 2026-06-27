@@ -1,11 +1,17 @@
 -module(context_assembler).
 
--export([build/2, trim_history/2, filter_llm_history/1]).
+-export([build/2, trim_history/2, filter_llm_history/1, recall_memory/2]).
 
 -define(DEFAULT_MAX_HISTORY_MSGS, 40).
 
 %%====================================================================
 %% Context_Assembler —— 上下文组装器 (纯函数式, 无副作用)
+%%
+%% EXEC-P1-013: 新增 recall_memory/2 —— agentmemory 优先召回策略入口。
+%%   - build/2 保持纯函数: 只接受已经召回到的 memory_snippets, 不做 I/O。
+%%   - recall_memory/2 负责编排: 决定走 agentmemory 还是本地 memory_rag,
+%%     并在 agentmemory 不可用/返回空时降级。编排权仍属 Erlang brain,
+%%     agentmemory 仅作为召回工具, 不持有会话真相。
 %%====================================================================
 
 -spec build(binary(), map()) -> map().
@@ -27,6 +33,67 @@ build(Model, Ctx) ->
         tools => normalize_tools(Tools),
         stream => true
     }.
+
+%%====================================================================
+%% agentmemory 优先召回策略 (EXEC-P1-013)
+%%
+%% 当 brain 需要上下文时:
+%%   1. priority=agentmemory (默认): 优先调 agentmemory 的 search MCP 工具
+%%      (经 bridge_manager → panel exec → Eion-tools → MCP client manager)
+%%   2. agentmemory 不可用或返回空: 降级到本地 memory_rag:prefetch/2
+%%      (走 memory_search 工具, 保持原有逻辑)
+%%   3. priority=local: 直接走本地 memory_rag:prefetch/2
+%%
+%% 关键约束: agentmemory 只是召回工具, 不持有会话真相; 策略与裁剪决策
+%% 仍在 Erlang 层。返回的 snippets 经 build/2 注入 System Prompt,
+%% 由 brain 统一编排。
+%%
+%% 优先级解析: app env memory_priority > OS env HERMES_MEMORY_PRIORITY > 默认 agentmemory
+%%====================================================================
+-spec recall_memory(binary(), [map()]) -> [map()].
+recall_memory(SessionId, History) when is_binary(SessionId), is_list(History) ->
+    case memory_priority() of
+        agentmemory ->
+            case memory_rag:search_agentmemory(SessionId, History) of
+                [] ->
+                    lager:info("agentmemory returned empty, falling back to local memory_rag, session_id=~p",
+                               [SessionId]),
+                    memory_rag:prefetch(SessionId, History);
+                Snippets ->
+                    lager:info("agentmemory recall ok, snippets=~p, session_id=~p",
+                               [length(Snippets), SessionId]),
+                    Snippets
+            end;
+        local ->
+            memory_rag:prefetch(SessionId, History)
+    end.
+
+%% 优先级解析: app env (atom/binary/string) > OS env > 默认 agentmemory
+memory_priority() ->
+    case application:get_env(hermes_brains, memory_priority) of
+        {ok, P} when P =:= agentmemory; P =:= local ->
+            P;
+        {ok, P} when is_binary(P) ->
+            case binary_to_existing_atom(string:lowercase(P), utf8) of
+                local -> local;
+                _ -> agentmemory
+            end;
+        {ok, P} when is_list(P) ->
+            case string:lowercase(P) of
+                "local" -> local;
+                _ -> agentmemory
+            end;
+        _ ->
+            case os:getenv("HERMES_MEMORY_PRIORITY") of
+                false ->
+                    agentmemory;
+                Env ->
+                    case string:lowercase(Env) of
+                        "local" -> local;
+                        _ -> agentmemory
+                    end
+            end
+    end.
 
 %% 去掉 history 中的 system 角色（统一由本模块生成一条 system 消息）
 -spec filter_llm_history([map()]) -> [map()].

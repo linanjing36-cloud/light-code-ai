@@ -51,6 +51,14 @@ Wails-v3/extract/
 *.swo
 .idea/
 .vscode/
+
+# ---- Trae CN 本地配置 / Skill 缓存 (assistant 自用, 不入库) ----
+# 包含: .trae-cn/skills/ (superpowers + code-simplifier), session 缓存等
+.trae-cn/
+
+# ---- CodeGraph 本地索引 (assistant 自用, 不入库) ----
+# .codegraph/ 自身已配 .gitignore 忽略内部产物, 这里再确保目录不进 git
+.codegraph/
 Agent-brains/config/mnesia/LATEST.LOG
 Agent-brains/log/hermes_brains.log
 erl_crash.dump
