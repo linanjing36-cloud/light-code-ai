@@ -247,7 +247,8 @@ encode_result(<<"list_tools">>, #{tools := Tools}) ->
 encode_result(<<"approve">>, #{ok := Ok}) ->
     ?PANEL_PB:encode_msg(#{ok => Ok}, 'ApproveResult');
 encode_result(<<"brain_status">>, M) ->
-    PbM = #{state => maps:get(state, M, <<>>),
+    StateBin = encode_state_bin(maps:get(state, M, <<>>)),
+    PbM = #{state => StateBin,
             loop_count => maps:get(loop_count, M, 0),
             max_loops => maps:get(max_loops, M, 0),
             history_len => maps:get(history_len, M, 0)},
@@ -284,3 +285,8 @@ decode_result(<<"stop">>, Bin) ->
     #{ok => maps:get(ok, M, false)};
 decode_result(_Method, _Bin) ->
     #{}.
+
+encode_state_bin(S) when is_atom(S) -> atom_to_binary(S, utf8);
+encode_state_bin(S) when is_binary(S) -> S;
+encode_state_bin(S) when is_list(S) -> list_to_binary(S);
+encode_state_bin(_) -> <<>>.

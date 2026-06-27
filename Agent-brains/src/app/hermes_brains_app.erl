@@ -22,7 +22,7 @@ stop(_State) ->
 %%     Wails 侧读该文件发现地址, 建立 TCP 连接池
 %%   - bridge_manager 作为 TCP 客户端连接 Eion-tools server (独立进程)
 %%
-%% 启动 panel_server (TCP+JSON RPC), 然后阻塞主进程直到应用退出。
+%% 启动 panel_server (TCP + Protobuf PanelFrame), 然后阻塞主进程直到应用退出。
 serve() ->
     case panel_server:start_link() of
         {ok, _Pid} ->

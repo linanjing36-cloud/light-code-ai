@@ -201,8 +201,20 @@ accept_loop(Sock) ->
         {ok, Conn} ->
             Remote = format_remote(Conn),
             ?log("connection accepted: remote=~s", [Remote]),
-            spawn(fun() -> connection_loop(Conn, Remote) end),
-            accept_loop(Sock);
+            %% 继续 accept; 本连接交给独立 handler (controlling_process 同步返回 ok 后交付)
+            spawn(fun() -> accept_loop(Sock) end),
+            Handler = spawn_link(fun() ->
+                receive {start, S, R} -> connection_recv_loop(S, R) end
+            end),
+            case gen_tcp:controlling_process(Conn, Handler) of
+                ok ->
+                    Handler ! {start, Conn, Remote};
+                {error, Err} ->
+                    ?log_error("controlling_process failed remote=~s: ~p", [Remote, Err]),
+                    unlink(Handler),
+                    exit(Handler, shutdown),
+                    ok
+            end;
         {error, closed} ->
             ?log("accept loop exiting: listen socket closed", []);
         {error, Reason} ->
@@ -211,55 +223,63 @@ accept_loop(Sock) ->
     end.
 
 %%====================================================================
-%% 内部: connection loop (每连接一个进程)
-%%   - {active, true} + {packet, 4}: gen_tcp 自动按 4字节长度前缀拼装完整帧
-%%   - receive 循环同时处理: client 请求 ({tcp}) + panel_server 转发的 push ({push_stream})
+%% 内部: connection receive loop (每连接一个进程, passive recv)
+%%   - {packet, 4}: gen_tcp:recv(Sock, 0) 读一帧 Protobuf 负载
+%%   - push_stream 走 mailbox (send 流式阶段; 与 recv 阻塞互斥, 后续可改 active once)
 %%====================================================================
 
-connection_loop(Sock, Remote) ->
-    %% 切到 active + packet 模式, 让 {tcp, Sock, Bin} 自动剥除长度前缀
-    ok = inet:setopts(Sock, [{active, true}, {packet, 4}]),
-    connection_recv_loop(Sock, Remote).
-
 connection_recv_loop(Sock, Remote) ->
+    ok = inet:setopts(Sock, [{packet, 4}, {active, false}]),
+    ?log("connection handler ready: remote=~s pid=~p", [Remote, self()]),
+    connection_passive_loop(Sock, Remote).
+
+connection_passive_loop(Sock, Remote) ->
     receive
-        {tcp, Sock, Bin} ->
-            %% 收到 client 完整帧 (4字节长度前缀已剥除, Bin 是 PanelFrame Protobuf 负载)
-            case panel_pb_codec:unpack_frame(Bin) of
-                {request, Id, Method, ArgsMap} ->
-                    ?log("request received: remote=~s id=~p method=~s", [Remote, Id, Method]),
-                    {RespTag, RespData} = dispatch(Id, Method, ArgsMap),
-                    case RespTag of
-                        ok ->
-                            Frame = panel_pb_codec:pack_response_ok(Id, Method, RespData),
-                            send_frame(Sock, Frame);
-                        error ->
-                            Frame = panel_pb_codec:pack_response_err(Id, RespData),
-                            send_frame(Sock, Frame)
-                    end,
-                    connection_recv_loop(Sock, Remote);
-                Other ->
-                    ?log_warning("invalid frame from remote=~s: ~p", [Remote, Other]),
-                    connection_recv_loop(Sock, Remote)
-            end;
         {push_stream, FrameBin} ->
-            %% 来自 panel_server 转发的流式 push (chunk/final/...)
             send_frame(Sock, FrameBin),
-            connection_recv_loop(Sock, Remote);
-        {tcp_closed, Sock} ->
+            connection_passive_loop(Sock, Remote)
+    after 0 -> ok
+    end,
+    case gen_tcp:recv(Sock, 0) of
+        {ok, Bin} ->
+            handle_client_frame(Sock, Remote, Bin),
+            connection_passive_loop(Sock, Remote);
+        {error, closed} ->
             ?log("connection handler exiting: remote=~s closed by peer", [Remote]),
             cleanup_streams_for_self(),
             ok;
-        {tcp_error, Sock, Reason} ->
-            ?log_warning("connection handler exiting: remote=~s tcp_error=~p", [Remote, Reason]),
+        {error, Reason} ->
+            ?log_warning("connection handler exiting: remote=~s recv_error=~p", [Remote, Reason]),
             cleanup_streams_for_self(),
             ok
     end.
 
-%% 发送一帧: 4 字节大端长度前缀 + PanelFrame Protobuf 二进制
+handle_client_frame(Sock, Remote, Bin) ->
+    case panel_pb_codec:unpack_frame(Bin) of
+        {request, Id, Method, ArgsMap} ->
+            ?log("request received: remote=~s id=~p method=~s", [Remote, Id, Method]),
+            MethodBin = ensure_method_binary(Method),
+            {RespTag, RespData} = dispatch(Id, MethodBin, ArgsMap),
+            case RespTag of
+                ok ->
+                    Frame = panel_pb_codec:pack_response_ok(Id, MethodBin, RespData),
+                    send_frame(Sock, Frame);
+                error ->
+                    Frame = panel_pb_codec:pack_response_err(Id, RespData),
+                    send_frame(Sock, Frame)
+            end;
+        Other ->
+            ?log_warning("invalid frame from remote=~s: ~p", [Remote, Other])
+    end.
+
+ensure_method_binary(M) when is_binary(M) -> M;
+ensure_method_binary(M) when is_list(M) -> list_to_binary(M);
+ensure_method_binary(M) when is_atom(M) -> atom_to_binary(M, utf8);
+ensure_method_binary(M) -> iolist_to_binary(io_lib:format("~p", [M])).
+
+%% 发送一帧: {packet, 4} 模式下 gen_tcp 自动加 4 字节大端长度前缀, 此处只发 Protobuf 负载
 send_frame(Sock, FrameBin) ->
-    Len = byte_size(FrameBin),
-    gen_tcp:send(Sock, <<Len:32/big, FrameBin/binary>>).
+    gen_tcp:send(Sock, FrameBin).
 
 %% connection 进程退出前清理以 self() 为 ConnPid 的 stream 注册 (防止 ETS 残留)
 cleanup_streams_for_self() ->
@@ -338,7 +358,7 @@ handle_method(<<"brain_status">>, ArgsMap) ->
             %% agent_fsm:status 返回的 map 字段与 panel.proto 的 BrainStatusResult 对齐
             {ok, agent_fsm:status(Pid)};
         not_found ->
-            {ok, #{state => not_found}}
+            {ok, #{state => <<"not_found">>}}
     end;
 
 %% ---- stop: 优雅退出整个 erl 节点 ----

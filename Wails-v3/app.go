@@ -10,7 +10,7 @@ import (
 )
 
 // HermesService 是暴露给前端 (TS via Wails bindings) 的 RPC 对象。
-// 前端调用这些方法 → 经 brain.Bridge.Call (TCP+JSON) → Erlang panel_server。
+// 前端调用这些方法 → 经 brain.Bridge.Call (TCP+Protobuf) → Erlang panel_server。
 //
 // 设计原则: 本 Service 不持有业务状态, 仅做转发。
 // 所有状态在 Erlang 侧的 agent_fsm / state_store 中, Wails 保持"哑终端"属性。
