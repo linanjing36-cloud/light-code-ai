@@ -70,3 +70,51 @@
 2026-06-27 22:38:45.962 [info] <0.446.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
 2026-06-27 22:38:45.962 [info] <0.446.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
 2026-06-27 22:38:45.962 [error] <0.446.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-28 00:46:19.194 [info] <0.409.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-28 00:46:19.199 [info] <0.411.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-28 00:46:19.229 [info] <0.412.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at data/mnesia
+2026-06-28 00:46:19.310 [info] <0.412.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-28 00:46:19.310 [info] <0.412.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-28 00:46:19.310 [error] <0.412.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-28 00:54:08.725 [info] <0.348.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-28 00:54:08.729 [info] <0.350.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-28 00:54:08.762 [info] <0.351.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at data/mnesia
+2026-06-28 00:54:08.844 [info] <0.351.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-28 00:54:08.844 [info] <0.351.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-28 00:54:08.844 [error] <0.351.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-28 00:59:22.902 [info] <0.348.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-28 00:59:22.906 [info] <0.350.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-28 00:59:22.936 [info] <0.351.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at data/mnesia
+2026-06-28 00:59:23.040 [info] <0.351.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-28 00:59:23.040 [info] <0.351.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-28 00:59:23.040 [error] <0.351.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-28 01:04:15.096 [info] <0.348.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-28 01:04:15.101 [info] <0.350.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-28 01:04:15.133 [info] <0.351.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at data/mnesia
+2026-06-28 01:04:15.220 [info] <0.351.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-28 01:04:15.220 [info] <0.351.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-28 01:04:15.220 [error] <0.351.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-28 01:08:58.414 [info] <0.363.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-28 01:08:58.418 [info] <0.365.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-28 01:08:58.449 [info] <0.366.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at data/mnesia
+2026-06-28 01:08:58.531 [info] <0.366.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-28 01:08:58.531 [info] <0.366.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-28 01:08:58.531 [error] <0.366.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-28 01:13:05.074 [info] <0.334.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-28 01:13:05.079 [info] <0.336.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-28 01:13:05.109 [info] <0.337.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at data/mnesia
+2026-06-28 01:13:05.275 [info] <0.337.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-28 01:13:05.275 [info] <0.337.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-28 01:13:05.275 [error] <0.337.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-28 01:16:23.692 [info] <0.334.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-28 01:16:23.697 [info] <0.336.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-28 01:16:23.728 [info] <0.337.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at data/mnesia
+2026-06-28 01:16:23.906 [info] <0.337.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-28 01:16:23.906 [info] <0.337.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-28 01:16:23.907 [error] <0.337.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-28 01:19:10.796 [info] <0.342.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-28 01:19:10.802 [info] <0.344.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-28 01:19:10.834 [info] <0.345.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at data/mnesia
+2026-06-28 01:19:10.915 [info] <0.345.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-28 01:19:10.915 [info] <0.345.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-28 01:19:10.915 [error] <0.345.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}

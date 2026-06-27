@@ -16,6 +16,7 @@
 %% 对外接口
 -export([start_link/0,
          put_snapshot/2, get_snapshot/1,
+         put_status/2, get_status/1,
          append_history/2, get_history/1,
          register_session/2, lookup_session/1, unregister_session/1,
          delete_session/1]).
@@ -37,22 +38,35 @@ start_link() ->
 
 %% 落 FSM 快照 (崩溃恢复用)
 put_snapshot(SessionId, Data) ->
-    gen_server:call(?MODULE, {put_snapshot, SessionId, Data}).
+    ets:insert(?TABLE, {{snapshot, SessionId}, Data}),
+    ok.
 
 get_snapshot(SessionId) ->
-    gen_server:call(?MODULE, {get_snapshot, SessionId}).
+    lookup_snapshot(SessionId).
 
 %% 追加短期记忆 (按会话): 维护一个倒序表, 读取时反转为正序
 append_history(SessionId, Message) ->
     gen_server:call(?MODULE, {append_history, SessionId, Message}).
 
 get_history(SessionId) ->
-    gen_server:call(?MODULE, {get_history, SessionId}).
+    lookup_history(SessionId).
+
+%% 轻量状态快照: 供 panel_server/前端轮询读取, 避免走 sys:get_state/2
+put_status(SessionId, StatusMap) ->
+    ets:insert(?TABLE, {{status, SessionId}, StatusMap}),
+    ok.
+
+get_status(SessionId) ->
+    case ets:lookup(?TABLE, {status, SessionId}) of
+        [{{status, SessionId}, StatusMap}] -> {ok, StatusMap};
+        [] -> not_found
+    end.
 
 %% 会话注册: SessionId -> agent_fsm Pid (由 panel_server 在 start_session 时写入)
 %% 用于 panel_server 在 send/brain_status 时反查 FSM 进程。
 register_session(SessionId, Pid) ->
-    gen_server:call(?MODULE, {register_session, SessionId, Pid}).
+    ets:insert(?TABLE, {{session_pid, SessionId}, Pid}),
+    ok.
 
 lookup_session(SessionId) ->
     case lookup_session_once(SessionId) of
@@ -78,18 +92,35 @@ lookup_session_once(SessionId) ->
     end.
 
 unregister_session(SessionId) ->
-    gen_server:call(?MODULE, {unregister_session, SessionId}).
+    ets:delete(?TABLE, {session_pid, SessionId}),
+    ok.
 
 %% 删除会话全部 ETS 状态 (history / snapshot / session_pid)
 delete_session(SessionId) ->
-    gen_server:call(?MODULE, {delete_session, SessionId}).
+    ets:delete(?TABLE, {session_pid, SessionId}),
+    ets:delete(?TABLE, {history, SessionId}),
+    ets:delete(?TABLE, {snapshot, SessionId}),
+    ets:delete(?TABLE, {status, SessionId}),
+    ok.
+
+lookup_snapshot(SessionId) ->
+    case ets:lookup(?TABLE, {snapshot, SessionId}) of
+        [{{snapshot, SessionId}, Data}] -> {ok, Data};
+        [] -> not_found
+    end.
+
+lookup_history(SessionId) ->
+    case ets:lookup(?TABLE, {history, SessionId}) of
+        [{{history, SessionId}, Msgs}] -> {ok, lists:reverse(Msgs)};
+        [] -> {ok, []}
+    end.
 
 %%%===================================================================
 %%% gen_server 回调
 %%%===================================================================
 
 init([]) ->
-    %% named_table: 让 FSM/其他进程可并发读; 写入经本 GenServer 串行化
+    %% named_table: 让 FSM/其他进程可并发读; 复合写(如 append_history)仍经本 GenServer 串行化
     ets:new(?TABLE, [set, public, named_table, {read_concurrency, true}]),
     %% 从磁盘快照恢复 ETS 内容 (mnesia_store 已在 sup 中先行启动)
     %% 第一次启动没有快照, mnesia_store:restore 返回 {error, no_snapshot}, 这里只记录不阻塞
@@ -110,10 +141,7 @@ handle_call({put_snapshot, SessionId, Data}, _From, State) ->
     ets:insert(?TABLE, {{snapshot, SessionId}, Data}),
     {reply, ok, State};
 handle_call({get_snapshot, SessionId}, _From, State) ->
-    case ets:lookup(?TABLE, {snapshot, SessionId}) of
-        [{{snapshot, SessionId}, Data}] -> {reply, {ok, Data}, State};
-        [] -> {reply, not_found, State}
-    end;
+    {reply, lookup_snapshot(SessionId), State};
 handle_call({append_history, SessionId, Message}, _From, State) ->
     Current = case ets:lookup(?TABLE, {history, SessionId}) of
                   [{{history, SessionId}, Msgs}] -> Msgs;
@@ -123,10 +151,7 @@ handle_call({append_history, SessionId, Message}, _From, State) ->
     ets:insert(?TABLE, {{history, SessionId}, [Message | Current]}),
     {reply, ok, State};
 handle_call({get_history, SessionId}, _From, State) ->
-    case ets:lookup(?TABLE, {history, SessionId}) of
-        [{{history, SessionId}, Msgs}] -> {reply, {ok, lists:reverse(Msgs)}, State};
-        [] -> {reply, {ok, []}, State}
-    end;
+    {reply, lookup_history(SessionId), State};
 handle_call({register_session, SessionId, Pid}, _From, State) ->
     ets:insert(?TABLE, {{session_pid, SessionId}, Pid}),
     {reply, ok, State};
@@ -137,6 +162,7 @@ handle_call({delete_session, SessionId}, _From, State) ->
     ets:delete(?TABLE, {session_pid, SessionId}),
     ets:delete(?TABLE, {history, SessionId}),
     ets:delete(?TABLE, {snapshot, SessionId}),
+    ets:delete(?TABLE, {status, SessionId}),
     {reply, ok, State}.
 
 handle_cast(_Msg, State) ->

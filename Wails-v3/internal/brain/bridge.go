@@ -37,6 +37,7 @@ const (
 	dialTimeout        = 5 * time.Second
 	addrResolveTimeout = 30 * time.Second
 	defaultRPCDeadline = 30 * time.Second
+	streamQueueSize    = 1024
 )
 
 type Bridge struct {
@@ -48,9 +49,11 @@ type Bridge struct {
 	addr     string
 	poolSize int
 	slots    []*connSlot
+	streamQ  chan StreamEvent
 
-	reqSeq atomic.Uint64
-	next   atomic.Uint64
+	reqSeq       atomic.Uint64
+	next         atomic.Uint64
+	reconnecting atomic.Bool
 }
 
 type connSlot struct {
@@ -106,7 +109,9 @@ func (b *Bridge) Start(parentCtx context.Context) error {
 		return fmt.Errorf("brain: 发现 panel_server 地址失败: %w", err)
 	}
 	b.addr = addr
+	b.streamQ = make(chan StreamEvent, streamQueueSize)
 	log.Printf("[brain] panel_server addr resolved: %s", addr)
+	go b.streamDispatcher(ctx, b.streamQ)
 
 	b.slots = make([]*connSlot, 0, b.poolSize)
 	for i := 0; i < b.poolSize; i++ {
@@ -123,7 +128,7 @@ func (b *Bridge) Start(parentCtx context.Context) error {
 		go b.runConn(ctx, slot)
 	}
 	if len(b.slots) == 0 {
-		go b.reconnectLoop(ctx)
+		b.triggerReconnect(ctx)
 	} else {
 		log.Printf("[brain] connection pool ready: %d/%d", len(b.slots), b.poolSize)
 	}
@@ -154,6 +159,7 @@ func (b *Bridge) Stop() {
 		_ = slot.conn.Close()
 	}
 	b.slots = nil
+	b.streamQ = nil
 	b.started = false
 }
 
@@ -283,7 +289,9 @@ func (b *Bridge) connReader(ctx context.Context, slot *connSlot, pending *sync.M
 			continue
 		}
 		if stream := frame.GetStream(); stream != nil {
-			emitPanelStream(stream)
+			if err := b.enqueuePanelStream(ctx, stream); err != nil && ctx.Err() == nil {
+				log.Printf("[brain] stream enqueue failed from %s: %v", remote, err)
+			}
 			continue
 		}
 		if exec := frame.GetExec(); exec != nil {
@@ -347,11 +355,54 @@ func (b *Bridge) markSlotBroken(slot *connSlot, remote string) {
 
 	_ = slot.conn.Close()
 	if needReconnect && ctx != nil && ctx.Err() == nil {
-		go b.reconnectLoop(ctx)
+		b.triggerReconnect(ctx)
+	}
+}
+
+func (b *Bridge) triggerReconnect(ctx context.Context) {
+	if ctx == nil || ctx.Err() != nil {
+		return
+	}
+	if !b.reconnecting.CompareAndSwap(false, true) {
+		return
+	}
+	go b.reconnectLoop(ctx)
+}
+
+func (b *Bridge) enqueuePanelStream(ctx context.Context, stream *panelpb.PanelStream) error {
+	ev := decodePanelStreamEvent(stream)
+
+	b.mu.Lock()
+	streamQ := b.streamQ
+	b.mu.Unlock()
+	if streamQ == nil {
+		return fmt.Errorf("stream dispatcher closed")
+	}
+
+	select {
+	case streamQ <- ev:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func (b *Bridge) streamDispatcher(ctx context.Context, streamQ <-chan StreamEvent) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case ev, ok := <-streamQ:
+			if !ok {
+				return
+			}
+			emitStreamEvent(ev)
+		}
 	}
 }
 
 func (b *Bridge) reconnectLoop(ctx context.Context) {
+	defer b.reconnecting.Store(false)
 	for {
 		select {
 		case <-ctx.Done():
@@ -379,6 +430,11 @@ func (b *Bridge) reconnectLoop(ctx context.Context) {
 
 		b.mu.Lock()
 		if b.ctx == nil || b.ctx.Err() != nil {
+			b.mu.Unlock()
+			_ = conn.Close()
+			return
+		}
+		if len(b.slots) >= b.poolSize {
 			b.mu.Unlock()
 			_ = conn.Close()
 			return
@@ -444,9 +500,7 @@ func defaultPanelAddrFile() string {
 	return filepath.Join(wd, "..", "bin", "run", "panel.addr")
 }
 
-func emitPanelStream(stream *panelpb.PanelStream) {
-	ev := decodePanelStreamEvent(stream)
-
+func emitStreamEvent(ev StreamEvent) {
 	streamHandlerMu.RLock()
 	fn := streamHandler
 	streamHandlerMu.RUnlock()

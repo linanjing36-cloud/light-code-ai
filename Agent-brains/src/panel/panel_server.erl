@@ -210,7 +210,7 @@ handle_cast({register_wails_conn, ConnPid}, State) ->
             {noreply, State#state{wails_conns = Conns ++ [#wails_conn{pid = ConnPid}]}}
     end;
 handle_cast({unregister_wails_conn, ConnPid}, State) ->
-    Conns = lists:filter(fun(#wails_conn{pid = P}) -> P =:= ConnPid end,
+    Conns = lists:filter(fun(#wails_conn{pid = P}) -> P =/= ConnPid end,
                          State#state.wails_conns),
     {noreply, State#state{wails_conns = Conns}};
 handle_cast({exec_result, ConnPid, Id, AgentRespBin, Err, Terminal}, State) ->
@@ -450,10 +450,9 @@ handle_method(<<"approve">>, _ArgsMap, _ConnPid) ->
 %% ---- brain_status: 读 FSM 当前状态 ----
 handle_method(<<"brain_status">>, ArgsMap, _ConnPid) ->
     SessionId = maps:get(session_id, ArgsMap, <<>>),
-    case state_store:lookup_session(SessionId) of
-        {ok, Pid} ->
-            %% agent_fsm:status 返回的 map 字段与 panel.proto 的 BrainStatusResult 对齐
-            {ok, agent_fsm:status(Pid)};
+    case state_store:get_status(SessionId) of
+        {ok, Status} ->
+            {ok, Status};
         not_found ->
             {ok, #{state => <<"not_found">>}}
     end;

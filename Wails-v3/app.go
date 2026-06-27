@@ -6,6 +6,7 @@ import (
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 
+	"hermes/internal/brain"
 	"hermes/internal/router"
 )
 
@@ -52,12 +53,11 @@ func (s *HermesService) StartSession(req SessionStartRequest) (*SessionInfo, err
 	if err != nil {
 		return nil, err
 	}
-	m, _ := out.(map[string]any)
-	id, _ := m["session_id"].(string)
-	if id == "" {
+	result, ok := out.(brain.StartSessionResult)
+	if !ok || result.SessionID == "" {
 		return nil, fmt.Errorf("router: invalid start_session response: %v", out)
 	}
-	return &SessionInfo{SessionID: id, Started: true}, nil
+	return &SessionInfo{SessionID: result.SessionID, Started: true}, nil
 }
 
 // ---- 对话 ----
@@ -74,9 +74,11 @@ func (s *HermesService) Send(sessionID, message string) (*SendResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	m, _ := out.(map[string]any)
-	id, _ := m["stream_id"].(string)
-	return &SendResult{StreamID: id}, nil
+	result, ok := out.(brain.SendResult)
+	if !ok {
+		return nil, fmt.Errorf("router: invalid send response: %T", out)
+	}
+	return &SendResult{StreamID: result.StreamID}, nil
 }
 
 func (s *HermesService) DeleteSession(sessionID string) (bool, error) {
@@ -86,9 +88,11 @@ func (s *HermesService) DeleteSession(sessionID string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	m, _ := out.(map[string]any)
-	ok, _ := m["ok"].(bool)
-	return ok, nil
+	result, ok := out.(brain.DeleteSessionResult)
+	if !ok {
+		return false, fmt.Errorf("router: invalid delete_session response: %T", out)
+	}
+	return result.OK, nil
 }
 
 // ---- 工具 ----
@@ -104,18 +108,16 @@ func (s *HermesService) ListTools() ([]ToolDesc, error) {
 	if err != nil {
 		return nil, err
 	}
-	m, _ := out.(map[string]any)
-	raw, _ := m["tools"].([]any)
+	raw, ok := out.([]brain.ToolDesc)
+	if !ok {
+		return nil, fmt.Errorf("router: invalid list_tools response: %T", out)
+	}
 	tools := make([]ToolDesc, 0, len(raw))
 	for _, item := range raw {
-		tm, ok := item.(map[string]any)
-		if !ok {
-			continue
-		}
 		tools = append(tools, ToolDesc{
-			Name:           fmt.Sprint(tm["name"]),
-			Description:    fmt.Sprint(tm["description"]),
-			ParametersJSON: fmt.Sprint(tm["parameters_json"]),
+			Name:           item.Name,
+			Description:    item.Description,
+			ParametersJSON: item.ParametersJSON,
 		})
 	}
 	return tools, nil
@@ -138,8 +140,13 @@ func (s *HermesService) BrainStatus(sessionID string) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	if m, ok := out.(map[string]any); ok {
-		return m, nil
+	if result, ok := out.(brain.BrainStatusResult); ok {
+		return map[string]any{
+			"state":       result.State,
+			"loop_count":  result.LoopCount,
+			"max_loops":   result.MaxLoops,
+			"history_len": result.HistoryLen,
+		}, nil
 	}
 	return nil, fmt.Errorf("router: invalid brain_status response: %T", out)
 }
@@ -158,19 +165,17 @@ func (s *HermesService) GetHistory(sessionID string) ([]HistoryEntry, error) {
 	if err != nil {
 		return nil, err
 	}
-	m, _ := out.(map[string]any)
-	raw, _ := m["messages"].([]any)
+	raw, ok := out.([]brain.HistoryEntry)
+	if !ok {
+		return nil, fmt.Errorf("router: invalid get_history response: %T", out)
+	}
 	entries := make([]HistoryEntry, 0, len(raw))
 	for _, item := range raw {
-		em, ok := item.(map[string]any)
-		if !ok {
-			continue
-		}
 		entries = append(entries, HistoryEntry{
-			Role:          fmt.Sprint(em["role"]),
-			Content:       fmt.Sprint(em["content"]),
-			ToolCallsJSON: fmt.Sprint(em["tool_calls_json"]),
-			ToolCallID:    fmt.Sprint(em["tool_call_id"]),
+			Role:          item.Role,
+			Content:       item.Content,
+			ToolCallsJSON: item.ToolCallsJSON,
+			ToolCallID:    item.ToolCallID,
 		})
 	}
 	return entries, nil

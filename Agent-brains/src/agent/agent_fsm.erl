@@ -461,6 +461,12 @@ tool_msg(_ToolCall, Resp) ->
 %% 落快照到 ETS (崩溃恢复用): {StateName, #data{}} 供 transient 重启后续跑
 snapshot(StateName, Data) when StateName =:= idle; StateName =:= thinking; StateName =:= acting ->
     state_store:put_snapshot(Data#data.session_id, {StateName, Data}),
+    state_store:put_status(Data#data.session_id, #{
+        state => StateName,
+        loop_count => Data#data.loop_count,
+        max_loops => Data#data.max_loops,
+        history_len => length(Data#data.history)
+    }),
     ok.
 
 %% 查询最近失败案例注入 System Prompt (防御性: case_store 不可用则返回 [])

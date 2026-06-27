@@ -30,6 +30,8 @@ const DEFAULT_CONFIG: LLMConfig = {
     systemPrompt: "",
 };
 
+const STATUS_POLL_INTERVAL_MS = 2500;
+
 // ---- 类型 ----
 type BrainState = "idle" | "thinking" | "acting" | "unknown" | "not_found" | "error";
 
@@ -50,9 +52,12 @@ const sessions = new Map<string, Session>();
 let brainConnected = false;
 let statusTimer: number | null = null;
 let isSending = false;
-let currentStreamId: string | null = null;
+const sessionStreamIds = new Map<string, string>();
+const sessionHistoryDirty = new Set<string>();
 let streamingMsgEl: HTMLElement | null = null;
+let streamingMsgText: Text | null = null;
 let streamingText = "";
+let streamingScrollRaf = 0;
 
 // ---- Wails 流式事件 (panel_server → Bridge → EmitEvent) ----
 declare global {
@@ -86,7 +91,26 @@ function setupStreamListener(): void {
 setupStreamListener();
 
 function handlePanelStream(ev: PanelStreamEvent): void {
-    if (!ev || !currentStreamId || ev.stream_id !== currentStreamId) return;
+    const targetSessionId = ev ? findSessionIdByStreamId(ev.stream_id) : null;
+    const activeCurrentStreamId = getStreamIdForSession(currentSessionId);
+    if (!ev || !targetSessionId) return;
+    if (targetSessionId !== currentSessionId) {
+        if (ev.kind === "tool_event") {
+            sessionHistoryDirty.add(targetSessionId);
+            applySessionState(targetSessionId, "acting", { updateCurrentUI: false });
+        }
+        if (ev.kind === "final" || ev.kind === "error") {
+            if (ev.kind === "final") {
+                void finalizeSessionUI(targetSessionId, String(ev.payload.content ?? ""));
+            } else {
+                clearStreamState(targetSessionId);
+                applySessionState(targetSessionId, "error", { updateCurrentUI: false });
+                sessionHistoryDirty.add(targetSessionId);
+            }
+        }
+        return;
+    }
+    if (!activeCurrentStreamId || ev.stream_id !== activeCurrentStreamId) return;
     console.log("[hermes] stream", ev.kind, ev.stream_id);
     switch (ev.kind) {
         case "chunk": {
@@ -94,32 +118,34 @@ function handlePanelStream(ev: PanelStreamEvent): void {
             if (part) {
                 streamingText += part;
                 ensureStreamingMsg();
-                if (streamingMsgEl) {
-                    streamingMsgEl.innerHTML = `<p>${escapeHtml(streamingText)}</p>`;
-                    scrollConvToBottom();
+                if (streamingMsgText) {
+                    streamingMsgText.appendData(part);
+                    scheduleStreamingScroll();
                 }
             }
             break;
         }
         case "final": {
-            removeThinking();
-            resetStreamState();
-            void refreshHistoryFromBrain();
-            syncStatusPolling();
+            void finalizeSessionUI(targetSessionId, String(ev.payload.content ?? ""));
             break;
         }
         case "error": {
             removeThinking();
             appendAgentMsg(`<p style="color:var(--danger)">${escapeHtml(String(ev.payload.message ?? "stream error"))}</p>`);
-            resetStreamState();
+            clearStreamState(targetSessionId);
+            applySessionState(targetSessionId, "error");
             syncStatusPolling();
             break;
         }
         case "tool_event": {
-            const sess = currentSessionId ? sessions.get(currentSessionId) : undefined;
+            const sess = targetSessionId ? sessions.get(targetSessionId) : undefined;
             if (sess) {
+                sessionHistoryDirty.add(targetSessionId);
+                applySessionState(targetSessionId, "acting");
                 sess.toolCalls += 1;
-                updateCanvasMeta(sess);
+                if (targetSessionId === currentSessionId) {
+                    updateCanvasMeta(sess);
+                }
             }
             break;
         }
@@ -139,15 +165,94 @@ function ensureStreamingMsg(): void {
         </div>
         <div class="msg-body"><p></p></div>
     `;
+    const p = streamingMsgEl.querySelector(".msg-body p");
+    streamingMsgText = document.createTextNode(streamingText);
+    p?.appendChild(streamingMsgText);
     conv.appendChild(streamingMsgEl);
 }
 
-function resetStreamState(): void {
-    const sid = currentSessionId;
-    currentStreamId = null;
-    streamingMsgEl = null;
+function getStreamIdForSession(sessionId: string | null | undefined): string | null {
+    if (!sessionId) return null;
+    return sessionStreamIds.get(sessionId) ?? null;
+}
+
+function findSessionIdByStreamId(streamId: string): string | null {
+    for (const [sessionId, activeStreamId] of sessionStreamIds.entries()) {
+        if (activeStreamId === streamId) return sessionId;
+    }
+    return null;
+}
+
+function clearStreamState(sessionId: string | null | undefined, preserveStreamingEl = false): void {
+    if (!sessionId) return;
+    const preservedEl = streamingMsgEl;
+    const preservedText = streamingMsgText;
+    sessionStreamIds.delete(sessionId);
     streamingText = "";
-    if (sid) updateSessionInList(sid);
+    if (!preserveStreamingEl && streamingScrollRaf) {
+        window.cancelAnimationFrame(streamingScrollRaf);
+        streamingScrollRaf = 0;
+    }
+    streamingMsgEl = preserveStreamingEl ? preservedEl : null;
+    streamingMsgText = preserveStreamingEl ? preservedText : null;
+    updateSessionInList(sessionId);
+}
+
+function scheduleStreamingScroll(): void {
+    if (streamingScrollRaf) return;
+    streamingScrollRaf = window.requestAnimationFrame(() => {
+        streamingScrollRaf = 0;
+        scrollConvToBottom();
+    });
+}
+
+function applySessionState(sessionId: string | null | undefined, state: BrainState, extra?: { historyLen?: number; updateCurrentUI?: boolean }): void {
+    if (!sessionId) return;
+    const sess = sessions.get(sessionId);
+    if (!sess) return;
+    sess.lastState = state;
+    if (typeof extra?.historyLen === "number") {
+        sess.lastHistoryLen = extra.historyLen;
+    }
+    updateSessionInList(sessionId);
+    if (extra?.updateCurrentUI !== false && sessionId === currentSessionId) {
+        ctxFsmState.textContent = state;
+        ctxFsmState.className = "state-badge " + stateClass(state);
+        if (typeof extra?.historyLen === "number") {
+            ctxHistory.textContent = String(extra.historyLen);
+        }
+    }
+}
+
+async function finalizeSessionUI(sessionId: string, finalContent: string): Promise<void> {
+    const sess = sessions.get(sessionId);
+    if (sess) {
+        applySessionState(sessionId, "idle", {
+            historyLen: sess.lastHistoryLen + 1,
+        });
+    }
+
+    if (sessionId !== currentSessionId) {
+        sessionHistoryDirty.add(sessionId);
+        return;
+    }
+
+    if (finalContent) {
+        streamingText = finalContent;
+        ensureStreamingMsg();
+        if (streamingMsgText) {
+            streamingMsgText.data = finalContent;
+        }
+        scheduleStreamingScroll();
+    }
+    removeThinking();
+    clearStreamState(sessionId, true);
+
+    if (sessionHistoryDirty.has(sessionId)) {
+        sessionHistoryDirty.delete(sessionId);
+        await refreshHistoryFromBrain(sess);
+    }
+    syncStatusPolling();
 }
 
 // ---- DOM ----
@@ -229,9 +334,9 @@ btnSaveConfig.addEventListener("click", () => {
     toast("LLM 配置已保存");
 });
 
-async function loadToolsList(): Promise<void> {
+async function loadToolsList(prefetchedTools?: Array<{ name?: string; description?: string }>): Promise<void> {
     try {
-        const tools = await HermesService.ListTools();
+        const tools = prefetchedTools ?? await HermesService.ListTools();
         if (!tools?.length) {
             ctxTools.innerHTML = `<div class="tool-mini"><span class="dot off"></span>无可用工具</div>`;
             return;
@@ -251,9 +356,9 @@ async function loadToolsList(): Promise<void> {
 async function checkBrainReady(): Promise<void> {
     try {
         // list_tools 不需要 session, 适合探活
-        await HermesService.ListTools();
+        const tools = await HermesService.ListTools();
         setBrainConnected(true);
-        await loadToolsList();
+        await loadToolsList(tools);
         if (sessions.size === 0) {
             await createNewSession();
         }
@@ -392,6 +497,8 @@ async function doSend(): Promise<void> {
     const sess = sessions.get(currentSessionId);
     if (sess) {
         sess.msgCount += 1;
+        sess.lastHistoryLen += 1;
+        applySessionState(currentSessionId, "thinking", { historyLen: sess.lastHistoryLen });
         if (sess.msgCount === 1 && sess.title.startsWith("聊天 ")) {
             sess.title = text.length > 24 ? text.slice(0, 24) + "…" : text;
             canvasTitle.textContent = sess.title;
@@ -405,10 +512,16 @@ async function doSend(): Promise<void> {
 
     try {
         const result = await HermesService.Send(currentSessionId, text);
-        currentStreamId = result?.stream_id ?? null;
+        const streamId = result?.stream_id ?? null;
+        if (streamId) {
+            sessionStreamIds.set(currentSessionId, streamId);
+        } else {
+            sessionStreamIds.delete(currentSessionId);
+        }
         streamingText = "";
         streamingMsgEl = null;
-        console.log("[hermes] send triggered stream_id=", currentStreamId);
+        streamingMsgText = null;
+        console.log("[hermes] send triggered stream_id=", streamId);
     } catch (e) {
         removeThinking();
         toast("Send 失败: " + e);
@@ -442,7 +555,7 @@ function autoGrow(): void {
 
 function shouldPollBrainStatus(): boolean {
     if (!currentSessionId || !brainConnected) return false;
-    if (isSending || currentStreamId) return true;
+    if (isSending || getStreamIdForSession(currentSessionId)) return true;
     const sess = sessions.get(currentSessionId);
     return sess?.lastState === "thinking" || sess?.lastState === "acting";
 }
@@ -451,7 +564,7 @@ function shouldPollBrainStatus(): boolean {
 function syncStatusPolling(): void {
     if (shouldPollBrainStatus()) {
         if (statusTimer === null) {
-            statusTimer = window.setInterval(pollBrainStatus, 1000);
+            statusTimer = window.setInterval(pollBrainStatus, STATUS_POLL_INTERVAL_MS);
             void pollBrainStatus();
         }
     } else {
@@ -470,7 +583,7 @@ async function pollBrainStatus(): Promise<void> {
     if (!currentSessionId) return;
     try {
         const st = await HermesService.BrainStatus(currentSessionId);
-        updateBrainStatusUI(st as Record<string, unknown>);
+        updateBrainStatusUI(currentSessionId, st as Record<string, unknown>);
     } catch (e) {
         console.warn("[hermes] brain_status error:", e);
     } finally {
@@ -478,40 +591,45 @@ async function pollBrainStatus(): Promise<void> {
     }
 }
 
-function updateBrainStatusUI(st: Record<string, unknown>): void {
+function updateBrainStatusUI(sessionId: string, st: Record<string, unknown>): void {
     if (!st) return;
     const state = (st.state as string) || "unknown";
     const loop = (st.loop_count as number) ?? 0;
     const max = (st.max_loops as number) ?? 0;
     const hist = (st.history_len as number) ?? 0;
+    const isCurrent = sessionId === currentSessionId;
 
-    ctxFsmState.textContent = state;
-    ctxFsmState.className = "state-badge " + stateClass(state);
-    ctxLoop.textContent = `${loop} / ${max}`;
-    ctxHistory.textContent = String(hist);
+    if (isCurrent) {
+        ctxFsmState.textContent = state;
+        ctxFsmState.className = "state-badge " + stateClass(state);
+        ctxLoop.textContent = `${loop} / ${max}`;
+        ctxHistory.textContent = String(hist);
+    }
 
-    const sess = sessions.get(currentSessionId!);
+    const sess = sessions.get(sessionId);
     if (sess) {
         const prevState = sess.lastState;
         sess.lastState = state as BrainState;
+        sess.lastHistoryLen = hist;
         if (prevState !== sess.lastState) {
             updateSessionInList(sess.id);
         }
 
-        // ReAct 循环状态机:
-        //   thinking → acting → (回 thinking) → idle
-        // 思考中/执行中: 保持 thinking 动画
-        // 回到 idle 且 history_len 增加: ReAct 完成, 显示占位 agent 消息
+        if (!isCurrent) {
+            return;
+        }
+
         if (state === "thinking" || state === "acting") {
             if (!hasThinking()) appendThinking();
         } else if (state === "idle") {
-            if (hist > sess.lastHistoryLen && !streamingMsgEl && !currentStreamId) {
+            const hasActiveStream = Boolean(getStreamIdForSession(sessionId));
+            if (sessionHistoryDirty.has(sessionId) && !streamingMsgEl && !hasActiveStream) {
                 removeThinking();
+                sessionHistoryDirty.delete(sessionId);
                 void refreshHistoryFromBrain();
-            } else if (state === "idle" && !currentStreamId) {
+            } else if (!hasActiveStream) {
                 removeThinking();
             }
-            sess.lastHistoryLen = hist;
         }
     }
 }
@@ -532,7 +650,8 @@ function stateClass(state: string): string {
 
 function sessionStatusLabel(sess: Session): string | null {
     const isCurrent = sess.id === currentSessionId;
-    if (isCurrent && (isSending || currentStreamId)) return "...";
+    if (isCurrent && (isSending || getStreamIdForSession(sess.id))) return "...";
+    if (getStreamIdForSession(sess.id)) return "...";
     if (sess.lastState === "thinking" || sess.lastState === "acting") return "...";
     if (sess.lastState === "error") return "error";
     return null;
@@ -655,7 +774,7 @@ async function deleteSession(id: string): Promise<void> {
 
     sessions.delete(id);
     if (currentSessionId === id) {
-        resetStreamState();
+        clearStreamState(id);
         isSending = false;
         stopStatusPolling();
         currentSessionId = null;
@@ -683,7 +802,17 @@ function switchSession(id: string): void {
     if (sess) {
         canvasTitle.textContent = sess.title;
         updateModelBadge(sess.model);
-        void refreshHistoryFromBrain(sess);
+        if (sessionHistoryDirty.has(id) || sess.msgCount > 0 || sess.toolCalls > 0) {
+            void refreshHistoryFromBrain(sess);
+        } else {
+            renderConversation(sess);
+        }
+        updateBrainStatusUI(id, {
+            state: sess.lastState,
+            loop_count: 0,
+            max_loops: 0,
+            history_len: sess.lastHistoryLen,
+        });
     }
     for (const child of sessionList.children) {
         const el = child as HTMLElement;
@@ -700,12 +829,15 @@ async function refreshHistoryFromBrain(sess?: Session): Promise<void> {
     try {
         const entries = (await HermesService.GetHistory(sid)) as HistoryEntry[];
         renderHistoryEntries(entries, target);
+        sessionHistoryDirty.delete(sid);
     } catch (e) {
         console.warn("[hermes] get_history error:", e);
     }
 }
 
 function renderHistoryEntries(entries: HistoryEntry[], sess?: Session): void {
+    streamingMsgEl = null;
+    streamingMsgText = null;
     conv.innerHTML = "";
     let userCount = 0;
     let toolCount = 0;
@@ -731,7 +863,9 @@ function renderHistoryEntries(entries: HistoryEntry[], sess?: Session): void {
     if (sess) {
         sess.msgCount = userCount;
         sess.toolCalls = toolCount;
+        sess.lastHistoryLen = entries.length;
         updateCanvasMeta(sess);
+        updateSessionInList(sess.id);
     }
     scrollConvToBottom();
 }
@@ -740,6 +874,8 @@ function renderHistoryEntries(entries: HistoryEntry[], sess?: Session): void {
 // 渲染: conversation
 // ============================================================
 function renderConversation(sess: Session): void {
+    streamingMsgEl = null;
+    streamingMsgText = null;
     conv.innerHTML = "";
     if (sess.msgCount === 0) {
         conv.innerHTML = `<div class="empty-state"><div class="glyph">☿</div><div>开始与 Hermes 对话</div></div>`;

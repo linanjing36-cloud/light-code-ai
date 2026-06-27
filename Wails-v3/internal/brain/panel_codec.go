@@ -8,6 +8,46 @@ import (
 	panelpb "hermes/proto/gen/panelpb/proto"
 )
 
+type StartSessionResult struct {
+	SessionID string
+}
+
+type SendResult struct {
+	StreamID string
+}
+
+type ToolDesc struct {
+	Name           string
+	Description    string
+	ParametersJSON string
+}
+
+type ApproveResult struct {
+	OK bool
+}
+
+type BrainStatusResult struct {
+	State       string
+	LoopCount   int32
+	MaxLoops    int32
+	HistoryLen  int32
+}
+
+type HistoryEntry struct {
+	Role          string
+	Content       string
+	ToolCallsJSON string
+	ToolCallID    string
+}
+
+type DeleteSessionResult struct {
+	OK bool
+}
+
+type StopResult struct {
+	OK bool
+}
+
 func encodePanelRequest(id uint64, method string, args map[string]any) ([]byte, error) {
 	argsBytes, err := encodePanelArgs(method, args)
 	if err != nil {
@@ -89,71 +129,71 @@ func decodePanelResult(method string, bin []byte) (any, error) {
 		if err := proto.Unmarshal(bin, &msg); err != nil {
 			return nil, err
 		}
-		return map[string]any{"session_id": msg.GetSessionId()}, nil
+		return StartSessionResult{SessionID: msg.GetSessionId()}, nil
 	case "send":
 		var msg panelpb.SendResult
 		if err := proto.Unmarshal(bin, &msg); err != nil {
 			return nil, err
 		}
-		return map[string]any{"stream_id": msg.GetStreamId()}, nil
+		return SendResult{StreamID: msg.GetStreamId()}, nil
 	case "list_tools":
 		var msg panelpb.ListToolsResult
 		if err := proto.Unmarshal(bin, &msg); err != nil {
 			return nil, err
 		}
-		tools := make([]any, 0, len(msg.GetTools()))
+		tools := make([]ToolDesc, 0, len(msg.GetTools()))
 		for _, t := range msg.GetTools() {
-			tools = append(tools, map[string]any{
-				"name":            t.GetName(),
-				"description":     t.GetDescription(),
-				"parameters_json": t.GetParametersJson(),
+			tools = append(tools, ToolDesc{
+				Name:           t.GetName(),
+				Description:    t.GetDescription(),
+				ParametersJSON: t.GetParametersJson(),
 			})
 		}
-		return map[string]any{"tools": tools}, nil
+		return tools, nil
 	case "approve":
 		var msg panelpb.ApproveResult
 		if err := proto.Unmarshal(bin, &msg); err != nil {
 			return nil, err
 		}
-		return map[string]any{"ok": msg.GetOk()}, nil
+		return ApproveResult{OK: msg.GetOk()}, nil
 	case "brain_status":
 		var msg panelpb.BrainStatusResult
 		if err := proto.Unmarshal(bin, &msg); err != nil {
 			return nil, err
 		}
-		return map[string]any{
-			"state":       msg.GetState(),
-			"loop_count":  msg.GetLoopCount(),
-			"max_loops":   msg.GetMaxLoops(),
-			"history_len": msg.GetHistoryLen(),
+		return BrainStatusResult{
+			State:      msg.GetState(),
+			LoopCount:  msg.GetLoopCount(),
+			MaxLoops:   msg.GetMaxLoops(),
+			HistoryLen: msg.GetHistoryLen(),
 		}, nil
 	case "get_history":
 		var msg panelpb.GetHistoryResult
 		if err := proto.Unmarshal(bin, &msg); err != nil {
 			return nil, err
 		}
-		msgs := make([]any, 0, len(msg.GetMessages()))
+		msgs := make([]HistoryEntry, 0, len(msg.GetMessages()))
 		for _, e := range msg.GetMessages() {
-			msgs = append(msgs, map[string]any{
-				"role":            e.GetRole(),
-				"content":         e.GetContent(),
-				"tool_calls_json": e.GetToolCallsJson(),
-				"tool_call_id":    e.GetToolCallId(),
+			msgs = append(msgs, HistoryEntry{
+				Role:          e.GetRole(),
+				Content:       e.GetContent(),
+				ToolCallsJSON: e.GetToolCallsJson(),
+				ToolCallID:    e.GetToolCallId(),
 			})
 		}
-		return map[string]any{"messages": msgs}, nil
+		return msgs, nil
 	case "delete_session":
 		var msg panelpb.DeleteSessionResult
 		if err := proto.Unmarshal(bin, &msg); err != nil {
 			return nil, err
 		}
-		return map[string]any{"ok": msg.GetOk()}, nil
+		return DeleteSessionResult{OK: msg.GetOk()}, nil
 	case "stop":
 		var msg panelpb.StopResult
 		if err := proto.Unmarshal(bin, &msg); err != nil {
 			return nil, err
 		}
-		return map[string]any{"ok": msg.GetOk()}, nil
+		return StopResult{OK: msg.GetOk()}, nil
 	default:
 		return nil, fmt.Errorf("unknown method: %s", method)
 	}
