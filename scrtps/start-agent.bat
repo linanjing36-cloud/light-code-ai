@@ -34,7 +34,7 @@ if "%MODE%"=="" set "MODE=dev"
 
 REM === Mode switch: dev (default) | prod ===
 if "%MODE%"=="dev" (
-    set "WORK_DIR=%AGENT_DIR%"
+    set "WORK_DIR=%ERL_BIN_DIR%"
     set "DEFAULT_MNESIA_DIR=%AGENT_DIR%\config\mnesia"
     set "DEFAULT_LOG_DIR=%AGENT_DIR%\log"
     set "DEFAULT_SYS_CONFIG=%AGENT_DIR%\config\sys.config"
@@ -64,6 +64,10 @@ if "%LOG_DIR%"=="" set "LOG_DIR=%DEFAULT_LOG_DIR%"
 if "%SYS_CONFIG%"=="" set "SYS_CONFIG=%DEFAULT_SYS_CONFIG%"
 if "%SNAPSHOT_INTERVAL_MS%"=="" set "SNAPSHOT_INTERVAL_MS=60000"
 
+REM Keep Erlang logs under bin\erl_bin\log for unified troubleshooting.
+set "LOG_DIR=%ERL_BIN_DIR%\log"
+set "AGENT_CONSOLE_LOG=%ERL_BIN_DIR%\log\agent-console.log"
+
 REM Addr files (unified location: bin/run/)
 set "PANEL_ADDR_FILE=%RUN_DIR%\panel.addr"
 set "EION_TOOLS_ADDR_FILE=%RUN_DIR%\eion-tools.addr"
@@ -81,12 +85,14 @@ REM (Erlang file/filelib fully supports / on Windows). cmd syntax: %VAR:\=/%
 set "PANEL_ADDR_FILE=%PANEL_ADDR_FILE:\=/%"
 set "EION_TOOLS_ADDR_FILE=%EION_TOOLS_ADDR_FILE:\=/%"
 set "MNESIA_DIR=%MNESIA_DIR:\=/%"
+set "LOG_DIR=%LOG_DIR:\=/%"
 set "SYS_CONFIG=%SYS_CONFIG:\=/%"
 
 echo ==> Starting Hermes Agent brain (mode=%MODE%, independent process)
 echo    ERL_LIBS           = %ERL_LIBS%
 echo    MNESIA_DIR         = %MNESIA_DIR%
 echo    LOG_DIR            = %LOG_DIR%
+echo    AGENT_CONSOLE_LOG  = %AGENT_CONSOLE_LOG%
 echo    SYS_CONFIG         = %SYS_CONFIG%
 echo    PANEL_ADDR_FILE    = %PANEL_ADDR_FILE%
 echo    EION_TOOLS_ADDR    = %EION_TOOLS_ADDR_FILE%
@@ -120,11 +126,13 @@ erl ^
     -env ERL_CRASH_DUMP "%LOG_DIR%\erl_crash.dump" ^
     -kernel net_ticktime 60 ^
     -config "%SYS_CONFIG%" ^
+    -lager log_root \"%LOG_DIR%\" ^
     -hermes_brains panel_addr_file \"%PANEL_ADDR_FILE%\" ^
     -hermes_brains eion_tools_addr_file \"%EION_TOOLS_ADDR_FILE%\" ^
     %EXEC_VIA_PANEL_ARG% ^
     -hermes_brains mnesia_dir \"%MNESIA_DIR%\" ^
     -hermes_brains snapshot_interval_ms %SNAPSHOT_INTERVAL_MS% ^
-    -eval "application:set_env(hermes_brains, snapshot_tables, [hermes_brains_state]), {ok, _} = application:ensure_all_started(hermes_brains), hermes_brains_app:serve()."
+    -eval "application:set_env(hermes_brains, snapshot_tables, [hermes_brains_state]), {ok, _} = application:ensure_all_started(hermes_brains), hermes_brains_app:serve()." ^
+    1>>"%AGENT_CONSOLE_LOG%" 2>&1
 
 endlocal

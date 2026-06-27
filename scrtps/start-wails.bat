@@ -25,6 +25,7 @@ set "SCRIPT_DIR=%~dp0"
 set "ROOT_DIR=%SCRIPT_DIR%.."
 set "WAILS_BIN_DIR=%ROOT_DIR%\bin\wails_v3_bin"
 set "RUN_DIR=%ROOT_DIR%\bin\run"
+set "WAILS_LOG_DIR=%WAILS_BIN_DIR%\log"
 
 REM Check Wails binary
 if exist "%WAILS_BIN_DIR%\hermes.exe" (
@@ -35,6 +36,7 @@ if exist "%WAILS_BIN_DIR%\hermes.exe" (
 )
 
 if not exist "%RUN_DIR%" mkdir "%RUN_DIR%"
+if not exist "%WAILS_LOG_DIR%" mkdir "%WAILS_LOG_DIR%"
 
 REM Eion-tools 已嵌入 hermes.exe；写 addr 供 Agent-brains bridge_manager 发现。
 set "EION_TOOLS_ADDR_FILE=%RUN_DIR%\eion-tools.addr"
@@ -45,11 +47,13 @@ REM bridge.go resolvePanelAddr() reads HERMES_PANEL_ADDR_FILE env first,
 REM then falls back to default <repo>/bin/run/panel.addr.
 set "HERMES_PANEL_ADDR_FILE=%RUN_DIR%\panel.addr"
 set "HERMES_EXEC_VIA_PANEL=1"
+set "HERMES_LOG_DIR=%WAILS_LOG_DIR%"
 
 echo ==> Starting Hermes Agent Workbench (Wails v3, Eion-tools embedded)
 echo    binary              = %BIN%
 echo    EION_TOOLS_ADDR     = %EION_TOOLS_ADDR_FILE%
 echo    HERMES_PANEL_ADDR   = %HERMES_PANEL_ADDR_FILE%
+echo    HERMES_LOG_DIR      = %HERMES_LOG_DIR%
 echo    HERMES_EXEC_VIA_PANEL = 1
 echo    (close window to exit / bin\stop-wails.bat)
 echo.

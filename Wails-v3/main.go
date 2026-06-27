@@ -10,7 +10,10 @@ package main
 import (
 	"context"
 	"embed"
+	"io"
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 
@@ -22,7 +25,42 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
+func initFileLogger() func() {
+	logDir := os.Getenv("HERMES_LOG_DIR")
+	if logDir == "" {
+		if exePath, err := os.Executable(); err == nil {
+			logDir = filepath.Join(filepath.Dir(exePath), "log")
+		}
+	}
+	if logDir == "" {
+		return func() {}
+	}
+	if err := os.MkdirAll(logDir, 0o755); err != nil {
+		log.Printf("create log dir failed: %v", err)
+		return func() {}
+	}
+	logFile := filepath.Join(logDir, "hermes-wails.log")
+	f, err := os.OpenFile(logFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
+	if err != nil {
+		log.Printf("open log file failed: %v", err)
+		return func() {}
+	}
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lshortfile)
+	if os.Getenv("HERMES_LOG_STDOUT") == "1" {
+		log.SetOutput(io.MultiWriter(f, os.Stdout))
+	} else {
+		log.SetOutput(f)
+	}
+	log.Printf("wails logger ready: %s", logFile)
+	return func() {
+		_ = f.Close()
+	}
+}
+
 func main() {
+	closeLog := initFileLogger()
+	defer closeLog()
+
 	embeddedEion := eion.NewEmbedded()
 	bootstrapCtx, bootstrapCancel := context.WithCancel(context.Background())
 	defer bootstrapCancel()

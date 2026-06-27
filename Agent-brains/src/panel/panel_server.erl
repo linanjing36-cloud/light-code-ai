@@ -417,12 +417,12 @@ handle_method(<<"send">>, ArgsMap, ConnPid) ->
         {ok, Pid} ->
             UserMsg = #{role => <<"user">>, content => Message},
             ok = state_store:append_history(SessionId, UserMsg),
-            %% 触发 ReAct (cast, 异步)
-            agent_fsm:start(Pid, #{}),
             %% 注册 stream: session_id -> {stream_id, conn_pid}
             %% ConnPid 为 connection handler (dispatch 在 spawn 中执行, 不能用 self())
             StreamId = generate_stream_id(),
             ets:insert(?STREAMS_TABLE, {SessionId, StreamId, ConnPid}),
+            %% 先注册 stream，再触发 ReAct，避免极快返回时 final 在注册前被静默丢弃。
+            agent_fsm:start(Pid, #{}),
             {ok, #{stream_id => StreamId}};
         not_found ->
             ErrMsg = erlang:iolist_to_binary(io_lib:format("session_not_found: ~s", [SessionId])),

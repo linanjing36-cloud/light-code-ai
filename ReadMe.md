@@ -66,37 +66,48 @@ cd Wails-v3 && wails3 build    # 产出 bin/wails_v3_bin/hermes
 
 ## 启动
 
-三进程必须**按顺序**启动，各自独立窗口/终端：
+### Windows（桌面面板模式，推荐）
 
-```
-Eion-tools  ──▶  Agent-brains  ──▶  Wails GUI
- (tools)          (agent)            (wails_v3)
-```
-
-### Windows（桌面面板模式）
+当前推荐直接使用一键入口：
 
 ```powershell
-.\bin\start-tools.bat    # 1. 启动 Eion-tools，写入 bin\run\eion-tools.addr
-.\bin\start-agent.bat    # 2. 启动 Erlang 大脑，写入 bin\run\panel.addr
-.\bin\start-wails.bat    # 3. 启动 Wails 面板，读取 panel.addr 连接大脑
+.\make.ps1 start-all-ui
+# 或：
+.\bin\start-all.bat wails
+```
+
+UI 模式的实际启动顺序为：
+
+```
+Agent-brains  ──▶  Wails GUI (+ embedded Eion-tools)
+   (agent)                  (wails_v3 / hermes.exe)
+```
+
+若需要手动分步启动，则顺序如下：
+
+```powershell
+.\bin\start-agent.bat    # 1. 启动 Erlang 大脑，写入 bin\run\panel.addr
+.\bin\start-wails.bat    # 2. 启动 Wails 面板，读取 panel.addr，并在 hermes.exe 内启动 embedded Eion-tools
 ```
 
 停止：
 
 ```powershell
-.\bin\stop-wails.bat     # 关闭 Wails 窗口，或运行此脚本
-.\bin\stop.bat           # 优雅停止 Erlang（rpc init:stop）
-                         # Eion-tools 在其窗口 Ctrl+C 退出
+.\make.ps1 stop-all      # 推荐，一键停止 Wails + Agent + Eion-tools
+# 或：
+.\bin\stop-wails.bat
+.\bin\stop.bat
 ```
 
-### Windows（纯命令行模式，无 GUI）
+### Windows（独立 tools / 纯命令行调试模式）
 
-仅需 Erlang 大脑，不启动 Wails：
+当你需要单独拉起外部 `Eion-tools` 进程，或不启动 Wails 面板时，可使用独立 tools 模式：
 
 ```powershell
-.\bin\start-tools.bat
-.\bin\start-agent.bat
-# 或合并入口：
+.\bin\start-tools.bat    # 1. 启动独立 Eion-tools，写入 bin\run\eion-tools.addr
+.\bin\start-agent.bat    # 2. 启动 Erlang 大脑，连接独立 Eion-tools
+
+# 或使用前台开发入口：
 .\make.ps1 run           # 开发模式（默认 MODE=dev）
 $env:MODE='prod'; .\make.ps1 run   # 发布模式
 .\make.ps1 stop          # 优雅停止

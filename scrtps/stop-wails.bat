@@ -2,8 +2,8 @@
 REM stop-wails.bat - 停止 Hermes Agent Workbench (Wails v3 桌面面板) - Windows
 REM
 REM 优雅停止: taskkill 发送 WM_CLOSE -> Wails shutdown -> bridge.ServiceShutdown
-REM           -> erl init:stop (优雅退出)
-REM 强制模式 (-f): taskkill /F 直接杀 (erl 子进程可能残留, 用 stop.bat 清理)
+REM           -> 关闭 Wails 与桥接连接；Agent 如需停止请单独执行 stop.bat / stop-all
+REM 强制模式 (-f): taskkill /F 直接杀 (Agent 进程可能仍在, 用 stop.bat 或 stop-all 清理)
 REM
 REM 用法:
 REM   bin\stop-wails.bat         REM 优雅停止
@@ -30,15 +30,15 @@ if "%FORCE%"=="1" (
 )
 
 echo ==> 优雅停止 Wails 桌面面板
-echo    [close] 发送 WM_CLOSE (触发 brain.Bridge.ServiceShutdown -> erl 优雅退出)...
+echo    [close] 发送 WM_CLOSE (触发 brain.Bridge.ServiceShutdown, 关闭 Wails)...
 taskkill /IM hermes.exe >nul 2>&1
 
-REM 等 5s (Wails shutdown + bridge rpc erl init:stop + erl app terminate)
+REM 等 5s 让 Wails 正常退出
 set /a COUNT=0
 :wait_loop
 tasklist /FI "IMAGENAME eq hermes.exe" 2>nul | findstr "hermes.exe" >nul
 if errorlevel 1 (
-    echo ==> Wails 已停止 (erl 已被 bridge 优雅停止)
+    echo ==> Wails 已停止
     exit /b 0
 )
 set /a COUNT+=1
@@ -50,6 +50,6 @@ goto wait_loop
 echo    [timeout] 5s 超时, 强制杀...
 taskkill /F /IM hermes.exe >nul 2>&1
 echo ==> 已强制杀死 Wails
-echo    提示: erl 子进程可能残留, 用 bin\stop.bat 清理
+echo    提示: Agent 进程可能仍在, 用 bin\stop.bat 或 .\make.ps1 stop-all 清理
 
 endlocal

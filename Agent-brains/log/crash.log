@@ -28,3 +28,12 @@ Error in process <0.180.0> on node 'hermes_brains@DESKTOP-EG96SR9' with exit val
 2026-06-28 02:35:15 =ERROR REPORT====
 Error in process <0.194.0> on node 'hermes_brains@DESKTOP-EG96SR9' with exit value:
 {{badmatch,{error,einval}},[{panel_server,connection_active_loop,2,[{file,"e:/light-code-ai-1/Agent-brains/src/panel/panel_server.erl"},{line,309}]}]}
+2026-06-28 02:48:31 =ERROR REPORT====
+Error in process <0.263.0> on node 'hermes_brains@DESKTOP-EG96SR9' with exit value:
+{{badmatch,{error,einval}},[{panel_server,connection_active_loop,2,[{file,"e:/light-code-ai-1/Agent-brains/src/panel/panel_server.erl"},{line,309}]}]}
+2026-06-28 02:50:09 =ERROR REPORT====
+Error in process <0.312.0> on node 'hermes_brains@DESKTOP-EG96SR9' with exit value:
+{{badmatch,{error,einval}},[{panel_server,connection_active_loop,2,[{file,"e:/light-code-ai-1/Agent-brains/src/panel/panel_server.erl"},{line,309}]}]}
+2026-06-28 02:55:11 =ERROR REPORT====
+Error in process <0.355.0> on node 'hermes_brains@DESKTOP-EG96SR9' with exit value:
+{{badmatch,{error,einval}},[{panel_server,connection_active_loop,2,[{file,"e:/light-code-ai-1/Agent-brains/src/panel/panel_server.erl"},{line,309}]}]}

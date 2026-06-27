@@ -13,6 +13,7 @@
 
 import { HermesService } from "../bindings/hermes";
 import { SessionStartRequest } from "../bindings/hermes/models.js";
+import { Events } from "@wailsio/runtime";
 
 const CONFIG_STORAGE_KEY = "hermes_llm_config";
 
@@ -60,17 +61,6 @@ let streamingMsgText: Text | null = null;
 let streamingText = "";
 let streamingScrollRaf = 0;
 
-// ---- Wails 流式事件 (panel_server → Bridge → EmitEvent) ----
-declare global {
-    interface Window {
-        wails?: {
-            Events?: {
-                On: (name: string, cb: (ev: { name: string; data: PanelStreamEvent }) => void) => () => void;
-            };
-        };
-    }
-}
-
 interface HistoryEntry {
     role: string;
     content: string;
@@ -94,7 +84,7 @@ interface PanelStreamEvent {
 }
 
 function setupStreamListener(): void {
-    window.wails?.Events?.On("panel:stream", (ev) => {
+    Events.On("panel:stream", (ev) => {
         handlePanelStream(ev.data);
     });
 }
@@ -103,7 +93,9 @@ setupStreamListener();
 function handlePanelStream(ev: PanelStreamEvent): void {
     const targetSessionId = ev ? findSessionIdByStreamId(ev.stream_id) : null;
     const activeCurrentStreamId = getStreamIdForSession(currentSessionId);
-    if (!ev || !targetSessionId) return;
+    if (!ev || !targetSessionId) {
+        return;
+    }
     if (targetSessionId !== currentSessionId) {
         if (ev.kind === "tool_event") {
             sessionHistoryDirty.add(targetSessionId);
@@ -120,8 +112,9 @@ function handlePanelStream(ev: PanelStreamEvent): void {
         }
         return;
     }
-    if (!activeCurrentStreamId || ev.stream_id !== activeCurrentStreamId) return;
-    console.log("[hermes] stream", ev.kind, ev.stream_id);
+    if (!activeCurrentStreamId || ev.stream_id !== activeCurrentStreamId) {
+        return;
+    }
     switch (ev.kind) {
         case "chunk": {
             const part = String(ev.payload.content ?? "");
@@ -329,7 +322,8 @@ const ctxHistory = $("ctx-history")!;
 const ctxConn = $("ctx-conn")!;
 
 // ============================================================
-// 启动: Bridge.ServiceStartup 已由 Wails 自动调用 (拉起 Erlang + 连 panel_server)
+// 启动: Bridge.ServiceStartup 已由 Wails 自动调用 (连接 panel_server)
+// Agent-brains 需先启动；embedded Eion 由宿主 hermes 进程内启动
 // 这里轮询探活, 等连接就绪后启用 UI
 // ============================================================
 console.log("[hermes] workbench starting");
@@ -569,7 +563,6 @@ async function doSend(): Promise<void> {
         streamingText = "";
         streamingMsgEl = null;
         streamingMsgText = null;
-        console.log("[hermes] send triggered stream_id=", streamId);
     } catch (e) {
         removeThinking();
         toast("Send 失败: " + e);
@@ -629,9 +622,16 @@ function stopStatusPolling(): void {
 
 async function pollBrainStatus(): Promise<void> {
     if (!currentSessionId) return;
+    const sessionId = currentSessionId;
     try {
-        const st = await HermesService.BrainStatus(currentSessionId);
-        updateBrainStatusUI(currentSessionId, st as Record<string, unknown>);
+        const st = (await HermesService.BrainStatus(sessionId)) as Record<string, unknown>;
+        updateBrainStatusUI(sessionId, st);
+        const state = String(st.state ?? "unknown");
+        if (state === "idle" && getStreamIdForSession(sessionId)) {
+            // 流式终态若偶发丢失，看到 FSM 已回到 idle 时主动拉历史收敛 UI。
+            sessionHistoryDirty.add(sessionId);
+            await finalizeSessionUI(sessionId, "");
+        }
     } catch (e) {
         console.warn("[hermes] brain_status error:", e);
     } finally {

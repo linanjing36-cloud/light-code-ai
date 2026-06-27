@@ -313,7 +313,6 @@ func (b *Bridge) handleExec(ctx context.Context, slot *connSlot, exec *panelpb.P
 			Terminal:      terminal,
 		})
 	}
-
 	if fn == nil {
 		_ = emit(nil, "exec handler not configured", true)
 		return

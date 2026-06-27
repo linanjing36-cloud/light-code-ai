@@ -435,13 +435,14 @@ function Invoke-Bin {
     Write-Host "    .\make.ps1 agent              # Erlang     -> bin\erl_bin\"
     Write-Host "    .\make.ps1 tools              # Eion-tools -> bin\eion_bin\"
     Write-Host "    .\make.ps1 wails_v3           # Wails v3   -> bin\wails_v3_bin\"
-    Write-Host "[make] ==> 启动 (三进程独立启动, 按顺序):"
-    Write-Host "    .\bin\start-all.bat           # 一键: Eion-tools + Agent-brains (推荐)"
-    Write-Host "    .\bin\start-all.bat wails     # 一键 + Wails UI"
-    Write-Host "    .\bin\start-tools.bat         # 1. Eion-tools server (写 eion-tools.addr)"
-    Write-Host "    .\bin\start-agent.bat         # 2. Erlang brain (写 panel.addr, 连 Eion-tools)"
-    Write-Host "    .\bin\start-wails.bat         # 3. Wails GUI (读 panel.addr, 连 Erlang)"
-    Write-Host "    .\bin\stop-all.bat              # 一键停止全部"
+    Write-Host "[make] ==> 启动:"
+    Write-Host "    .\make.ps1 start-all-ui       # 一键: Agent-brains -> Wails UI (推荐)"
+    Write-Host "    .\bin\start-all.bat wails     # 同上, bat 包装入口"
+    Write-Host "    .\bin\start-agent.bat         # 1. Erlang brain (写 panel.addr)"
+    Write-Host "    .\bin\start-wails.bat         # 2. Wails GUI + embedded Eion-tools (读 panel.addr)"
+    Write-Host "    .\make.ps1 start-all          # 独立 tools 模式: Eion-tools + Agent-brains"
+    Write-Host "    .\bin\start-tools.bat         # 独立 tools server (写 eion-tools.addr)"
+    Write-Host "    .\bin\stop-all.bat            # 一键停止全部"
 }
 
 # 编译 Agent 大脑 (Erlang/OTP), 产物安装到 bin\erl_bin\
@@ -501,7 +502,7 @@ function Invoke-Tools {
 
     Write-Host "[make] ==> 完成. 已安装 Eion-tools server:"
     Write-Host "    [eion_bin] eion-tools-server.exe"
-    Write-Host "[make] ==> 一键启动: .\make.ps1 start-all  (或 .\bin\start-all.bat)"
+    Write-Host "[make] ==> 一键启动: .\make.ps1 start-all  (UI 模式用 .\make.ps1 start-all-ui)"
 }
 
 # 编译 Wails-v3 (Hermes GUI) -> bin\wails_v3_bin\hermes.exe
@@ -546,7 +547,7 @@ function Invoke-WailsV3 {
     }
     Write-Host "[make] ==> 完成. 已安装 Wails GUI:"
     Write-Host "    [wails_v3_bin] hermes.exe"
-    Write-Host "[make] ==> 启动: .\bin\start-wails.bat  (需先 start-tools + start-agent)"
+    Write-Host "[make] ==> 启动: .\make.ps1 start-all-ui  (或手动先 .\bin\start-agent.bat 再 .\bin\start-wails.bat)"
 }
 
 # 启动 Agent 大脑 (前台运行, 优化参数, Ctrl+C 退出)
@@ -883,8 +884,8 @@ function Show-Help {
     Write-Host "  tools    编译 Eion-tools (Go/Eino), 产物安装到 bin\eion_bin\"
     Write-Host "  wails_v3 编译 Wails-v3 (GUI), 产物安装到 bin\wails_v3_bin\"
     Write-Host "  run      启动 Agent 大脑 (前台, 优化参数, Ctrl+C 退出)"
-    Write-Host "  start-all  一键启动 Eion-tools + Agent-brains (独立窗口)"
-    Write-Host "  start-all-ui  一键启动 + Wails UI"
+    Write-Host "  start-all  一键启动 Eion-tools + Agent-brains (独立 tools 模式)"
+    Write-Host "  start-all-ui  一键启动 Agent-brains + Wails UI (推荐)"
     Write-Host "  stop     优雅停止 Agent 大脑 (rpc init:stop 触发 app terminate)"
     Write-Host "  stop-all 一键停止 Wails + Agent + Eion-tools"
     Write-Host "  stop-all -Force  强制停止 (等同 stop-all.bat -f)"
