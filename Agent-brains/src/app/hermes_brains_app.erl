@@ -8,6 +8,7 @@
 -export([start/2, stop/1, serve/0]).
 
 start(_StartType, _StartArgs) ->
+    ok = credentials:load_optional(),
     hermes_brains_sup:start_link().
 
 stop(_State) ->

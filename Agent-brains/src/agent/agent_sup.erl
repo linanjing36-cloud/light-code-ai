@@ -14,10 +14,10 @@ init([]) ->
     SupFlags = #{strategy => simple_one_for_one,
                  intensity => 10,
                  period => 10},
-    %% temporary: 会话 FSM 不自动重启 (会话结束即终止; 崩溃由调用方决定是否重放)
+    %% transient: 异常退出时监督者自动重启 FSM, 配合 state_store 快照断点续跑 (Phase 3.1)
     ChildSpec = #{id => agent_fsm,
                   start => {agent_fsm, start_link, []},
-                  restart => temporary,
+                  restart => transient,
                   shutdown => 5000,
                   type => worker,
                   modules => [agent_fsm]},

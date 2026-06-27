@@ -19,7 +19,9 @@
 %%   关键是: 一次跑通 = Phase 1.4 通信基座全部打通。
 %%====================================================================
 
--export([run/0, run/1]).
+-export([run/0, run/1,
+         load_credentials/0, configure_eion_addr/0, ensure_started/0,
+         print_env/0, wait_bridge_pool/1, wait_idle/2, wait_idle/3, print_history/1]).
 
 -define(DEFAULT_SESSION, <<"demo-sess-1">>).
 
@@ -50,7 +52,7 @@ run(Query) when is_binary(Query) ->
     %% 7. 触发 ReAct 主循环 (cast start, idle -> thinking)
     agent_fsm:start(FsmPid, #{}),
     %% 8. 等待 FSM 回到 idle (循环结束), 最多等 90s
-    ok = wait_idle(FsmPid, 90000),
+    ok = wait_idle(FsmPid, ?DEFAULT_SESSION, 90000),
     %% 9. 拉取会话历史并打印
     print_history(?DEFAULT_SESSION),
     ok.
@@ -117,21 +119,10 @@ print_env() ->
               [AddrFile, ApiBase, Model]).
 
 configure_eion_addr() ->
-    AddrFile = resolve_eion_tools_addr_file(),
+    AddrFile = util:resolve_eion_tools_addr_file(),
     application:set_env(hermes_brains, eion_tools_addr_file, AddrFile),
     io:format("[demo] eion_tools_addr_file=~s~n", [AddrFile]),
     ok.
-
-resolve_eion_tools_addr_file() ->
-    case application:get_env(hermes_brains, eion_tools_addr_file) of
-        {ok, F} when is_list(F), F =/= "" -> F;
-        _ ->
-            case os:getenv("EION_TOOLS_ADDR_FILE") of
-                false -> "../bin/run/eion-tools.addr";
-                "" -> "../bin/run/eion-tools.addr";
-                F -> F
-            end
-    end.
 
 wait_bridge_pool(TimeoutMs) ->
     Deadline = erlang:system_time(millisecond) + TimeoutMs,
@@ -189,10 +180,13 @@ get_weather_tool() ->
 
 %% 等待 FSM 回到 idle (轮询 state_store 快照, loop_count 不再增长 + history 末尾出现 assistant 无 tool_calls)
 wait_idle(FsmPid, TimeoutMs) ->
-    Deadline = erlang:system_time(millisecond) + TimeoutMs,
-    wait_idle_loop(FsmPid, Deadline, 0).
+    wait_idle(FsmPid, ?DEFAULT_SESSION, TimeoutMs).
 
-wait_idle_loop(FsmPid, Deadline, _Iter) ->
+wait_idle(FsmPid, SessionId, TimeoutMs) ->
+    Deadline = erlang:system_time(millisecond) + TimeoutMs,
+    wait_idle_loop(FsmPid, SessionId, Deadline, 0).
+
+wait_idle_loop(FsmPid, SessionId, Deadline, _Iter) ->
     case erlang:is_process_alive(FsmPid) of
         false ->
             io:format("[demo] FSM 进程已退出~n"),
@@ -205,9 +199,9 @@ wait_idle_loop(FsmPid, Deadline, _Iter) ->
                true ->
                    timer:sleep(1000),
                    %% 检查最后一条历史是否是 assistant 且无 tool_calls (意味着 LLM 给出最终答案)
-                   case state_store:get_history(?DEFAULT_SESSION) of
+                   case state_store:get_history(SessionId) of
                        {ok, []} ->
-                           wait_idle_loop(FsmPid, Deadline, _Iter + 1);
+                           wait_idle_loop(FsmPid, SessionId, Deadline, _Iter + 1);
                        {ok, History} ->
                            Last = lists:last(History),
                            case is_final_answer(Last) of
@@ -215,7 +209,7 @@ wait_idle_loop(FsmPid, Deadline, _Iter) ->
                                    io:format("[demo] FSM 已回 idle (最终答案就绪)~n"),
                                    ok;
                                false ->
-                                   wait_idle_loop(FsmPid, Deadline, _Iter + 1)
+                                   wait_idle_loop(FsmPid, SessionId, Deadline, _Iter + 1)
                            end
                    end
             end

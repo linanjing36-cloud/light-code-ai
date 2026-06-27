@@ -43,7 +43,8 @@
 %% 支持的方法 (与 Go 侧 brain.Bridge.Call / HermesService 对齐):
 %%   start_session   [{system_prompt}]              -> {ok, #{session_id => binary()}}
 %%   send            [{session_id, message}]        -> {ok, #{stream_id => binary()}}
-%%   list_tools      []                              -> {ok, #{tools => []}}
+%%   list_tools      []                              -> {ok, #{tools => [...]}}
+%%   get_history     [{session_id}]                  -> {ok, #{messages => [...]}}
 %%   approve         [{req_id, allow}]               -> {ok, #{ok => true}}
 %%   brain_status    [{session_id}]                 -> {ok, #{state, loop_count, ...}}
 %%   stop            []                              -> 触发 init:stop() 优雅退出
@@ -309,8 +310,9 @@ handle_method(<<"start_session">>, ArgsMap) ->
     Model = application:get_env(hermes_brains, default_model, <<"deepseek-v4-pro">>),
     FSMArgs = [{session_id, SessionId},
                {model, Model},
-               {tools, []},
-               {history, [#{role => <<"system">>, content => SystemPrompt}]}],
+               {tools, panel_tools:fetch_tool_descs()},
+               {session_prompt, SystemPrompt},
+               {history, []}],
     case agent_sup:start_agent(FSMArgs) of
         {ok, Pid} ->
             ok = state_store:register_session(SessionId, Pid),
@@ -341,9 +343,19 @@ handle_method(<<"send">>, ArgsMap) ->
             {error, ErrMsg}
     end;
 
-%% ---- list_tools: 返回与 Eion-tools 对齐的默认工具列表 ----
+%% ---- list_tools: 从 Eion-tools 动态同步工具注册表 ----
 handle_method(<<"list_tools">>, _ArgsMap) ->
-    {ok, #{tools => default_tool_descs()}};
+    {ok, #{tools => panel_tools:fetch_tool_descs()}};
+
+%% ---- get_history: 读 state_store 短期记忆 ----
+handle_method(<<"get_history">>, ArgsMap) ->
+    SessionId = maps:get(session_id, ArgsMap, <<>>),
+    case state_store:get_history(SessionId) of
+        {ok, Msgs} ->
+            {ok, #{messages => Msgs}};
+        {error, _} ->
+            {ok, #{messages => []}}
+    end;
 
 %% ---- approve: 工具调用授权 (占位) ----
 handle_method(<<"approve">>, _ArgsMap) ->
@@ -369,17 +381,6 @@ handle_method(<<"stop">>, _ArgsMap) ->
 handle_method(Method, _ArgsMap) ->
     ErrMsg = erlang:iolist_to_binary(io_lib:format("unknown_method: ~s", [Method])),
     {error, ErrMsg}.
-
-default_tool_descs() ->
-    [#{name => <<"get_weather">>,
-       description => util:u("获取指定城市的当前天气。仅支持中国主要城市。"),
-       parameters_json => util:u(
-           "{\"type\":\"object\","
-           "\"properties\":{"
-           "\"city\":{\"type\":\"string\",\"description\":\"城市名，例如 北京/上海/深圳\"}"
-           "},"
-           "\"required\":[\"city\"]"
-           "}")}].
 
 %%====================================================================
 %% 内部: id 生成

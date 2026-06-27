@@ -10,6 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/eino-contrib/jsonschema"
 	"github.com/cloudwego/eino/components/tool"
@@ -45,7 +46,30 @@ func (w *Eino_Tool_Wrapper) Register(name, description, parametersJSON string, h
 		}
 		// 解析失败则该工具视为无参工具（ParamsOneOf 为 nil）
 	}
-	w.registry[name] = &registeredTool{info: info, handler: h}
+	w.registry[name] = &registeredTool{info: info, handler: h, paramsJSON: parametersJSON}
+}
+
+// Desc 是对外暴露的工具描述（与 hermes.ToolDesc / panel_tools 对齐）。
+type Desc struct {
+	Name           string
+	Description    string
+	ParametersJSON string
+}
+
+// ListDescs 返回当前注册表中的全部工具描述（按 name 排序）。
+func (w *Eino_Tool_Wrapper) ListDescs() []Desc {
+	names := w.Names()
+	sort.Strings(names)
+	out := make([]Desc, 0, len(names))
+	for _, n := range names {
+		t := w.registry[n]
+		out = append(out, Desc{
+			Name:           t.info.Name,
+			Description:    t.info.Desc,
+			ParametersJSON: t.paramsJSON,
+		})
+	}
+	return out
 }
 
 // Get 返回注册的工具（实现 tool.InvokableTool 接口）。
@@ -74,8 +98,9 @@ func (w *Eino_Tool_Wrapper) ToolInfos() []*schema.ToolInfo {
 
 // registeredTool 实现 tool.InvokableTool 接口（BaseTool + InvokableRun）。
 type registeredTool struct {
-	info    *schema.ToolInfo
-	handler HandlerFunc
+	info       *schema.ToolInfo
+	handler    HandlerFunc
+	paramsJSON string
 }
 
 func (t *registeredTool) Info(_ context.Context) (*schema.ToolInfo, error) {

@@ -4,7 +4,7 @@
 
 /**
  * HermesService 是暴露给前端 (TS via Wails bindings) 的 RPC 对象。
- * 前端调用这些方法 → 经 brain.Bridge.Call (TCP+JSON) → Erlang panel_server。
+ * 前端调用这些方法 → 经 brain.Bridge.Call (TCP+Protobuf) → Erlang panel_server。
  * 
  * 设计原则: 本 Service 不持有业务状态, 仅做转发。
  * 所有状态在 Erlang 侧的 agent_fsm / state_store 中, Wails 保持"哑终端"属性。
@@ -42,12 +42,23 @@ export function BrainStatus(sessionID) {
 }
 
 /**
+ * GetHistory 拉取指定会话的短期记忆 (state_store)。
+ * @param {string} sessionID
+ * @returns {$CancellablePromise<$models.HistoryEntry[]>}
+ */
+export function GetHistory(sessionID) {
+    return $Call.ByID(3702214731, sessionID).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType2($result);
+    }));
+}
+
+/**
  * ListTools 列出 Eion-tools 侧注册的工具描述 (经 Erlang 转发)。
- * @returns {$CancellablePromise<string[]>}
+ * @returns {$CancellablePromise<$models.ToolDesc[]>}
  */
 export function ListTools() {
     return $Call.ByID(541722566).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType1($result);
+        return $$createType4($result);
     }));
 }
 
@@ -60,7 +71,7 @@ export function ListTools() {
  */
 export function Send(sessionID, message) {
     return $Call.ByID(1084921369, sessionID, message).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType3($result);
+        return $$createType6($result);
     }));
 }
 
@@ -72,7 +83,7 @@ export function Send(sessionID, message) {
  */
 export function StartSession(systemPrompt) {
     return $Call.ByID(3191461447, systemPrompt).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType5($result);
+        return $$createType8($result);
     }));
 }
 
@@ -87,8 +98,11 @@ export function StopBrain() {
 
 // Private type creation functions
 const $$createType0 = $Create.Map($Create.Any, $Create.Any);
-const $$createType1 = $Create.Array($Create.Any);
-const $$createType2 = $models.SendResult.createFrom;
-const $$createType3 = $Create.Nullable($$createType2);
-const $$createType4 = $models.SessionInfo.createFrom;
-const $$createType5 = $Create.Nullable($$createType4);
+const $$createType1 = $models.HistoryEntry.createFrom;
+const $$createType2 = $Create.Array($$createType1);
+const $$createType3 = $models.ToolDesc.createFrom;
+const $$createType4 = $Create.Array($$createType3);
+const $$createType5 = $models.SendResult.createFrom;
+const $$createType6 = $Create.Nullable($$createType5);
+const $$createType7 = $models.SessionInfo.createFrom;
+const $$createType8 = $Create.Nullable($$createType7);

@@ -54,11 +54,23 @@ register_session(SessionId, Pid) ->
     gen_server:call(?MODULE, {register_session, SessionId, Pid}).
 
 lookup_session(SessionId) ->
+    case lookup_session_once(SessionId) of
+        {ok, _} = Ok ->
+            Ok;
+        not_found ->
+            %% transient 重启窗口: 旧 pid 已死, 新 FSM 可能尚未 register
+            timer:sleep(200),
+            lookup_session_once(SessionId)
+    end.
+
+lookup_session_once(SessionId) ->
     case ets:lookup(?TABLE, {session_pid, SessionId}) of
         [{{session_pid, SessionId}, Pid}] ->
             case is_process_alive(Pid) of
                 true -> {ok, Pid};
-                false -> not_found
+                false ->
+                    ets:delete(?TABLE, {session_pid, SessionId}),
+                    not_found
             end;
         [] ->
             not_found

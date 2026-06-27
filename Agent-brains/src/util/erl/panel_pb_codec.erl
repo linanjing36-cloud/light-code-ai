@@ -213,6 +213,8 @@ encode_args(<<"approve">>, #{req_id := ReqId, allow := Allow}) ->
     ?PANEL_PB:encode_msg(#{req_id => ReqId, allow => Allow}, 'ApproveArgs');
 encode_args(<<"brain_status">>, #{session_id := SessId}) ->
     ?PANEL_PB:encode_msg(#{session_id => SessId}, 'BrainStatusArgs');
+encode_args(<<"get_history">>, #{session_id := SessId}) ->
+    ?PANEL_PB:encode_msg(#{session_id => SessId}, 'GetHistoryArgs');
 encode_args(_NoArgsMethod, _ArgsMap) ->
     %% list_tools / stop 无参数, args_bytes 为空
     <<>>.
@@ -230,6 +232,9 @@ decode_args(<<"approve">>, Bin) ->
       allow => maps:get(allow, M, false)};
 decode_args(<<"brain_status">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'BrainStatusArgs'),
+    #{session_id => maps:get(session_id, M, <<>>)};
+decode_args(<<"get_history">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'GetHistoryArgs'),
     #{session_id => maps:get(session_id, M, <<>>)};
 decode_args(_NoArgsMethod, _Bin) ->
     #{}.
@@ -253,6 +258,9 @@ encode_result(<<"brain_status">>, M) ->
             max_loops => maps:get(max_loops, M, 0),
             history_len => maps:get(history_len, M, 0)},
     ?PANEL_PB:encode_msg(PbM, 'BrainStatusResult');
+encode_result(<<"get_history">>, #{messages := Msgs}) ->
+    PbMsgs = [history_entry_to_pb(M) || M <- Msgs],
+    ?PANEL_PB:encode_msg(#{messages => PbMsgs}, 'GetHistoryResult');
 encode_result(<<"stop">>, #{ok := Ok}) ->
     ?PANEL_PB:encode_msg(#{ok => Ok}, 'StopResult');
 encode_result(_Method, _ResultMap) ->
@@ -280,6 +288,9 @@ decode_result(<<"brain_status">>, Bin) ->
       loop_count => maps:get(loop_count, M, 0),
       max_loops => maps:get(max_loops, M, 0),
       history_len => maps:get(history_len, M, 0)};
+decode_result(<<"get_history">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'GetHistoryResult'),
+    #{messages => [history_entry_from_pb(E) || E <- maps:get(messages, M, [])]};
 decode_result(<<"stop">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'StopResult'),
     #{ok => maps:get(ok, M, false)};
@@ -290,3 +301,69 @@ encode_state_bin(S) when is_atom(S) -> atom_to_binary(S, utf8);
 encode_state_bin(S) when is_binary(S) -> S;
 encode_state_bin(S) when is_list(S) -> list_to_binary(S);
 encode_state_bin(_) -> <<>>.
+
+history_entry_to_pb(M) ->
+    Role = ensure_binary(maps:get(role, M, <<>>)),
+    Content = ensure_binary(maps:get(content, M, <<>>)),
+    TCJson = case maps:get(tool_calls, M, []) of
+                 [] -> <<>>;
+                 TCs -> encode_tool_calls_json(TCs)
+             end,
+    ToolCallId = ensure_binary(maps:get(tool_call_id, M, <<>>)),
+    #{role => Role,
+      content => Content,
+      tool_calls_json => TCJson,
+      tool_call_id => ToolCallId}.
+
+history_entry_from_pb(E) ->
+    Base = #{role => maps:get(role, E, <<>>),
+             content => maps:get(content, E, <<>>)},
+    TCJson = maps:get(tool_calls_json, E, <<>>),
+    WithTC = case TCJson of
+                 <<>> -> Base;
+                 _ ->
+                     case decode_tool_calls_json(TCJson) of
+                         {ok, TCs} -> Base#{tool_calls => TCs};
+                         _ -> Base
+                     end
+             end,
+    ToolCallId = maps:get(tool_call_id, E, <<>>),
+    case ToolCallId of
+        <<>> -> WithTC;
+        _ -> WithTC#{tool_call_id => ToolCallId}
+    end.
+
+encode_tool_calls_json(TCs) when is_list(TCs) ->
+    Items = [tool_call_to_json(TC) || TC <- TCs],
+    json:encode(Items).
+
+tool_call_to_json(TC) ->
+    #{
+        <<"id">> => ensure_binary(maps:get(id, TC, <<>>)),
+        <<"type">> => <<"function">>,
+        <<"function">> => #{
+            <<"name">> => ensure_binary(maps:get(name, TC, <<>>)),
+            <<"arguments">> => ensure_binary(maps:get(arguments, TC, <<>>))
+        }
+    }.
+
+decode_tool_calls_json(Bin) ->
+    try
+        Decoded = json:decode(Bin),
+        {ok, [tool_call_from_json(J) || J <- Decoded]}
+    catch
+        _:_ -> {error, invalid_json}
+    end.
+
+tool_call_from_json(J) when is_map(J) ->
+    Fun = maps:get(<<"function">>, J, #{}),
+    #{
+        id => maps:get(<<"id">>, J, <<>>),
+        name => maps:get(<<"name">>, Fun, <<>>),
+        arguments => maps:get(<<"arguments">>, Fun, <<>>)
+    }.
+
+ensure_binary(V) when is_binary(V) -> V;
+ensure_binary(V) when is_list(V) -> list_to_binary(V);
+ensure_binary(V) when is_atom(V) -> atom_to_binary(V, utf8);
+ensure_binary(V) -> iolist_to_binary(io_lib:format("~p", [V])).

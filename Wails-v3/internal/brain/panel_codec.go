@@ -52,6 +52,11 @@ func encodePanelArgs(method string, args map[string]any) ([]byte, error) {
 			SessionId: stringArg(args, "session_id"),
 		}
 		return proto.Marshal(msg)
+	case "get_history":
+		msg := &panelpb.GetHistoryArgs{
+			SessionId: stringArg(args, "session_id"),
+		}
+		return proto.Marshal(msg)
 	case "list_tools", "stop":
 		return nil, nil
 	default:
@@ -114,6 +119,21 @@ func decodePanelResult(method string, bin []byte) (any, error) {
 			"max_loops":   msg.GetMaxLoops(),
 			"history_len": msg.GetHistoryLen(),
 		}, nil
+	case "get_history":
+		var msg panelpb.GetHistoryResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		msgs := make([]map[string]any, 0, len(msg.GetMessages()))
+		for _, e := range msg.GetMessages() {
+			msgs = append(msgs, map[string]any{
+				"role":            e.GetRole(),
+				"content":         e.GetContent(),
+				"tool_calls_json": e.GetToolCallsJson(),
+				"tool_call_id":    e.GetToolCallId(),
+			})
+		}
+		return map[string]any{"messages": msgs}, nil
 	case "stop":
 		var msg panelpb.StopResult
 		if err := proto.Unmarshal(bin, &msg); err != nil {

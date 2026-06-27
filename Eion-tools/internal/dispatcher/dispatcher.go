@@ -59,6 +59,10 @@ func (d *Command_Dispatcher) Dispatch(ctx context.Context, req *hermes.AgentRequ
 				resp.Payload = &hermes.AgentResponse_LlmInfer{
 					LlmInfer: &hermes.LLMInferResponse{},
 				}
+			case *hermes.AgentRequest_ToolList:
+				resp.Payload = &hermes.AgentResponse_ToolList{
+					ToolList: &hermes.ToolListResponse{Error: fmt.Sprintf("panic: %v", r)},
+				}
 			default:
 				resp.Payload = &hermes.AgentResponse_ToolExec{
 					ToolExec: &hermes.ToolExecResponse{
@@ -80,6 +84,12 @@ func (d *Command_Dispatcher) Dispatch(ctx context.Context, req *hermes.AgentRequ
 		out := d.handleTool(ctx, p.ToolExec)
 		return &hermes.AgentResponse{
 			Payload: &hermes.AgentResponse_ToolExec{ToolExec: out},
+		}
+
+	case *hermes.AgentRequest_ToolList:
+		out := d.handleToolList(p.ToolList)
+		return &hermes.AgentResponse{
+			Payload: &hermes.AgentResponse_ToolList{ToolList: out},
 		}
 
 	default:
@@ -204,6 +214,19 @@ func (d *Command_Dispatcher) handleTool(ctx context.Context, req *hermes.ToolExe
 	}
 	d.cacheIdempotent(req.GetReqId(), resp)
 	return resp
+}
+
+func (d *Command_Dispatcher) handleToolList(_ *hermes.ToolListRequest) *hermes.ToolListResponse {
+	descs := d.toolW.ListDescs()
+	tools := make([]*hermes.ToolDesc, 0, len(descs))
+	for _, desc := range descs {
+		tools = append(tools, &hermes.ToolDesc{
+			Name:           desc.Name,
+			Description:    desc.Description,
+			ParametersJson: desc.ParametersJSON,
+		})
+	}
+	return &hermes.ToolListResponse{Tools: tools}
 }
 
 // cacheIdempotent 将工具执行结果存入幂等缓存（ReqId 为空则跳过）。

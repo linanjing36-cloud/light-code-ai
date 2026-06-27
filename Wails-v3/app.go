@@ -140,6 +140,40 @@ func (s *HermesService) BrainStatus(sessionID string) (map[string]any, error) {
 	return nil, fmt.Errorf("brain: invalid brain_status response: %T", out)
 }
 
+// HistoryEntry 单条对话历史 (与 panel.proto HistoryEntry 对齐)
+type HistoryEntry struct {
+	Role          string `json:"role"`
+	Content       string `json:"content"`
+	ToolCallsJSON string `json:"tool_calls_json"`
+	ToolCallID    string `json:"tool_call_id"`
+}
+
+// GetHistory 拉取指定会话的短期记忆 (state_store)。
+func (s *HermesService) GetHistory(sessionID string) ([]HistoryEntry, error) {
+	out, err := s.brain.Call("get_history", map[string]any{
+		"session_id": sessionID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	m, _ := out.(map[string]any)
+	raw, _ := m["messages"].([]any)
+	entries := make([]HistoryEntry, 0, len(raw))
+	for _, item := range raw {
+		em, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		entries = append(entries, HistoryEntry{
+			Role:          fmt.Sprint(em["role"]),
+			Content:       fmt.Sprint(em["content"]),
+			ToolCallsJSON: fmt.Sprint(em["tool_calls_json"]),
+			ToolCallID:    fmt.Sprint(em["tool_call_id"]),
+		})
+	}
+	return entries, nil
+}
+
 // ---- Brain 控制 ----
 
 // StopBrain 优雅停止 Erlang 大脑 (触发 init:stop, 退出整个 erl 子进程)。

@@ -13,7 +13,8 @@
 %%====================================================================
 
 -export([u/1, safe_prefix/1,
-         extract_kv/1, extract_string_field/2]).
+         extract_kv/1, extract_string_field/2,
+         resolve_eion_tools_addr_file/0]).
 
 %% UTF-8 字符串辅助: string list -> unicode:characters_to_binary/2
 %% 含中文的字面量必须走本函数, 直接写 <<"...中文...">> 二进制字面量在编译期会被破坏。
@@ -43,4 +44,22 @@ extract_string_field(Bin, Field) ->
     case re:run(Bin, RE, [{capture, all_but_first, binary}]) of
         {match, [Val]} -> Val;
         nomatch -> <<>>
+    end.
+
+%% Eion-tools 地址文件解析 (联调脚本 / start-agent.bat 共用)
+%% 优先级: 环境变量 EION_TOOLS_ADDR_FILE > app env (文件须存在) > ../bin/run/eion-tools.addr
+-spec resolve_eion_tools_addr_file() -> string().
+resolve_eion_tools_addr_file() ->
+    case os:getenv("EION_TOOLS_ADDR_FILE") of
+        F when F =/= false, F =/= "" ->
+            F;
+        _ ->
+            AppFile = case application:get_env(hermes_brains, eion_tools_addr_file) of
+                {ok, P} when is_list(P), P =/= "" -> P;
+                _ -> "../bin/run/eion-tools.addr"
+            end,
+            case filelib:is_regular(AppFile) of
+                true -> AppFile;
+                false -> "../bin/run/eion-tools.addr"
+            end
     end.

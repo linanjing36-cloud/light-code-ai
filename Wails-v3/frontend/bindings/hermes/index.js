@@ -8,6 +8,8 @@ export {
 };
 
 export {
+    HistoryEntry,
     SendResult,
-    SessionInfo
+    SessionInfo,
+    ToolDesc
 } from "./models.js";

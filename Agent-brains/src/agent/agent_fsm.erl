@@ -39,10 +39,13 @@
 -define(MAX_LOOPS, 10).
 %% 失败案例注入条数 (System Prompt 末尾的"负面案例"段)
 -define(CASE_INJECT_LIMIT, 5).
+%% history 超过此条数时在 thinking 中触发中期摘要（见 memory_summarizer）
+-define(SUMMARY_HISTORY_THRESHOLD, 20).
 
 -record(data, {
     session_id :: binary(),
     model :: binary(),
+    session_prompt = <<>> :: binary(),
     %% 工具描述列表 (ToolDesc map): #{name, description, parameters_json}
     tools = [] :: [map()],
     %% 对话历史 (Message map): #{role, content, tool_calls, tool_call_id}
@@ -93,33 +96,61 @@ init(Args) ->
     Model = proplists:get_value(model, Args, <<"gpt-4">>),
     Tools = proplists:get_value(tools, Args, []),
     History0 = proplists:get_value(history, Args, []),
-    %% 崩溃恢复 (架构文档 5.1 / Phase 3.1):
-    %% rest_for_one 重启场景下, state_store 仍持有上次崩溃前的快照 (#data{} term)。
-    %% 优先从快照恢复 loop_count/history/pending_tool_calls 等运行时状态,
-    %% 避免每次崩溃都丢失上下文从头开始。
-    %% 恢复后停留在 idle, 等外部 start 重新触发 (LLM ref 已失效, 不能自动续跑)。
-    case state_store:get_snapshot(SessionId) of
-        {ok, #data{} = Saved} ->
-            lager:info("agent_fsm recovering from snapshot, session_id=~p, "
-                       "loop=~p/~p, history_len=~p",
-                       [SessionId, Saved#data.loop_count, Saved#data.max_loops,
-                        length(Saved#data.history)]),
-            %% Args 中的 Model/Tools 视为"热更新"覆盖, 优先于快照
-            %% (允许重启时切换模型或更新工具列表, 而不丢失对话历史)
-            Data = Saved#data{model = Model, tools = Tools,
-                              llm_ref = undefined,
-                              pending_tool_calls = [],
-                              tool_results = #{},
-                              pending_count = 0},
-            {ok, idle, Data};
-        not_found ->
+    SessionPrompt = proplists:get_value(session_prompt, Args, <<>>),
+    ok = state_store:register_session(SessionId, self()),
+    case load_recovered_snapshot(SessionId, Model, Tools, History0, SessionPrompt) of
+        {ok, StateName, Data} ->
+            lager:info("agent_fsm resume session_id=~p state=~p loop=~p/~p history_len=~p",
+                       [SessionId, StateName, Data#data.loop_count,
+                        Data#data.max_loops, length(Data#data.history)]),
+            {ok, StateName, Data};
+        fresh ->
             lager:info("agent_fsm fresh start, session_id=~p", [SessionId]),
             Data = #data{session_id = SessionId,
                          model = Model,
                          tools = Tools,
                          history = History0,
+                         session_prompt = SessionPrompt,
                          max_loops = ?MAX_LOOPS},
             {ok, idle, Data}
+    end.
+
+%% 从 state_store 恢复快照; 无快照则走全新会话。
+load_recovered_snapshot(SessionId, Model, Tools, History0, SessionPrompt) ->
+    case state_store:get_snapshot(SessionId) of
+        {ok, {StateName, #data{} = Saved}}
+          when StateName =:= idle; StateName =:= thinking; StateName =:= acting ->
+            {ok, StateName, sanitize_recovered(Saved, Model, Tools, History0, SessionPrompt)};
+        {ok, #data{} = Saved} ->
+            %% 兼容旧快照 (仅 #data{}, 无状态名)
+            {ok, idle, sanitize_recovered(Saved, Model, Tools, History0, SessionPrompt)};
+        not_found ->
+            fresh
+    end.
+
+%% 恢复时清除已失效的异步引用; acting 保留 pending_tool_calls 以便 enter 重派发。
+sanitize_recovered(Saved, Model, Tools, History0, SessionPrompt) ->
+    Hist = case History0 of
+               [] -> Saved#data.history;
+               _ -> History0
+           end,
+    Prompt = case SessionPrompt of
+                 <<>> -> Saved#data.session_prompt;
+                 _ -> SessionPrompt
+             end,
+    Base = Saved#data{
+        model = Model,
+        tools = Tools,
+        history = Hist,
+        session_prompt = Prompt,
+        llm_ref = undefined,
+        tool_results = #{}
+    },
+    case Saved#data.pending_tool_calls of
+        TCs when TCs =/= [], Saved#data.pending_count > 0 ->
+            Base;
+        _ ->
+            Base#data{pending_tool_calls = [], pending_count = 0}
     end.
 
 callback_mode() ->
@@ -132,12 +163,14 @@ callback_mode() ->
 %%% 状态: idle
 %%%   等待会话启动; 或最终答案就绪后驻留 (会话结束)
 %%%===================================================================
+idle(enter, _OldState, Data) ->
+    ok = snapshot(idle, Data),
+    keep_state_and_data;
 idle(cast, start, Data) ->
-    %% 关键节点: ReAct 主循环启动 (idle -> thinking)
     lager:info("session started, session_id=~p, history_len=~p",
                 [Data#data.session_id, length(Data#data.history)]),
-    ok = snapshot(Data),
-    {next_state, thinking, Data};
+    History = reload_history(Data#data.session_id, Data#data.history),
+    {next_state, thinking, Data#data{history = History}};
 idle(_EventType, _EventContent, _Data) ->
     %% 其余事件忽略 (容错)
     keep_state_and_data.
@@ -149,22 +182,33 @@ idle(_EventType, _EventContent, _Data) ->
 %%%   Response = #{content, tool_calls, prompt_tokens, completion_tokens}
 %%%===================================================================
 thinking(enter, _OldState, Data) ->
+    ok = snapshot(thinking, Data),
     %% 关键节点: 进入 thinking 状态 (ReAct 每一轮的起点)
     lager:info("thinking(enter) fired, model=~p, history_len=~p, loop=~p/~p",
                 [Data#data.model, length(Data#data.history),
                  Data#data.loop_count, Data#data.max_loops]),
     %% 查询最近失败案例注入 System Prompt (负面案例记忆, Task 1)
     Cases = query_cases(),
+    Summaries = query_session_summaries(Data#data.session_id),
+    Snippets = query_memory_snippets(Data#data.session_id, Data#data.history),
+    Phase = detect_prompt_phase(Data),
+    maybe_schedule_mid_session_summary(Data#data.session_id, length(Data#data.history)),
     Req = context_assembler:build(Data#data.model, #{
         history => Data#data.history,
         tools => Data#data.tools,
-        failure_cases => Cases
+        failure_cases => Cases,
+        session_summaries => Summaries,
+        memory_snippets => Snippets,
+        prompt_phase => Phase,
+        session_prompt => Data#data.session_prompt
     }),
-    lager:debug("calling bridge_manager:call_llm"),
-    %% 异步投递 (经 pb_codec 编码为 Protobuf 二进制后发往 Go 侧)
+    %% 异步投递 LLMInferRequest → bridge_manager → Eion-tools (Eino ChatModel 调 LLM API)
+    %% Erlang 侧不直连 LLM; 只等 {llm_response, Ref, Resp} 回链。
     Ref = bridge_manager:call_llm(self(), Req),
     lager:info("llm request dispatched, ref=~p", [Ref]),
-    {keep_state, Data#data{llm_ref = Ref}};
+    Data1 = Data#data{llm_ref = Ref},
+    ok = snapshot(thinking, Data1),
+    {keep_state, Data1};
 thinking(cast, {llm_chunk, Ref, Chunk},
          #data{llm_ref = Ref} = Data) ->
     %% Task 4 流式: LLM 增量 chunk 透传到 panel_server, 推给前端
@@ -189,7 +233,7 @@ thinking(cast, {llm_response, Ref, Response},
     %% 同步到 state_store 的 history (供外部轮询, 如 agent_demo:wait_idle)
     state_store:append_history(Data#data.session_id, AssistantMsg),
     Data1 = Data#data{history = History},
-    ok = snapshot(Data1),
+    ok = snapshot(thinking, Data1),
     case {ToolCalls, Data1#data.loop_count >= Data1#data.max_loops} of
         {[], _NoTools} ->
             %% LLM 未要求工具调用 -> 视为最终答案, 会话结束
@@ -201,6 +245,7 @@ thinking(cast, {llm_response, Ref, Response},
                 completion_tokens => maps:get(completion_tokens, Response, 0),
                 loop_count => Data1#data.loop_count
             }),
+            schedule_session_summary(Data1#data.session_id),
             {next_state, idle, Data1};
         {_ToolCalls, true} ->
             %% 仍有工具调用但已达循环上限 -> 强制结束 (防 Eino 控制权泄漏/死循环)
@@ -217,6 +262,7 @@ thinking(cast, {llm_response, Ref, Response},
             panel_server:push_stream_err(
                 Data1#data.session_id,
                 util:u("ReAct 循环达到上限, 已强制结束")),
+            schedule_session_summary(Data1#data.session_id),
             {next_state, idle, Data1};
         {ToolCalls, false} ->
             %% 进入执行阶段: 并行派发
@@ -262,6 +308,7 @@ thinking(_EventType, _EventContent, _Data) ->
 %%%   不再单独设置 observing 状态。
 %%%===================================================================
 acting(enter, _OldState, Data) ->
+    ok = snapshot(acting, Data),
     ToolCalls = Data#data.pending_tool_calls,
     %% 关键节点: 进入 acting 状态, 派发工具调用
     lager:info("acting(enter) fired, dispatching ~p tools, pending_count=~p",
@@ -353,7 +400,7 @@ observe_and_transition(Data) ->
 continue_after_observe(Data0) ->
     NewCount = Data0#data.loop_count + 1,
     Data = Data0#data{loop_count = NewCount},
-    ok = snapshot(Data),
+    ok = snapshot(thinking, Data),
     case NewCount >= Data#data.max_loops of
         true ->
             lager:warning("continue_after_observe: loop_count=~p >= max_loops=~p, forcing idle",
@@ -397,9 +444,9 @@ tool_msg(#{id := Id} = _ToolCall, Resp) ->
 tool_msg(_ToolCall, Resp) ->
     #{role => <<"tool">>, content => maps:get(result_json, Resp, <<>>)}.
 
-%% 落快照到 ETS (崩溃恢复用): state_store 持有 session -> #data{} 映射
-snapshot(Data) ->
-    state_store:put_snapshot(Data#data.session_id, Data),
+%% 落快照到 ETS (崩溃恢复用): {StateName, #data{}} 供 transient 重启后续跑
+snapshot(StateName, Data) when StateName =:= idle; StateName =:= thinking; StateName =:= acting ->
+    state_store:put_snapshot(Data#data.session_id, {StateName, Data}),
     ok.
 
 %% 查询最近失败案例注入 System Prompt (防御性: case_store 不可用则返回 [])
@@ -409,6 +456,75 @@ query_cases() ->
         {error, _} -> []
     catch _:_ -> []
     end.
+
+query_session_summaries(SessionId) ->
+    try memory_summarizer:get_recent(SessionId, 3) of
+        {ok, Summaries} -> Summaries;
+        {error, _} -> []
+    catch _:_ -> []
+    end.
+
+query_memory_snippets(SessionId, History) ->
+    try memory_rag:prefetch(SessionId, History) of
+        Snippets when is_list(Snippets) -> Snippets;
+        _ -> []
+    catch _:_ -> []
+    end.
+
+reload_history(SessionId, Fallback) ->
+    case state_store:get_history(SessionId) of
+        {ok, H} when H =/= [] -> H;
+        _ -> Fallback
+    end.
+
+schedule_session_summary(SessionId) ->
+    try memory_summarizer:schedule(SessionId)
+    catch _:_ -> ok
+    end.
+
+maybe_schedule_mid_session_summary(SessionId, Len)
+  when is_integer(Len), Len >= ?SUMMARY_HISTORY_THRESHOLD ->
+    try memory_summarizer:schedule_if_long(SessionId)
+    catch _:_ -> ok
+    end;
+maybe_schedule_mid_session_summary(_SessionId, _Len) ->
+    ok.
+
+detect_prompt_phase(#data{loop_count = 0}) ->
+    first_turn;
+detect_prompt_phase(#data{loop_count = LC, max_loops = Max})
+  when is_integer(LC), is_integer(Max), LC >= Max - 1 ->
+    near_loop_limit;
+detect_prompt_phase(#data{history = Hist}) ->
+    case recent_observation_kind(Hist) of
+        bridge_disconnect -> after_bridge_disconnect;
+        tool_error -> after_tool_error;
+        _ -> thinking
+    end.
+
+recent_observation_kind(History) when is_list(History) ->
+    case lists:reverse(History) of
+        [#{role := <<"system">>, content := C}|_] ->
+            case binary:match(C, <<"Bridge disconnected">>) of
+                nomatch -> thinking;
+                _ -> bridge_disconnect
+            end;
+        [#{role := <<"tool">>, content := C}|_] ->
+            case looks_like_tool_error(C) of
+                true -> tool_error;
+                false -> thinking
+            end;
+        _ ->
+            thinking
+    end.
+
+looks_like_tool_error(Content) when is_binary(Content) ->
+    Content =/= <<>> andalso
+        (binary:match(Content, <<"error">>) =/= nomatch orelse
+         binary:match(Content, <<"bridge disconnected">>) =/= nomatch orelse
+         binary:match(Content, <<"not found">>) =/= nomatch);
+looks_like_tool_error(_) ->
+    false.
 
 %% 记录失败案例 (防御性: 写入失败不阻断 FSM 主流程)
 record_case(CaseMap) ->

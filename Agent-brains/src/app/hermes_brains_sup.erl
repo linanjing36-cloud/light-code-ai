@@ -83,6 +83,11 @@ init([]) ->
                   type => worker,
                   modules => [case_store]},
 
-    %% 启动顺序: timing_wheel -> mnesia_store -> state_store -> bridge_manager -> agent_sup -> case_store
-    %% rest_for_one: 任何前置崩溃, 后续全部重启
-    {ok, {SupFlags, [TimingWheel, MnesiaStore, StateStore, BridgeManager, AgentSup, CaseStore]}}.
+    MemorySummarizer = #{id => memory_summarizer,
+                         start => {memory_summarizer, start_link, []},
+                         restart => permanent,
+                         shutdown => 5000,
+                         type => worker,
+                         modules => [memory_summarizer]},
+
+    {ok, {SupFlags, [TimingWheel, MnesiaStore, StateStore, BridgeManager, AgentSup, CaseStore, MemorySummarizer]}}.

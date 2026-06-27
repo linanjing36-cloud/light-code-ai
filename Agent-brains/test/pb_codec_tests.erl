@@ -185,3 +185,20 @@ end_to_end_roundtrip_test() ->
     ?assertEqual(tool_exec, maps:get(kind, BizResp)),
     ?assertEqual(util:u("{\"temp\":30}"), maps:get(result_json, BizResp)),
     ok.
+
+%%--------------------------------------------------------------------
+%% ToolList 请求/响应 round-trip
+%%--------------------------------------------------------------------
+tool_list_roundtrip_test() ->
+    Bin = pb_codec:encode_req(#{kind => tool_list}),
+    DecodedReq = hermes:decode_msg(Bin, 'AgentRequest'),
+    ?assertMatch(#{tool_list := _}, DecodedReq),
+
+    Inner = #{tools => [#{name => <<"get_weather">>,
+                           description => util:u("天气"),
+                           parameters_json => <<"{\"type\":\"object\"}">>}]},
+    AgentResp = #{tool_list => Inner},
+    BizResp = pb_codec:decode_resp(hermes:encode_msg(AgentResp, 'AgentResponse')),
+    ?assertEqual(tool_list, maps:get(kind, BizResp)),
+    ?assertEqual(1, length(maps:get(tools, BizResp))),
+    ok.

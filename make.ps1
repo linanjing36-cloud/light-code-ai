@@ -11,7 +11,7 @@ make.ps1 - Hermes Agent 大脑构建与运行 (Windows / PowerShell 版, Makefil
   .\make.ps1 run      启动 Agent 大脑 (前台, 优化参数, Ctrl+C 退出)
   .\make.ps1 stop     优雅停止 Agent 大脑 (rpc init:stop 触发 app terminate)
   .\make.ps1 clean    清理编译产物与 bin\erl_bin\
-  .\make.ps1 test      跑 eunit 测试
+  .\make.ps1 test      跑 Eion-tools go test + Agent-brains eunit
   .\make.ps1 help      显示帮助
 
 模式切换 (run 时):
@@ -334,9 +334,12 @@ function Invoke-Bin {
     Write-Host "    .\make.ps1 tools              # Eion-tools -> bin\eion_bin\"
     Write-Host "    .\make.ps1 wails_v3           # Wails v3   -> bin\wails_v3_bin\"
     Write-Host "[make] ==> 启动 (三进程独立启动, 按顺序):"
+    Write-Host "    .\bin\start-all.bat           # 一键: Eion-tools + Agent-brains (推荐)"
+    Write-Host "    .\bin\start-all.bat wails     # 一键 + Wails UI"
     Write-Host "    .\bin\start-tools.bat         # 1. Eion-tools server (写 eion-tools.addr)"
     Write-Host "    .\bin\start-agent.bat         # 2. Erlang brain (写 panel.addr, 连 Eion-tools)"
     Write-Host "    .\bin\start-wails.bat         # 3. Wails GUI (读 panel.addr, 连 Erlang)"
+    Write-Host "    .\bin\stop-all.bat              # 一键停止全部"
 }
 
 # 编译 Agent 大脑 (Erlang/OTP), 产物安装到 bin\erl_bin\
@@ -396,7 +399,7 @@ function Invoke-Tools {
 
     Write-Host "[make] ==> 完成. 已安装 Eion-tools server:"
     Write-Host "    [eion_bin] eion-tools-server.exe"
-    Write-Host "[make] ==> 启动: .\bin\start-tools.bat"
+    Write-Host "[make] ==> 一键启动: .\make.ps1 start-all  (或 .\bin\start-all.bat)"
 }
 
 # 编译 Wails-v3 (Hermes GUI) -> bin\wails_v3_bin\hermes.exe
@@ -462,8 +465,18 @@ function Invoke-Stop {
     & $stopBat
 }
 
-# eunit 测试
+# eunit + Eion-tools go test
 function Invoke-Test {
+    $eionToolsDir = Join-Path $RootDir "Eion-tools"
+    Write-Host "[make] ==> Eion-tools go test..."
+    Push-Location $eionToolsDir
+    try {
+        & go test ./...
+        if ($LASTEXITCODE -ne 0) { throw "go test 失败 (exit $LASTEXITCODE)" }
+    }
+    finally { Pop-Location }
+
+    Write-Host "[make] ==> Agent-brains eunit..."
     Push-Location $AgentDir
     try {
         & rebar3 eunit
@@ -484,6 +497,123 @@ function Invoke-Clean {
     Write-Host "[make] ==> 完成."
 }
 
+function Wait-AddrFile {
+    param(
+        [string]$Path,
+        [int]$TimeoutSec = 30,
+        [string]$Label = "addr"
+    )
+    for ($i = 0; $i -lt $TimeoutSec; $i++) {
+        if (Test-Path $Path) {
+            return (Get-Content $Path -Raw).Trim()
+        }
+        Start-Sleep -Seconds 1
+    }
+    throw "等待 $Label 超时 (${TimeoutSec}s): $Path"
+}
+
+function Apply-MemoryEnv {
+    if (-not $env:HERMES_MEMORY_BACKEND) { $env:HERMES_MEMORY_BACKEND = "redis" }
+    if (-not $env:HERMES_REDIS_ADDR) { $env:HERMES_REDIS_ADDR = "192.168.59.129:6379" }
+    if (-not $env:HERMES_MEMORY_MOCK_EMBED) { $env:HERMES_MEMORY_MOCK_EMBED = "1" }
+    if (-not $env:HERMES_EMBEDDING_DIM) { $env:HERMES_EMBEDDING_DIM = "1536" }
+}
+
+function Test-AgentRunning {
+    if (-not (Test-CommandExists "erl")) { return $false }
+    & erl -noshell -eval "case net_adm:names() of {ok, Ns} -> case lists:member(hermes_brains, Ns) of true -> halt(0); false -> halt(1) end; _ -> halt(1) end." 2>$null | Out-Null
+    return ($LASTEXITCODE -eq 0)
+}
+
+function Invoke-StopAll {
+    $bat = Join-Path $ScrtpsDir "stop-all.bat"
+    if (-not (Test-Path $bat)) { throw "未找到 $bat" }
+    & cmd /c $bat
+}
+
+function Invoke-StartAll {
+    param([switch]$Wails)
+
+    Apply-MemoryEnv
+
+    $RunDir = Join-Path $BinDir "run"
+    $EionExe = Join-Path $EionBin "eion-tools-server.exe"
+    $EionAddrFile = Join-Path $RunDir "eion-tools.addr"
+    $PanelAddrFile = Join-Path $RunDir "panel.addr"
+    $StartToolsBat = Join-Path $ScrtpsDir "start-tools.bat"
+    $StartAgentBat = Join-Path $ScrtpsDir "start-agent.bat"
+    $StartWailsBat = Join-Path $ScrtpsDir "start-wails.bat"
+
+    if (-not (Test-Path $ErlBin)) {
+        throw "Agent 未编译, 请先运行: .\make.ps1 agent"
+    }
+    if (-not (Test-Path $EionExe)) {
+        throw "Eion-tools 未编译, 请先运行: .\make.ps1 tools (产物: bin\eion_bin\eion-tools-server.exe)"
+    }
+    New-Item -ItemType Directory -Force -Path $RunDir | Out-Null
+    $env:EION_TOOLS_ADDR_FILE = $EionAddrFile
+
+    Write-Host ""
+    Write-Host "========================================"
+    Write-Host "  Hermes 一键启动"
+    Write-Host "  memory=$($env:HERMES_MEMORY_BACKEND) redis=$($env:HERMES_REDIS_ADDR)"
+    Write-Host "  eion_bin=$EionExe"
+    Write-Host "========================================"
+    Write-Host ""
+
+    $toolsRunning = [bool](Get-Process -Name "eion-tools-server" -ErrorAction SilentlyContinue)
+    if (-not $toolsRunning) {
+        Write-Host "[1/3] 启动 Eion-tools (bin/eion_bin) ..."
+        Remove-Item $EionAddrFile -ErrorAction SilentlyContinue
+        Start-Process -FilePath "cmd.exe" `
+            -ArgumentList "/k", "`"$StartToolsBat`"" `
+            -WorkingDirectory $ScrtpsDir `
+            -WindowStyle Normal | Out-Null
+        $eionAddr = Wait-AddrFile -Path $EionAddrFile -TimeoutSec 30 -Label "eion-tools"
+        Write-Host "       Eion-tools @ $eionAddr"
+    } else {
+        Write-Host "[1/3] Eion-tools 已在运行, 跳过"
+        if (Test-Path $EionAddrFile) {
+            Write-Host "       Eion-tools @ $((Get-Content $EionAddrFile -Raw).Trim())"
+        }
+    }
+
+    if (-not (Test-AgentRunning)) {
+        Write-Host "[2/3] 启动 Agent-brains ..."
+        Remove-Item $PanelAddrFile -ErrorAction SilentlyContinue
+        Start-Process -FilePath "cmd.exe" `
+            -ArgumentList "/k", "`"$StartAgentBat`"" `
+            -WorkingDirectory $ScrtpsDir `
+            -WindowStyle Normal | Out-Null
+        $panelAddr = Wait-AddrFile -Path $PanelAddrFile -TimeoutSec 45 -Label "panel_server"
+        Write-Host "       panel_server @ $panelAddr"
+    } else {
+        Write-Host "[2/3] Agent-brains 已在运行, 跳过"
+        if (Test-Path $PanelAddrFile) {
+            Write-Host "       panel_server @ $((Get-Content $PanelAddrFile -Raw).Trim())"
+        }
+    }
+
+    if ($Wails) {
+        $wailsRunning = [bool](Get-Process -Name "hermes" -ErrorAction SilentlyContinue)
+        if (-not $wailsRunning) {
+            Write-Host "[3/3] 启动 Wails UI ..."
+            if (-not (Test-Path $StartWailsBat)) { throw "未找到 $StartWailsBat" }
+            & cmd /c $StartWailsBat
+            if ($LASTEXITCODE -ne 0) { throw "start-wails 失败 (exit $LASTEXITCODE)" }
+        } else {
+            Write-Host "[3/3] Wails 已在运行, 跳过"
+        }
+    } else {
+        Write-Host "[3/3] 跳过 Wails (.\make.ps1 start-all-ui 可一并启动 UI)"
+    }
+
+    Write-Host ""
+    Write-Host "[ok] Hermes 已就绪"
+    Write-Host "     停止: .\make.ps1 stop-all"
+    Write-Host ""
+}
+
 function Show-Help {
     Write-Host "用法: .\make.ps1 <target>"
     Write-Host ""
@@ -494,9 +624,12 @@ function Show-Help {
     Write-Host "  tools    编译 Eion-tools (Go/Eino), 产物安装到 bin\eion_bin\"
     Write-Host "  wails_v3 编译 Wails-v3 (GUI), 产物安装到 bin\wails_v3_bin\"
     Write-Host "  run      启动 Agent 大脑 (前台, 优化参数, Ctrl+C 退出)"
+    Write-Host "  start-all  一键启动 Eion-tools + Agent-brains (独立窗口)"
+    Write-Host "  start-all-ui  一键启动 + Wails UI"
     Write-Host "  stop     优雅停止 Agent 大脑 (rpc init:stop 触发 app terminate)"
+    Write-Host "  stop-all 一键停止 Wails + Agent + Eion-tools"
     Write-Host "  clean    清理编译产物与 bin\erl_bin\"
-    Write-Host "  test     跑 eunit 测试"
+    Write-Host "  test     跑 Eion-tools go test + Agent-brains eunit"
     Write-Host "  help     显示此帮助"
     Write-Host ""
     Write-Host "模式切换 (run 时):"
@@ -517,10 +650,13 @@ switch ($Target) {
     "tools"    { Invoke-Tools }
     "wails_v3" { Invoke-WailsV3 }
     "run"      { Invoke-Run }
+    "start-all"    { Invoke-StartAll }
+    "start-all-ui" { Invoke-StartAll -Wails }
     "stop"   { Invoke-Stop }
+    "stop-all" { Invoke-StopAll }
     "clean"  { Invoke-Clean }
     "test"   { Invoke-Test }
     "help"   { Show-Help }
     ""       { Show-Help }
-    default  { Write-Host "未知目标: $Target (可用: bin / env / agent / tools / wails_v3 / run / stop / clean / test / help)"; exit 1 }
+    default  { Write-Host "未知目标: $Target (可用: bin / env / agent / tools / wails_v3 / run / start-all / start-all-ui / stop / stop-all / clean / test / help)"; exit 1 }
 }

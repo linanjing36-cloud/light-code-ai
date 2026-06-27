@@ -36,3 +36,22 @@ send_roundtrip_test() ->
 response_error_test() ->
     ErrBin = panel_pb_codec:pack_response_err(9, <<"bad_method">>),
     {response, 9, error, <<"bad_method">>} = panel_pb_codec:unpack_frame(ErrBin).
+
+get_history_roundtrip_test() ->
+    Args = #{session_id => <<"sess-1">>},
+    Bin = panel_pb_codec:pack_request(4, <<"get_history">>, Args),
+    {request, 4, <<"get_history">>, DecArgs} = panel_pb_codec:unpack_frame(Bin),
+    ?assertEqual(Args, DecArgs),
+    Msgs = [
+        #{role => <<"user">>, content => <<"hello">>},
+        #{role => <<"assistant">>, content => <<>>, tool_calls => [
+            #{id => <<"tc1">>, name => <<"get_weather">>, arguments => <<"{\"city\":\"beijing\"}">>}
+        ]}
+    ],
+    RespBin = panel_pb_codec:pack_response_ok(4, <<"get_history">>, #{messages => Msgs}),
+    {response, 4, ok, ResultBytes} = panel_pb_codec:unpack_frame(RespBin),
+    Dec = panel_pb_codec:decode_result(<<"get_history">>, ResultBytes),
+    DecMsgs = maps:get(messages, Dec),
+    ?assertEqual(2, length(DecMsgs)),
+    [_, Asst] = DecMsgs,
+    ?assertEqual(1, length(maps:get(tool_calls, Asst))).

@@ -7,6 +7,58 @@
 import { Create as $Create } from "@wailsio/runtime";
 
 /**
+ * HistoryEntry 单条对话历史 (与 panel.proto HistoryEntry 对齐)
+ */
+export class HistoryEntry {
+    /**
+     * Creates a new HistoryEntry instance.
+     * @param {Partial<HistoryEntry>} [$$source = {}] - The source object to create the HistoryEntry.
+     */
+    constructor($$source = {}) {
+        if (!("role" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["role"] = "";
+        }
+        if (!("content" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["content"] = "";
+        }
+        if (!("tool_calls_json" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["tool_calls_json"] = "";
+        }
+        if (!("tool_call_id" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["tool_call_id"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new HistoryEntry instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {HistoryEntry}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new HistoryEntry(/** @type {Partial<HistoryEntry>} */($$parsedSource));
+    }
+}
+
+/**
  * SendResult: Send 返回值
  */
 export class SendResult {
@@ -72,5 +124,50 @@ export class SessionInfo {
     static createFrom($$source = {}) {
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         return new SessionInfo(/** @type {Partial<SessionInfo>} */($$parsedSource));
+    }
+}
+
+/**
+ * ToolDesc 工具描述 (与 panel.proto ListToolsResult 对齐)
+ */
+export class ToolDesc {
+    /**
+     * Creates a new ToolDesc instance.
+     * @param {Partial<ToolDesc>} [$$source = {}] - The source object to create the ToolDesc.
+     */
+    constructor($$source = {}) {
+        if (!("name" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["name"] = "";
+        }
+        if (!("description" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["description"] = "";
+        }
+        if (!("parameters_json" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["parameters_json"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ToolDesc instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {ToolDesc}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ToolDesc(/** @type {Partial<ToolDesc>} */($$parsedSource));
     }
 }

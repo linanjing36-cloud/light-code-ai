@@ -57,21 +57,10 @@ run() ->
     halt().
 
 configure_eion_addr() ->
-    AddrFile = resolve_eion_tools_addr_file(),
+    AddrFile = util:resolve_eion_tools_addr_file(),
     application:set_env(hermes_brains, eion_tools_addr_file, AddrFile),
     io:format("[ping] eion_tools_addr_file=~s~n", [AddrFile]),
     ok.
-
-resolve_eion_tools_addr_file() ->
-    case application:get_env(hermes_brains, eion_tools_addr_file) of
-        {ok, F} when is_list(F), F =/= "" -> F;
-        _ ->
-            case os:getenv("EION_TOOLS_ADDR_FILE") of
-                false -> "../bin/run/eion-tools.addr";
-                "" -> "../bin/run/eion-tools.addr";
-                F -> F
-            end
-    end.
 
 load_credentials() ->
     Path = case os:getenv("API_KEY_FILE") of

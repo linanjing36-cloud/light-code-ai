@@ -4,11 +4,11 @@
 //   HermesService.StartSession(prompt)  → 派发 agent_fsm
 //   HermesService.Send(sid, msg)        → 触发 ReAct (异步, 立即返回 stream_id)
 //   HermesService.BrainStatus(sid)      → 读 FSM 状态 (idle/thinking/acting)
+//   HermesService.GetHistory(sid)       → 拉取 state_store 短期记忆
 //   HermesService.ListTools()           → 工具列表
 //   HermesService.StopBrain()            → 优雅停止 Erlang 大脑
 //
-// 当前限制: send 是 cast 触发, 不返回 final answer。
-// 前端通过轮询 brain_status 推断 ReAct 进度, agent 响应文本拉取待后续 get_history RPC 接入。
+// 流式 chunk/final 由 panel:stream 事件驱动; 终态后 get_history 同步对话区。
 
 import { HermesService } from "../bindings/hermes";
 
@@ -46,6 +46,13 @@ declare global {
     }
 }
 
+interface HistoryEntry {
+    role: string;
+    content: string;
+    tool_calls_json?: string;
+    tool_call_id?: string;
+}
+
 interface PanelStreamEvent {
     stream_id: string;
     kind: "chunk" | "tool_event" | "final" | "error" | "unknown";
@@ -77,9 +84,8 @@ function handlePanelStream(ev: PanelStreamEvent): void {
         }
         case "final": {
             removeThinking();
-            const content = String(ev.payload.content ?? streamingText);
-            if (content) appendAgentMsg(`<p>${escapeHtml(content)}</p>`);
             resetStreamState();
+            void refreshHistoryFromBrain();
             break;
         }
         case "error": {
@@ -329,9 +335,7 @@ function updateBrainStatusUI(st: Record<string, unknown>): void {
         } else if (state === "idle") {
             if (hist > sess.lastHistoryLen && !streamingMsgEl && !currentStreamId) {
                 removeThinking();
-                appendAgentMsg(
-                    `<p>Brain 已完成此轮 ReAct 循环 (loop=${loop}/${max}, history=${hist})。</p>`
-                );
+                void refreshHistoryFromBrain();
             } else if (state === "idle" && !currentStreamId) {
                 removeThinking();
             }
@@ -385,9 +389,52 @@ function pillClass(state: BrainState): string {
 function switchSession(id: string): void {
     currentSessionId = id;
     const sess = sessions.get(id);
-    if (sess) renderConversation(sess);
+    if (sess) void refreshHistoryFromBrain(sess);
     renderSessionList();
     startStatusPolling();
+}
+
+async function refreshHistoryFromBrain(sess?: Session): Promise<void> {
+    const sid = currentSessionId;
+    if (!sid || !brainConnected) return;
+    const target = sess ?? sessions.get(sid);
+    try {
+        const entries = (await HermesService.GetHistory(sid)) as HistoryEntry[];
+        renderHistoryEntries(entries, target);
+    } catch (e) {
+        console.warn("[hermes] get_history error:", e);
+    }
+}
+
+function renderHistoryEntries(entries: HistoryEntry[], sess?: Session): void {
+    conv.innerHTML = "";
+    let userCount = 0;
+    let toolCount = 0;
+    for (const e of entries) {
+        const role = (e.role || "").toLowerCase();
+        if (role === "system") continue;
+        const content = e.content || "";
+        if (role === "user") {
+            if (content) appendUserMsg(content);
+            userCount += 1;
+        } else if (role === "assistant") {
+            if (content) appendAgentMsg(`<p>${escapeHtml(content)}</p>`);
+            if (e.tool_calls_json) toolCount += 1;
+        } else if (role === "tool") {
+            toolCount += 1;
+            const label = e.tool_call_id ? `tool · ${e.tool_call_id}` : "tool";
+            appendAgentMsg(`<p><small>${escapeHtml(label)}</small><br>${escapeHtml(content)}</p>`);
+        }
+    }
+    if (userCount === 0 && toolCount === 0) {
+        conv.innerHTML = `<div class="empty-state"><div class="glyph">☿</div><div>开始与 Hermes 对话</div></div>`;
+    }
+    if (sess) {
+        sess.msgCount = userCount;
+        sess.toolCalls = toolCount;
+        updateCanvasMeta(sess);
+    }
+    scrollConvToBottom();
 }
 
 // ============================================================

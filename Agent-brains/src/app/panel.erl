@@ -121,6 +121,10 @@
       #{session_id              => unicode:chardata() % = 1, optional
        }.
 
+-type 'GetHistoryArgs'() ::
+      #{session_id              => unicode:chardata() % = 1, optional
+       }.
+
 -type 'StartSessionResult'() ::
       #{session_id              => unicode:chardata() % = 1, optional
        }.
@@ -150,13 +154,24 @@
         history_len             => integer()        % = 4, optional, 32 bits
        }.
 
+-type 'HistoryEntry'() ::
+      #{role                    => unicode:chardata(), % = 1, optional
+        content                 => unicode:chardata(), % = 2, optional
+        tool_calls_json         => unicode:chardata(), % = 3, optional
+        tool_call_id            => unicode:chardata() % = 4, optional
+       }.
+
+-type 'GetHistoryResult'() ::
+      #{messages                => ['HistoryEntry'()] % = 1, repeated
+       }.
+
 -type 'StopResult'() ::
       #{ok                      => boolean() | 0 | 1 % = 1, optional
        }.
 
--export_type(['PanelFrame'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'LlmChunk'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'StopResult'/0]).
--type '$msg_name'() :: 'PanelFrame' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'LlmChunk' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ApproveResult' | 'BrainStatusResult' | 'StopResult'.
--type '$msg'() :: 'PanelFrame'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'LlmChunk'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ApproveResult'() | 'BrainStatusResult'() | 'StopResult'().
+-export_type(['PanelFrame'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'LlmChunk'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0]).
+-type '$msg_name'() :: 'PanelFrame' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'LlmChunk' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult'.
+-type '$msg'() :: 'PanelFrame'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'LlmChunk'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'().
 -export_type(['$msg_name'/0, '$msg'/0]).
 
 -if(?OTP_RELEASE >= 24).
@@ -188,12 +203,15 @@ encode_msg(Msg, MsgName, Opts) ->
         'SendArgs' -> encode_msg_SendArgs(id(Msg, TrUserData), TrUserData);
         'ApproveArgs' -> encode_msg_ApproveArgs(id(Msg, TrUserData), TrUserData);
         'BrainStatusArgs' -> encode_msg_BrainStatusArgs(id(Msg, TrUserData), TrUserData);
+        'GetHistoryArgs' -> encode_msg_GetHistoryArgs(id(Msg, TrUserData), TrUserData);
         'StartSessionResult' -> encode_msg_StartSessionResult(id(Msg, TrUserData), TrUserData);
         'SendResult' -> encode_msg_SendResult(id(Msg, TrUserData), TrUserData);
         'ListToolsResult' -> encode_msg_ListToolsResult(id(Msg, TrUserData), TrUserData);
         'ToolDesc' -> encode_msg_ToolDesc(id(Msg, TrUserData), TrUserData);
         'ApproveResult' -> encode_msg_ApproveResult(id(Msg, TrUserData), TrUserData);
         'BrainStatusResult' -> encode_msg_BrainStatusResult(id(Msg, TrUserData), TrUserData);
+        'HistoryEntry' -> encode_msg_HistoryEntry(id(Msg, TrUserData), TrUserData);
+        'GetHistoryResult' -> encode_msg_GetHistoryResult(id(Msg, TrUserData), TrUserData);
         'StopResult' -> encode_msg_StopResult(id(Msg, TrUserData), TrUserData)
     end.
 
@@ -533,6 +551,22 @@ encode_msg_BrainStatusArgs(#{} = M, Bin, TrUserData) ->
         _ -> Bin
     end.
 
+encode_msg_GetHistoryArgs(Msg, TrUserData) -> encode_msg_GetHistoryArgs(Msg, <<>>, TrUserData).
+
+
+encode_msg_GetHistoryArgs(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{session_id := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                case is_empty_string(TrF1) of
+                    true -> Bin;
+                    false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
 encode_msg_StartSessionResult(Msg, TrUserData) -> encode_msg_StartSessionResult(Msg, <<>>, TrUserData).
 
 
@@ -677,6 +711,68 @@ encode_msg_BrainStatusResult(#{} = M, Bin, TrUserData) ->
         _ -> B3
     end.
 
+encode_msg_HistoryEntry(Msg, TrUserData) -> encode_msg_HistoryEntry(Msg, <<>>, TrUserData).
+
+
+encode_msg_HistoryEntry(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{role := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{content := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     case is_empty_string(TrF2) of
+                         true -> B1;
+                         false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    B3 = case M of
+             #{tool_calls_json := F3} ->
+                 begin
+                     TrF3 = id(F3, TrUserData),
+                     case is_empty_string(TrF3) of
+                         true -> B2;
+                         false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                     end
+                 end;
+             _ -> B2
+         end,
+    case M of
+        #{tool_call_id := F4} ->
+            begin
+                TrF4 = id(F4, TrUserData),
+                case is_empty_string(TrF4) of
+                    true -> B3;
+                    false -> e_type_string(TrF4, <<B3/binary, 34>>, TrUserData)
+                end
+            end;
+        _ -> B3
+    end.
+
+encode_msg_GetHistoryResult(Msg, TrUserData) -> encode_msg_GetHistoryResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_GetHistoryResult(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{messages := F1} ->
+            TrF1 = id(F1, TrUserData),
+            if TrF1 == [] -> Bin;
+               true -> e_field_GetHistoryResult_messages(TrF1, Bin, TrUserData)
+            end;
+        _ -> Bin
+    end.
+
 encode_msg_StopResult(Msg, TrUserData) -> encode_msg_StopResult(Msg, <<>>, TrUserData).
 
 
@@ -737,6 +833,17 @@ e_field_ListToolsResult_tools([Elem | Rest], Bin, TrUserData) ->
     Bin3 = e_mfield_ListToolsResult_tools(id(Elem, TrUserData), Bin2, TrUserData),
     e_field_ListToolsResult_tools(Rest, Bin3, TrUserData);
 e_field_ListToolsResult_tools([], Bin, _TrUserData) -> Bin.
+
+e_mfield_GetHistoryResult_messages(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_HistoryEntry(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_GetHistoryResult_messages([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 10>>,
+    Bin3 = e_mfield_GetHistoryResult_messages(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_GetHistoryResult_messages(Rest, Bin3, TrUserData);
+e_field_GetHistoryResult_messages([], Bin, _TrUserData) -> Bin.
 
 -compile({nowarn_unused_function,e_type_sint/3}).
 e_type_sint(Value, Bin, _TrUserData) when Value >= 0 -> e_varint(Value * 2, Bin);
@@ -879,12 +986,15 @@ decode_msg_2_doit('StartSessionArgs', Bin, TrUserData) -> id(decode_msg_StartSes
 decode_msg_2_doit('SendArgs', Bin, TrUserData) -> id(decode_msg_SendArgs(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ApproveArgs', Bin, TrUserData) -> id(decode_msg_ApproveArgs(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('BrainStatusArgs', Bin, TrUserData) -> id(decode_msg_BrainStatusArgs(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('GetHistoryArgs', Bin, TrUserData) -> id(decode_msg_GetHistoryArgs(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('StartSessionResult', Bin, TrUserData) -> id(decode_msg_StartSessionResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('SendResult', Bin, TrUserData) -> id(decode_msg_SendResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ListToolsResult', Bin, TrUserData) -> id(decode_msg_ListToolsResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ToolDesc', Bin, TrUserData) -> id(decode_msg_ToolDesc(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ApproveResult', Bin, TrUserData) -> id(decode_msg_ApproveResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('BrainStatusResult', Bin, TrUserData) -> id(decode_msg_BrainStatusResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('HistoryEntry', Bin, TrUserData) -> id(decode_msg_HistoryEntry(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('GetHistoryResult', Bin, TrUserData) -> id(decode_msg_GetHistoryResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('StopResult', Bin, TrUserData) -> id(decode_msg_StopResult(Bin, TrUserData), TrUserData).
 
 
@@ -1667,6 +1777,50 @@ skip_32_BrainStatusArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d
 
 skip_64_BrainStatusArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_BrainStatusArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
 
+decode_msg_GetHistoryArgs(Bin, TrUserData) -> dfp_read_field_def_GetHistoryArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_GetHistoryArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_GetHistoryArgs_session_id(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_GetHistoryArgs(<<>>, 0, 0, _, F@_1, _) -> #{session_id => F@_1};
+dfp_read_field_def_GetHistoryArgs(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_GetHistoryArgs(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_GetHistoryArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_GetHistoryArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_GetHistoryArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_GetHistoryArgs_session_id(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_GetHistoryArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_GetHistoryArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_GetHistoryArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_GetHistoryArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_GetHistoryArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_GetHistoryArgs(<<>>, 0, 0, _, F@_1, _) -> #{session_id => F@_1}.
+
+d_field_GetHistoryArgs_session_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_GetHistoryArgs_session_id(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_GetHistoryArgs_session_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_GetHistoryArgs(RestF, 0, 0, F, NewFValue, TrUserData).
+
+skip_varint_GetHistoryArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_GetHistoryArgs(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_GetHistoryArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_GetHistoryArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_GetHistoryArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_GetHistoryArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_GetHistoryArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_GetHistoryArgs(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_GetHistoryArgs(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_GetHistoryArgs(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_GetHistoryArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_GetHistoryArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_GetHistoryArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_GetHistoryArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
 decode_msg_StartSessionResult(Bin, TrUserData) -> dfp_read_field_def_StartSessionResult(Bin, 0, 0, 0, id(<<>>, TrUserData), TrUserData).
 
 dfp_read_field_def_StartSessionResult(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_StartSessionResult_session_id(Rest, Z1, Z2, F, F@_1, TrUserData);
@@ -1974,6 +2128,123 @@ skip_32_BrainStatusResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@
 
 skip_64_BrainStatusResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_BrainStatusResult(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
+decode_msg_HistoryEntry(Bin, TrUserData) -> dfp_read_field_def_HistoryEntry(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_HistoryEntry(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_HistoryEntry_role(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_HistoryEntry(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_HistoryEntry_content(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_HistoryEntry(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_HistoryEntry_tool_calls_json(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_HistoryEntry(<<34, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_HistoryEntry_tool_call_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_HistoryEntry(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, _) -> #{role => F@_1, content => F@_2, tool_calls_json => F@_3, tool_call_id => F@_4};
+dfp_read_field_def_HistoryEntry(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dg_read_field_def_HistoryEntry(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+dg_read_field_def_HistoryEntry(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 32 - 7 -> dg_read_field_def_HistoryEntry(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dg_read_field_def_HistoryEntry(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_HistoryEntry_role(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        18 -> d_field_HistoryEntry_content(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        26 -> d_field_HistoryEntry_tool_calls_json(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        34 -> d_field_HistoryEntry_tool_call_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_HistoryEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                1 -> skip_64_HistoryEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                2 -> skip_length_delimited_HistoryEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                3 -> skip_group_HistoryEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                5 -> skip_32_HistoryEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData)
+            end
+    end;
+dg_read_field_def_HistoryEntry(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, _) -> #{role => F@_1, content => F@_2, tool_calls_json => F@_3, tool_call_id => F@_4}.
+
+d_field_HistoryEntry_role(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_HistoryEntry_role(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_HistoryEntry_role(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_HistoryEntry(RestF, 0, 0, F, NewFValue, F@_2, F@_3, F@_4, TrUserData).
+
+d_field_HistoryEntry_content(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_HistoryEntry_content(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_HistoryEntry_content(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_HistoryEntry(RestF, 0, 0, F, F@_1, NewFValue, F@_3, F@_4, TrUserData).
+
+d_field_HistoryEntry_tool_calls_json(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_HistoryEntry_tool_calls_json(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_HistoryEntry_tool_calls_json(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_HistoryEntry(RestF, 0, 0, F, F@_1, F@_2, NewFValue, F@_4, TrUserData).
+
+d_field_HistoryEntry_tool_call_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_HistoryEntry_tool_call_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_HistoryEntry_tool_call_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_HistoryEntry(RestF, 0, 0, F, F@_1, F@_2, F@_3, NewFValue, TrUserData).
+
+skip_varint_HistoryEntry(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> skip_varint_HistoryEntry(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_varint_HistoryEntry(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_HistoryEntry(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_length_delimited_HistoryEntry(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> skip_length_delimited_HistoryEntry(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_length_delimited_HistoryEntry(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_HistoryEntry(Rest2, 0, 0, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_group_HistoryEntry(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_HistoryEntry(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_32_HistoryEntry(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_HistoryEntry(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_64_HistoryEntry(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_HistoryEntry(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+decode_msg_GetHistoryResult(Bin, TrUserData) -> dfp_read_field_def_GetHistoryResult(Bin, 0, 0, 0, id([], TrUserData), TrUserData).
+
+dfp_read_field_def_GetHistoryResult(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_GetHistoryResult_messages(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_GetHistoryResult(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{messages => lists_reverse(R1, TrUserData)}
+    end;
+dfp_read_field_def_GetHistoryResult(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_GetHistoryResult(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_GetHistoryResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_GetHistoryResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_GetHistoryResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_GetHistoryResult_messages(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_GetHistoryResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_GetHistoryResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_GetHistoryResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_GetHistoryResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_GetHistoryResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_GetHistoryResult(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{messages => lists_reverse(R1, TrUserData)}
+    end.
+
+d_field_GetHistoryResult_messages(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_GetHistoryResult_messages(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_GetHistoryResult_messages(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_HistoryEntry(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_GetHistoryResult(RestF, 0, 0, F, cons(NewFValue, Prev, TrUserData), TrUserData).
+
+skip_varint_GetHistoryResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_GetHistoryResult(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_GetHistoryResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_GetHistoryResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_GetHistoryResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_GetHistoryResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_GetHistoryResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_GetHistoryResult(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_GetHistoryResult(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_GetHistoryResult(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_GetHistoryResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_GetHistoryResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_GetHistoryResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_GetHistoryResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
 decode_msg_StopResult(Bin, TrUserData) -> dfp_read_field_def_StopResult(Bin, 0, 0, 0, id(false, TrUserData), TrUserData).
 
 dfp_read_field_def_StopResult(<<8, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_StopResult_ok(Rest, Z1, Z2, F, F@_1, TrUserData);
@@ -2093,12 +2364,15 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'SendArgs' -> merge_msg_SendArgs(Prev, New, TrUserData);
         'ApproveArgs' -> merge_msg_ApproveArgs(Prev, New, TrUserData);
         'BrainStatusArgs' -> merge_msg_BrainStatusArgs(Prev, New, TrUserData);
+        'GetHistoryArgs' -> merge_msg_GetHistoryArgs(Prev, New, TrUserData);
         'StartSessionResult' -> merge_msg_StartSessionResult(Prev, New, TrUserData);
         'SendResult' -> merge_msg_SendResult(Prev, New, TrUserData);
         'ListToolsResult' -> merge_msg_ListToolsResult(Prev, New, TrUserData);
         'ToolDesc' -> merge_msg_ToolDesc(Prev, New, TrUserData);
         'ApproveResult' -> merge_msg_ApproveResult(Prev, New, TrUserData);
         'BrainStatusResult' -> merge_msg_BrainStatusResult(Prev, New, TrUserData);
+        'HistoryEntry' -> merge_msg_HistoryEntry(Prev, New, TrUserData);
+        'GetHistoryResult' -> merge_msg_GetHistoryResult(Prev, New, TrUserData);
         'StopResult' -> merge_msg_StopResult(Prev, New, TrUserData)
     end.
 
@@ -2304,6 +2578,15 @@ merge_msg_BrainStatusArgs(PMsg, NMsg, _) ->
         _ -> S1
     end.
 
+-compile({nowarn_unused_function,merge_msg_GetHistoryArgs/3}).
+merge_msg_GetHistoryArgs(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {_, #{session_id := NFsession_id}} -> S1#{session_id => NFsession_id};
+        {#{session_id := PFsession_id}, _} -> S1#{session_id => PFsession_id};
+        _ -> S1
+    end.
+
 -compile({nowarn_unused_function,merge_msg_StartSessionResult/3}).
 merge_msg_StartSessionResult(PMsg, NMsg, _) ->
     S1 = #{},
@@ -2384,6 +2667,40 @@ merge_msg_BrainStatusResult(PMsg, NMsg, _) ->
         _ -> S4
     end.
 
+-compile({nowarn_unused_function,merge_msg_HistoryEntry/3}).
+merge_msg_HistoryEntry(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{role := NFrole}} -> S1#{role => NFrole};
+             {#{role := PFrole}, _} -> S1#{role => PFrole};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{content := NFcontent}} -> S2#{content => NFcontent};
+             {#{content := PFcontent}, _} -> S2#{content => PFcontent};
+             _ -> S2
+         end,
+    S4 = case {PMsg, NMsg} of
+             {_, #{tool_calls_json := NFtool_calls_json}} -> S3#{tool_calls_json => NFtool_calls_json};
+             {#{tool_calls_json := PFtool_calls_json}, _} -> S3#{tool_calls_json => PFtool_calls_json};
+             _ -> S3
+         end,
+    case {PMsg, NMsg} of
+        {_, #{tool_call_id := NFtool_call_id}} -> S4#{tool_call_id => NFtool_call_id};
+        {#{tool_call_id := PFtool_call_id}, _} -> S4#{tool_call_id => PFtool_call_id};
+        _ -> S4
+    end.
+
+-compile({nowarn_unused_function,merge_msg_GetHistoryResult/3}).
+merge_msg_GetHistoryResult(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {#{messages := PFmessages}, #{messages := NFmessages}} -> S1#{messages => 'erlang_++'(PFmessages, NFmessages, TrUserData)};
+        {_, #{messages := NFmessages}} -> S1#{messages => NFmessages};
+        {#{messages := PFmessages}, _} -> S1#{messages => PFmessages};
+        {_, _} -> S1
+    end.
+
 -compile({nowarn_unused_function,merge_msg_StopResult/3}).
 merge_msg_StopResult(PMsg, NMsg, _) ->
     S1 = #{},
@@ -2411,12 +2728,15 @@ verify_msg(Msg, MsgName, Opts) ->
         'SendArgs' -> v_msg_SendArgs(Msg, [MsgName], TrUserData);
         'ApproveArgs' -> v_msg_ApproveArgs(Msg, [MsgName], TrUserData);
         'BrainStatusArgs' -> v_msg_BrainStatusArgs(Msg, [MsgName], TrUserData);
+        'GetHistoryArgs' -> v_msg_GetHistoryArgs(Msg, [MsgName], TrUserData);
         'StartSessionResult' -> v_msg_StartSessionResult(Msg, [MsgName], TrUserData);
         'SendResult' -> v_msg_SendResult(Msg, [MsgName], TrUserData);
         'ListToolsResult' -> v_msg_ListToolsResult(Msg, [MsgName], TrUserData);
         'ToolDesc' -> v_msg_ToolDesc(Msg, [MsgName], TrUserData);
         'ApproveResult' -> v_msg_ApproveResult(Msg, [MsgName], TrUserData);
         'BrainStatusResult' -> v_msg_BrainStatusResult(Msg, [MsgName], TrUserData);
+        'HistoryEntry' -> v_msg_HistoryEntry(Msg, [MsgName], TrUserData);
+        'GetHistoryResult' -> v_msg_GetHistoryResult(Msg, [MsgName], TrUserData);
         'StopResult' -> v_msg_StopResult(Msg, [MsgName], TrUserData);
         _ -> mk_type_error(not_a_known_message, Msg, [])
     end.
@@ -2762,6 +3082,21 @@ v_msg_BrainStatusArgs(#{} = M, Path, TrUserData) ->
 v_msg_BrainStatusArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'BrainStatusArgs'}, M, Path);
 v_msg_BrainStatusArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'BrainStatusArgs'}, X, Path).
 
+-compile({nowarn_unused_function,v_msg_GetHistoryArgs/3}).
+-dialyzer({nowarn_function,v_msg_GetHistoryArgs/3}).
+v_msg_GetHistoryArgs(#{} = M, Path, TrUserData) ->
+    case M of
+        #{session_id := F1} -> v_type_string(F1, [session_id | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (session_id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_GetHistoryArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'GetHistoryArgs'}, M, Path);
+v_msg_GetHistoryArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'GetHistoryArgs'}, X, Path).
+
 -compile({nowarn_unused_function,v_msg_StartSessionResult/3}).
 -dialyzer({nowarn_function,v_msg_StartSessionResult/3}).
 v_msg_StartSessionResult(#{} = M, Path, TrUserData) ->
@@ -2885,6 +3220,60 @@ v_msg_BrainStatusResult(#{} = M, Path, TrUserData) ->
     ok;
 v_msg_BrainStatusResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'BrainStatusResult'}, M, Path);
 v_msg_BrainStatusResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'BrainStatusResult'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_HistoryEntry/3}).
+-dialyzer({nowarn_function,v_submsg_HistoryEntry/3}).
+v_submsg_HistoryEntry(Msg, Path, TrUserData) -> v_msg_HistoryEntry(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_HistoryEntry/3}).
+-dialyzer({nowarn_function,v_msg_HistoryEntry/3}).
+v_msg_HistoryEntry(#{} = M, Path, TrUserData) ->
+    case M of
+        #{role := F1} -> v_type_string(F1, [role | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{content := F2} -> v_type_string(F2, [content | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{tool_calls_json := F3} -> v_type_string(F3, [tool_calls_json | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{tool_call_id := F4} -> v_type_string(F4, [tool_call_id | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (tool_call_id) -> ok;
+                      (tool_calls_json) -> ok;
+                      (content) -> ok;
+                      (role) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_HistoryEntry(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'HistoryEntry'}, M, Path);
+v_msg_HistoryEntry(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'HistoryEntry'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_GetHistoryResult/3}).
+-dialyzer({nowarn_function,v_msg_GetHistoryResult/3}).
+v_msg_GetHistoryResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{messages := F1} ->
+            if is_list(F1) ->
+                   _ = [v_submsg_HistoryEntry(Elem, [messages | Path], TrUserData) || Elem <- F1],
+                   ok;
+               true -> mk_type_error({invalid_list_of, {msg, 'HistoryEntry'}}, F1, [messages | Path])
+            end;
+        _ -> ok
+    end,
+    lists:foreach(fun (messages) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_GetHistoryResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'GetHistoryResult'}, M, Path);
+v_msg_GetHistoryResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'GetHistoryResult'}, X, Path).
 
 -compile({nowarn_unused_function,v_msg_StopResult/3}).
 -dialyzer({nowarn_function,v_msg_StopResult/3}).
@@ -3017,6 +3406,7 @@ get_msg_defs() ->
      {{msg, 'SendArgs'}, [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => message, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}]},
      {{msg, 'ApproveArgs'}, [#{name => req_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => allow, fnum => 2, rnum => 3, type => bool, occurrence => optional, opts => []}]},
      {{msg, 'BrainStatusArgs'}, [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'GetHistoryArgs'}, [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
      {{msg, 'StartSessionResult'}, [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
      {{msg, 'SendResult'}, [#{name => stream_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
      {{msg, 'ListToolsResult'}, [#{name => tools, fnum => 1, rnum => 2, type => {msg, 'ToolDesc'}, occurrence => repeated, opts => []}]},
@@ -3030,6 +3420,12 @@ get_msg_defs() ->
        #{name => loop_count, fnum => 2, rnum => 3, type => int32, occurrence => optional, opts => []},
        #{name => max_loops, fnum => 3, rnum => 4, type => int32, occurrence => optional, opts => []},
        #{name => history_len, fnum => 4, rnum => 5, type => int32, occurrence => optional, opts => []}]},
+     {{msg, 'HistoryEntry'},
+      [#{name => role, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => content, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+       #{name => tool_calls_json, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+       #{name => tool_call_id, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'GetHistoryResult'}, [#{name => messages, fnum => 1, rnum => 2, type => {msg, 'HistoryEntry'}, occurrence => repeated, opts => []}]},
      {{msg, 'StopResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}]}].
 
 
@@ -3046,12 +3442,15 @@ get_msg_names() ->
      'SendArgs',
      'ApproveArgs',
      'BrainStatusArgs',
+     'GetHistoryArgs',
      'StartSessionResult',
      'SendResult',
      'ListToolsResult',
      'ToolDesc',
      'ApproveResult',
      'BrainStatusResult',
+     'HistoryEntry',
+     'GetHistoryResult',
      'StopResult'].
 
 
@@ -3071,12 +3470,15 @@ get_msg_or_group_names() ->
      'SendArgs',
      'ApproveArgs',
      'BrainStatusArgs',
+     'GetHistoryArgs',
      'StartSessionResult',
      'SendResult',
      'ListToolsResult',
      'ToolDesc',
      'ApproveResult',
      'BrainStatusResult',
+     'HistoryEntry',
+     'GetHistoryResult',
      'StopResult'].
 
 
@@ -3135,6 +3537,7 @@ find_msg_def('StartSessionArgs') -> [#{name => system_prompt, fnum => 1, rnum =>
 find_msg_def('SendArgs') -> [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => message, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}];
 find_msg_def('ApproveArgs') -> [#{name => req_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => allow, fnum => 2, rnum => 3, type => bool, occurrence => optional, opts => []}];
 find_msg_def('BrainStatusArgs') -> [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];
+find_msg_def('GetHistoryArgs') -> [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];
 find_msg_def('StartSessionResult') -> [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];
 find_msg_def('SendResult') -> [#{name => stream_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];
 find_msg_def('ListToolsResult') -> [#{name => tools, fnum => 1, rnum => 2, type => {msg, 'ToolDesc'}, occurrence => repeated, opts => []}];
@@ -3148,6 +3551,12 @@ find_msg_def('BrainStatusResult') ->
      #{name => loop_count, fnum => 2, rnum => 3, type => int32, occurrence => optional, opts => []},
      #{name => max_loops, fnum => 3, rnum => 4, type => int32, occurrence => optional, opts => []},
      #{name => history_len, fnum => 4, rnum => 5, type => int32, occurrence => optional, opts => []}];
+find_msg_def('HistoryEntry') ->
+    [#{name => role, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => content, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+     #{name => tool_calls_json, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+     #{name => tool_call_id, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []}];
+find_msg_def('GetHistoryResult') -> [#{name => messages, fnum => 1, rnum => 2, type => {msg, 'HistoryEntry'}, occurrence => repeated, opts => []}];
 find_msg_def('StopResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}];
 find_msg_def(_) -> error.
 
@@ -3219,12 +3628,15 @@ fqbin_to_msg_name(<<"panel.StartSessionArgs">>) -> 'StartSessionArgs';
 fqbin_to_msg_name(<<"panel.SendArgs">>) -> 'SendArgs';
 fqbin_to_msg_name(<<"panel.ApproveArgs">>) -> 'ApproveArgs';
 fqbin_to_msg_name(<<"panel.BrainStatusArgs">>) -> 'BrainStatusArgs';
+fqbin_to_msg_name(<<"panel.GetHistoryArgs">>) -> 'GetHistoryArgs';
 fqbin_to_msg_name(<<"panel.StartSessionResult">>) -> 'StartSessionResult';
 fqbin_to_msg_name(<<"panel.SendResult">>) -> 'SendResult';
 fqbin_to_msg_name(<<"panel.ListToolsResult">>) -> 'ListToolsResult';
 fqbin_to_msg_name(<<"panel.ToolDesc">>) -> 'ToolDesc';
 fqbin_to_msg_name(<<"panel.ApproveResult">>) -> 'ApproveResult';
 fqbin_to_msg_name(<<"panel.BrainStatusResult">>) -> 'BrainStatusResult';
+fqbin_to_msg_name(<<"panel.HistoryEntry">>) -> 'HistoryEntry';
+fqbin_to_msg_name(<<"panel.GetHistoryResult">>) -> 'GetHistoryResult';
 fqbin_to_msg_name(<<"panel.StopResult">>) -> 'StopResult';
 fqbin_to_msg_name(E) -> error({gpb_error, {badmsg, E}}).
 
@@ -3241,12 +3653,15 @@ msg_name_to_fqbin('StartSessionArgs') -> <<"panel.StartSessionArgs">>;
 msg_name_to_fqbin('SendArgs') -> <<"panel.SendArgs">>;
 msg_name_to_fqbin('ApproveArgs') -> <<"panel.ApproveArgs">>;
 msg_name_to_fqbin('BrainStatusArgs') -> <<"panel.BrainStatusArgs">>;
+msg_name_to_fqbin('GetHistoryArgs') -> <<"panel.GetHistoryArgs">>;
 msg_name_to_fqbin('StartSessionResult') -> <<"panel.StartSessionResult">>;
 msg_name_to_fqbin('SendResult') -> <<"panel.SendResult">>;
 msg_name_to_fqbin('ListToolsResult') -> <<"panel.ListToolsResult">>;
 msg_name_to_fqbin('ToolDesc') -> <<"panel.ToolDesc">>;
 msg_name_to_fqbin('ApproveResult') -> <<"panel.ApproveResult">>;
 msg_name_to_fqbin('BrainStatusResult') -> <<"panel.BrainStatusResult">>;
+msg_name_to_fqbin('HistoryEntry') -> <<"panel.HistoryEntry">>;
+msg_name_to_fqbin('GetHistoryResult') -> <<"panel.GetHistoryResult">>;
 msg_name_to_fqbin('StopResult') -> <<"panel.StopResult">>;
 msg_name_to_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 
@@ -3292,6 +3707,9 @@ get_msg_containment("panel") ->
      'BrainStatusArgs',
      'BrainStatusResult',
      'FinalAnswer',
+     'GetHistoryArgs',
+     'GetHistoryResult',
+     'HistoryEntry',
      'ListToolsResult',
      'LlmChunk',
      'PanelFrame',
@@ -3337,12 +3755,15 @@ get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.SendArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ApproveArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.SendResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ListToolsResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ToolDesc">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ApproveResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.HistoryEntry">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.StopResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 

@@ -28,6 +28,7 @@ import (
 
 	"github.com/light-code-ai/eion-tools/internal/dispatcher"
 	"github.com/light-code-ai/eion-tools/internal/logging"
+	"github.com/light-code-ai/eion-tools/internal/memory"
 	"github.com/light-code-ai/eion-tools/internal/tool"
 	hermes "github.com/light-code-ai/eion-tools/proto/gen"
 )
@@ -36,10 +37,26 @@ func main() {
 	logging.Init()
 	defer func() { _ = logging.Logger.Sync() }()
 
-	// 1. 初始化 dispatcher, 注册示例工具 get_weather
+	// 1. 初始化 dispatcher, 注册工具
 	d := dispatcher.New()
 	name, desc, params, handler := tool.GetWeatherHandler()
 	d.ToolWrapper().Register(name, desc, params, handler)
+
+	memCfg := memory.LoadConfig()
+	if os.Getenv("HERMES_MEMORY_DISABLE") != "1" {
+		memSvc, backendName, err := memory.NewFromConfig(context.Background(), memCfg)
+		if err != nil {
+			logging.Logger.Warn("memory tools disabled",
+				zap.Error(err),
+				zap.String("hint", "set HERMES_MEMORY_BACKEND=dev and HERMES_MEMORY_MOCK_EMBED=1 for local Windows"))
+		} else {
+			tool.RegisterMemoryTools(d.ToolWrapper(), memSvc)
+			logging.Logger.Info("memory tools enabled",
+				zap.String("backend", backendName),
+				zap.String("redis", memCfg.RedisAddr),
+				zap.Bool("mock_embed", memCfg.MockEmbed))
+		}
+	}
 
 	// 2. 解析监听地址 (环境变量 EION_TOOLS_ADDR 覆盖默认值)
 	addr := os.Getenv("EION_TOOLS_ADDR")
@@ -182,6 +199,8 @@ func runFramingLoop(r io.Reader, w io.Writer, d *dispatcher.Command_Dispatcher) 
 				zap.String("name", p.ToolExec.GetToolName()),
 				zap.String("req_id", p.ToolExec.GetReqId()),
 			)
+		case *hermes.AgentRequest_ToolList:
+			logging.Logger.Debug("dispatch: tool_list")
 		}
 
 		// writeAgent 闭包: 由 dispatcher 内部按需多次调用

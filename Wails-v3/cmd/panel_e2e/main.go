@@ -41,6 +41,29 @@ func main() {
 	}
 	fmt.Printf("start_session OK session_id=%s\n", sid)
 
+	histOut, err := b.Call("get_history", map[string]any{"session_id": sid})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "get_history: %v\n", err)
+		os.Exit(1)
+	}
+	hist, ok := histOut.(map[string]any)
+	if !ok {
+		fmt.Fprintf(os.Stderr, "get_history: unexpected type %T\n", histOut)
+		os.Exit(1)
+	}
+	msgs, _ := hist["messages"].([]any)
+	for _, m := range msgs {
+		mm, ok := m.(map[string]any)
+		if !ok {
+			continue
+		}
+		if role, _ := mm["role"].(string); role == "system" {
+			fmt.Fprintf(os.Stderr, "get_history: system role must not be in history after start_session, got %#v\n", msgs)
+			os.Exit(1)
+		}
+	}
+	fmt.Printf("get_history OK messages=%d (no system in history)\n", len(msgs))
+
 	stOut, err := b.Call("brain_status", map[string]any{"session_id": sid})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "brain_status: %v\n", err)

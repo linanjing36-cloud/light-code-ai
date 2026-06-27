@@ -34,8 +34,8 @@
 %%====================================================================
 
 %% 对外接口
--export([start_link/0, call_llm/2, call_tool_batch/2, call_tool/2,
-         pool_info/0]).
+-export([start_link/0, call_llm/2, call_tool_batch/2, call_tool/2, call_tool_sync/2,
+         list_tools/1, pool_info/0]).
 %% gen_server 回调
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
@@ -57,14 +57,16 @@
     conns = [] :: [#conn{}],
     %% FIFO 队列: 等待 idle 连接的请求
     %%   {Ref, FsmPid, Kind, ReqId, Payload, Timeout}
-    queue = queue:new() :: queue:queue({reference(), pid(), llm | tool,
+    queue = queue:new() :: queue:queue({reference(), pid() | undefined, llm | tool | tool_list,
                                         binary() | undefined, binary(),
                                         non_neg_integer()}),
     %% socket -> 等待响应的请求 {Ref, FsmPid, Kind, ReqId}
-    pending = #{} :: #{gen_tcp:socket() => {reference(), pid(), llm | tool,
+    pending = #{} :: #{gen_tcp:socket() => {reference(), pid() | undefined, llm | tool | tool_list,
                                              binary() | undefined}},
     %% socket -> 超时计时器
-    timers = #{} :: #{gen_tcp:socket() => reference()}
+    timers = #{} :: #{gen_tcp:socket() => reference()},
+    %% req_id -> gen_server From (同步工具调用, 如 memory_search 预取)
+    sync_waiters = #{} :: #{binary() => gen_server:from()}
 }).
 
 %%%===================================================================
@@ -92,6 +94,16 @@ call_tool(FsmPid, #{id := Id, name := Name, arguments := Args}) ->
     gen_server:cast(?MODULE, {call_tool, FsmPid, Ref, Id, Name, Args}),
     Ref.
 
+%% 同步调用单个工具 (阻塞至响应或超时), 供 memory RAG 预取等 FSM 外场景。
+%% ToolCall = #{id, name, arguments}; 返回 {ok, Resp} | {error, Reason}
+call_tool_sync(#{id := Id, name := Name, arguments := Args}, TimeoutMs)
+  when is_integer(TimeoutMs), TimeoutMs > 0 ->
+    gen_server:call(?MODULE, {call_tool_sync, Id, Name, Args, TimeoutMs}, TimeoutMs + 2000).
+
+%% 同步查询 Eion-tools 注册的工具列表 -> {ok, [ToolDescMap]} | {error, Reason}
+list_tools(TimeoutMs) when is_integer(TimeoutMs), TimeoutMs > 0 ->
+    gen_server:call(?MODULE, {list_tools, TimeoutMs}, TimeoutMs + 2000).
+
 %% 调试用: 查看连接池状态
 pool_info() ->
     gen_server:call(?MODULE, pool_info).
@@ -107,6 +119,25 @@ init([]) ->
     self() ! connect_all,
     {ok, #state{addr = Addr, pool_size = PoolSize}}.
 
+handle_call({call_tool_sync, Id, Name, Args, TimeoutMs}, From, State) ->
+    lager:info("call_tool_sync queued, tool=~s, req_id=~s, timeout=~pms", [Name, Id, TimeoutMs]),
+    BizReq = #{kind => tool_exec,
+               req_id => Id,
+               tool_name => Name,
+               arguments_json => Args},
+    Payload = pb_codec:encode_req(BizReq),
+    Ref = make_ref(),
+    Item = {Ref, undefined, tool, Id, Payload, TimeoutMs},
+    State1 = State#state{sync_waiters = maps:put(Id, From, State#state.sync_waiters)},
+    {noreply, dispatch(State1, Item)};
+handle_call({list_tools, TimeoutMs}, From, State) ->
+    lager:info("list_tools queued, timeout=~pms", [TimeoutMs]),
+    Id = iolist_to_binary(["list-", integer_to_binary(erlang:unique_integer([positive]))]),
+    Payload = pb_codec:encode_req(#{kind => tool_list}),
+    Ref = make_ref(),
+    Item = {Ref, undefined, tool_list, Id, Payload, TimeoutMs},
+    State1 = State#state{sync_waiters = maps:put(Id, From, State#state.sync_waiters)},
+    {noreply, dispatch(State1, Item)};
 handle_call(pool_info, _From, State) ->
     Info = #{addr => State#state.addr,
              pool_size => State#state.pool_size,
@@ -254,11 +285,14 @@ handle_info({tcp, Sock, Bin}, #state{pending = Pending, timers = Timers} = State
                     %% 工具终态: 取消 timer, 释放连接, 转发结果
                     TRef = maps:get(Sock, Timers, undefined),
                     _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
-                    gen_statem:cast(FsmPid, {tool_result, ReqId, Resp}),
                     Conns = mark_conn(State#state.conns, Sock, idle),
-                    NewState = State#state{conns = Conns,
-                                           pending = maps:remove(Sock, Pending),
-                                           timers = maps:remove(Sock, Timers)},
+                    NewState = reply_tool_result(State, ReqId, Resp, Conns, Sock, Pending, Timers),
+                    {noreply, dispatch_next(NewState)};
+                {tool_list, tool_list} ->
+                    TRef = maps:get(Sock, Timers, undefined),
+                    _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
+                    Conns = mark_conn(State#state.conns, Sock, idle),
+                    NewState = reply_tool_list_result(State, ReqId, Resp, Conns, Sock, Pending, Timers),
                     {noreply, dispatch_next(NewState)};
                 _Other ->
                     %% 类型不匹配 (如 llm 请求收到 tool_exec 响应): 当作异常, 释放连接
@@ -288,7 +322,11 @@ handle_info({tcp_closed, Sock}, #state{pending = Pending, timers = Timers, conns
                           [Sock, Idx, Ref, Kind, ReqId, FsmPid]),
             TRef = maps:get(Sock, Timers, undefined),
             _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
-            gen_statem:cast(FsmPid, {bridge_disconnect});
+            _ = reply_tool_timeout(State, ReqId),
+            case FsmPid of
+                undefined -> ok;
+                _ -> gen_statem:cast(FsmPid, {bridge_disconnect})
+            end;
         undefined ->
             lager:warning("tcp connection closed: socket=~p slot=~p (no in-flight req)", [Sock, Idx])
     end,
@@ -325,7 +363,11 @@ handle_info({timeout, TRef, {req, Sock, Ref}}, #state{timers = Timers,
                 {Ref, FsmPid, Kind, ReqId} ->
                     lager:warning("request timeout: socket=~p ref=~p kind=~p req_id=~p, notifying fsm=~p",
                                   [Sock, Ref, Kind, ReqId, FsmPid]),
-                    gen_statem:cast(FsmPid, {bridge_disconnect});
+                    _ = reply_tool_timeout(State, ReqId),
+                    case FsmPid of
+                        undefined -> ok;
+                        _ -> gen_statem:cast(FsmPid, {bridge_disconnect})
+                    end;
                 _ ->
                     lager:warning("request timeout but no matching pending: socket=~p ref=~p", [Sock, Ref])
             end,
@@ -357,6 +399,52 @@ terminate(Reason, State) ->
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
+
+reply_tool_result(#state{sync_waiters = Sync} = State, ReqId, Resp, Conns, Sock, Pending, Timers) ->
+    Base = State#state{conns = Conns,
+                       pending = maps:remove(Sock, Pending),
+                       timers = maps:remove(Sock, Timers)},
+    case maps:get(ReqId, Sync, undefined) of
+        undefined ->
+            case maps:get(Sock, Pending, undefined) of
+                {_, FsmPid, _, _} when FsmPid =/= undefined ->
+                    gen_statem:cast(FsmPid, {tool_result, ReqId, Resp});
+                _ ->
+                    ok
+            end,
+            Base;
+        From ->
+            gen_server:reply(From, {ok, Resp}),
+            Base#state{sync_waiters = maps:remove(ReqId, Sync)}
+    end.
+
+reply_tool_list_result(#state{sync_waiters = Sync} = State, ReqId, Resp, Conns, Sock, Pending, Timers) ->
+    Base = State#state{conns = Conns,
+                       pending = maps:remove(Sock, Pending),
+                       timers = maps:remove(Sock, Timers)},
+    case maps:get(ReqId, Sync, undefined) of
+        undefined ->
+            lager:warning("tool_list response without sync waiter req_id=~s", [ReqId]),
+            Base;
+        From ->
+            Reply = case maps:get(error, Resp, <<>>) of
+                        Err when Err =/= <<>> ->
+                            {error, Err};
+                        _ ->
+                            {ok, maps:get(tools, Resp, [])}
+                    end,
+            gen_server:reply(From, Reply),
+            Base#state{sync_waiters = maps:remove(ReqId, Sync)}
+    end.
+
+reply_tool_timeout(#state{sync_waiters = Sync} = State, ReqId) ->
+    case maps:get(ReqId, Sync, undefined) of
+        undefined ->
+            ok;
+        From ->
+            gen_server:reply(From, {error, timeout}),
+            State#state{sync_waiters = maps:remove(ReqId, Sync)}
+    end.
 
 %%%===================================================================
 %%% 内部函数

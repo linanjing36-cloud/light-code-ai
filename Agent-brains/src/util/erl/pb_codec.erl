@@ -81,7 +81,9 @@ to_struct(#{kind := tool_exec} = M) ->
     ToolReq = #{req_id => maps:get(req_id, M, <<>>),
                 tool_name => maps:get(tool_name, M, <<>>),
                 arguments_json => maps:get(arguments_json, M, <<>>)},
-    #{tool_exec => ToolReq}.
+    #{tool_exec => ToolReq};
+to_struct(#{kind := tool_list}) ->
+    #{tool_list => #{}}.
 
 %% Message -> gpb map (role, content, tool_calls, tool_call_id)
 msg_to_struct(Msg) ->
@@ -98,6 +100,11 @@ tool_call_to_struct(TC) ->
 
 %% ToolDesc -> gpb map (name, description, parameters_json)
 tool_desc_to_struct(T) ->
+    #{name => maps:get(name, T, <<>>),
+      description => maps:get(description, T, <<>>),
+      parameters_json => maps:get(parameters_json, T, <<>>)}.
+
+tool_desc_from_struct(T) ->
     #{name => maps:get(name, T, <<>>),
       description => maps:get(description, T, <<>>),
       parameters_json => maps:get(parameters_json, T, <<>>)}.
@@ -131,6 +138,11 @@ from_struct(#{tool_exec := Resp}) ->
     %% ToolExecResponse 分支 (error 非空表示失败)
     #{kind => tool_exec,
       result_json => maps:get(result_json, Resp, <<>>),
+      error => maps:get(error, Resp, <<>>)};
+from_struct(#{tool_list := Resp}) ->
+    Tools = [tool_desc_from_struct(T) || T <- maps:get(tools, Resp, [])],
+    #{kind => tool_list,
+      tools => Tools,
       error => maps:get(error, Resp, <<>>)};
 from_struct(Other) ->
     %% 防御性兜底: 未知结构 (例如 Go 侧返回空 oneof 时 gpb 解出 #{})

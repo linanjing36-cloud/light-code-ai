@@ -75,20 +75,30 @@ message ToolExecResponse {
   string error = 2;
 }
 
-// 顶层请求包装：通过 oneof 区分是 LLM 推理还是工具执行。
+// 工具列表查询（无参，返回 Eion-tools 当前注册表）。
+message ToolListRequest {}
+
+message ToolListResponse {
+  repeated ToolDesc tools = 1;
+  string error = 2;
+}
+
+// 顶层请求包装：通过 oneof 区分请求类型。
 message AgentRequest {
   oneof payload {
     LLMInferRequest llm_infer = 1;
     ToolExecRequest tool_exec = 2;
+    ToolListRequest tool_list = 3;
   }
 }
 
-// 顶层响应包装：与 AgentRequest 的 oneof 分支一一对应, 加 llm_chunk 流式分支。
+// 顶层响应包装：与 AgentRequest 的 oneof 分支对应。
 // stream=true 时, Go 侧先发若干 AgentResponse{llm_chunk: ...}, 最后发 AgentResponse{llm_infer: ...} 终态。
 message AgentResponse {
   oneof payload {
     LLMInferResponse llm_infer = 1;
     ToolExecResponse tool_exec = 2;
     LlmChunk llm_chunk = 3;  // 流式 chunk (非终态, 仅 stream=true)
+    ToolListResponse tool_list = 4;
   }
 }
