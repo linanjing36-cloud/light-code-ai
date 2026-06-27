@@ -12,9 +12,9 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/eino-contrib/jsonschema"
 	"github.com/cloudwego/eino/components/tool"
 	"github.com/cloudwego/eino/schema"
+	"github.com/eino-contrib/jsonschema"
 	"github.com/light-code-ai/eion-tools/internal/capability"
 )
 
@@ -114,6 +114,17 @@ func (w *Eino_Tool_Wrapper) CapabilityDescs() []capability.Desc {
 		return nil
 	}
 	return w.capRegistry.List()
+}
+
+func (w *Eino_Tool_Wrapper) Invoke(ctx context.Context, name, argumentsJSON string) (string, error) {
+	if w == nil {
+		return "", fmt.Errorf("tool wrapper is nil")
+	}
+	t, ok := w.registry[name]
+	if !ok {
+		return "", fmt.Errorf("tool %s not registered", name)
+	}
+	return t.InvokableRun(ctx, argumentsJSON)
 }
 
 // registeredTool 实现 tool.InvokableTool 接口（BaseTool + InvokableRun）。

@@ -56,3 +56,33 @@ func TestServerRegistersMCPAsCapability(t *testing.T) {
 		t.Fatalf("mcp_echo not found in capabilities: %#v", caps)
 	}
 }
+
+func TestServerRegistersBuiltInSkillAsCapability(t *testing.T) {
+	logging.Init()
+	t.Setenv("HERMES_MCP_SERVERS_JSON", "")
+	t.Setenv("HERMES_MEMORY_DISABLE", "1")
+
+	srv, err := New(Options{})
+	if err != nil {
+		t.Fatalf("server new: %v", err)
+	}
+	defer srv.Stop()
+
+	caps := srv.Dispatcher().ToolWrapper().CapabilityDescs()
+	found := false
+	for _, cap := range caps {
+		if cap.Name != "workspace_briefing" {
+			continue
+		}
+		found = true
+		if string(cap.Kind) != "skill" {
+			t.Fatalf("unexpected kind: %s", cap.Kind)
+		}
+		if cap.Source != "builtin" {
+			t.Fatalf("unexpected source: %s", cap.Source)
+		}
+	}
+	if !found {
+		t.Fatalf("workspace_briefing not found in capabilities: %#v", caps)
+	}
+}

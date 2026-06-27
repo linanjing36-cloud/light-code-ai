@@ -14,6 +14,7 @@ import (
 	"github.com/light-code-ai/eion-tools/internal/logging"
 	"github.com/light-code-ai/eion-tools/internal/mcp"
 	"github.com/light-code-ai/eion-tools/internal/memory"
+	"github.com/light-code-ai/eion-tools/internal/skill"
 	"github.com/light-code-ai/eion-tools/internal/tool"
 	codesearch "github.com/light-code-ai/eion-tools/plugins/code_search"
 	githubplugin "github.com/light-code-ai/eion-tools/plugins/github"
@@ -51,6 +52,9 @@ func New(opts Options) (*Server, error) {
 	repomap.Register(d.ToolWrapper())
 	codesearch.Register(d.ToolWrapper())
 	githubplugin.Register(d.ToolWrapper())
+	if err := skill.RegisterBuiltins(d.ToolWrapper()); err != nil {
+		return nil, err
+	}
 
 	if !opts.DisableMemory && os.Getenv("HERMES_MEMORY_DISABLE") != "1" {
 		memCfg := memory.LoadConfig()
