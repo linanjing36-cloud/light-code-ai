@@ -400,6 +400,16 @@ func defaultPanelAddrFile() string {
 }
 
 func emitPanelStream(stream *panelpb.PanelStream) {
+	ev := decodePanelStreamEvent(stream)
+
+	streamHandlerMu.RLock()
+	fn := streamHandler
+	streamHandlerMu.RUnlock()
+	if fn != nil {
+		fn(ev)
+		return
+	}
+
 	app := application.Get()
 	if app == nil {
 		return
@@ -408,6 +418,18 @@ func emitPanelStream(stream *panelpb.PanelStream) {
 	if w == nil {
 		return
 	}
-	ev := decodePanelStreamEvent(stream)
 	w.EmitEvent("panel:stream", ev)
+}
+
+var (
+	streamHandlerMu sync.RWMutex
+	streamHandler   func(StreamEvent)
+)
+
+// SetStreamHandler 供 CLI e2e 等无 Wails 窗口场景接收 panel:stream 等价事件。
+// 传入 nil 可清除。
+func SetStreamHandler(fn func(StreamEvent)) {
+	streamHandlerMu.Lock()
+	streamHandler = fn
+	streamHandlerMu.Unlock()
 }

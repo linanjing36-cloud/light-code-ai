@@ -614,8 +614,15 @@ function Invoke-StartAll {
     if (-not (Test-Path $ErlBin)) {
         throw "Agent 未编译, 请先运行: .\make.ps1 agent"
     }
-    if (-not (Test-Path $EionExe)) {
-        throw "Eion-tools 未编译, 请先运行: .\make.ps1 tools (产物: bin\eion_bin\eion-tools-server.exe)"
+    if (-not $Wails) {
+        if (-not (Test-Path $EionExe)) {
+            throw "Eion-tools 未编译, 请先运行: .\make.ps1 tools (产物: bin\eion_bin\eion-tools-server.exe)"
+        }
+    } else {
+        $WailsExe = Join-Path $WailsBin "hermes.exe"
+        if (-not (Test-Path $WailsExe)) {
+            throw "Wails 未编译, 请先运行: .\make.ps1 wails_v3 (产物: bin\wails_v3_bin\hermes.exe)"
+        }
     }
     New-Item -ItemType Directory -Force -Path $RunDir | Out-Null
     $env:EION_TOOLS_ADDR_FILE = $EionAddrFile
@@ -624,34 +631,60 @@ function Invoke-StartAll {
     Write-Host "========================================"
     Write-Host "  Hermes 一键启动"
     Write-Host "  memory=$($env:HERMES_MEMORY_BACKEND) redis=$($env:HERMES_REDIS_ADDR)"
-    Write-Host "  eion_bin=$EionExe"
+    if ($Wails) {
+        Write-Host "  eion=embedded in hermes.exe"
+    } else {
+        Write-Host "  eion_bin=$EionExe"
+    }
     Write-Host "========================================"
     Write-Host ""
 
-    $toolsRunning = [bool](Get-Process -Name "eion-tools-server" -ErrorAction SilentlyContinue)
-    $eionAddrKnown = $null
-    if ($toolsRunning -and (Test-Path $EionAddrFile)) {
-        $eionAddrKnown = (Get-Content $EionAddrFile -Raw).Trim()
-        if (-not (Test-TcpAddrReachable -Addr $eionAddrKnown)) {
-            Write-Host "[1/3] Eion-tools 进程在跑但 addr 不可达 ($eionAddrKnown), 将重启..."
-            Invoke-StopAll -Force
-            Start-Sleep -Seconds 2
-            $toolsRunning = $false
+    if ($Wails) {
+        # UI 模式: Eion-tools 嵌入 Wails，先启 hermes 写 eion-tools.addr，再启 Agent
+        $wailsRunning = [bool](Get-Process -Name "hermes" -ErrorAction SilentlyContinue)
+        if (-not $wailsRunning) {
+            Write-Host "[1/3] 启动 Wails (含 embedded Eion-tools) ..."
+            Remove-Item $EionAddrFile -ErrorAction SilentlyContinue
+            $env:HERMES_EION_ADDR_FILE = $EionAddrFile
+            $env:HERMES_PANEL_ADDR_FILE = $PanelAddrFile
+            if (-not (Test-Path $StartWailsBat)) { throw "未找到 $StartWailsBat" }
+            Start-Process -FilePath "cmd.exe" `
+                -ArgumentList "/c", "`"$StartWailsBat`"" `
+                -WorkingDirectory $ScrtpsDir `
+                -WindowStyle Normal | Out-Null
+            $eionAddr = Wait-AddrFile -Path $EionAddrFile -TimeoutSec 45 -Label "embedded-eion"
+            Write-Host "       embedded Eion-tools @ $eionAddr"
+        } else {
+            Write-Host "[1/3] Wails 已在运行 (embedded Eion-tools), 跳过"
+            if (Test-Path $EionAddrFile) {
+                Write-Host "       Eion-tools @ $((Get-Content $EionAddrFile -Raw).Trim())"
+            }
         }
-    }
-    if (-not $toolsRunning) {
-        Write-Host "[1/3] 启动 Eion-tools (bin/eion_bin) ..."
-        Remove-Item $EionAddrFile -ErrorAction SilentlyContinue
-        Start-Process -FilePath "cmd.exe" `
-            -ArgumentList "/k", "`"$StartToolsBat`"" `
-            -WorkingDirectory $ScrtpsDir `
-            -WindowStyle Normal | Out-Null
-        $eionAddr = Wait-AddrFile -Path $EionAddrFile -TimeoutSec 30 -Label "eion-tools"
-        Write-Host "       Eion-tools @ $eionAddr"
     } else {
-        Write-Host "[1/3] Eion-tools 已在运行, 跳过"
-        if (Test-Path $EionAddrFile) {
-            Write-Host "       Eion-tools @ $((Get-Content $EionAddrFile -Raw).Trim())"
+        $toolsRunning = [bool](Get-Process -Name "eion-tools-server" -ErrorAction SilentlyContinue)
+        if ($toolsRunning -and (Test-Path $EionAddrFile)) {
+            $eionAddrKnown = (Get-Content $EionAddrFile -Raw).Trim()
+            if (-not (Test-TcpAddrReachable -Addr $eionAddrKnown)) {
+                Write-Host "[1/3] Eion-tools 进程在跑但 addr 不可达 ($eionAddrKnown), 将重启..."
+                Invoke-StopAll -Force
+                Start-Sleep -Seconds 2
+                $toolsRunning = $false
+            }
+        }
+        if (-not $toolsRunning) {
+            Write-Host "[1/3] 启动 Eion-tools (bin/eion_bin) ..."
+            Remove-Item $EionAddrFile -ErrorAction SilentlyContinue
+            Start-Process -FilePath "cmd.exe" `
+                -ArgumentList "/k", "`"$StartToolsBat`"" `
+                -WorkingDirectory $ScrtpsDir `
+                -WindowStyle Normal | Out-Null
+            $eionAddr = Wait-AddrFile -Path $EionAddrFile -TimeoutSec 30 -Label "eion-tools"
+            Write-Host "       Eion-tools @ $eionAddr"
+        } else {
+            Write-Host "[1/3] Eion-tools 已在运行, 跳过"
+            if (Test-Path $EionAddrFile) {
+                Write-Host "       Eion-tools @ $((Get-Content $EionAddrFile -Raw).Trim())"
+            }
         }
     }
 
@@ -698,15 +731,7 @@ function Invoke-StartAll {
     }
 
     if ($Wails) {
-        $wailsRunning = [bool](Get-Process -Name "hermes" -ErrorAction SilentlyContinue)
-        if (-not $wailsRunning) {
-            Write-Host "[3/3] 启动 Wails UI ..."
-            if (-not (Test-Path $StartWailsBat)) { throw "未找到 $StartWailsBat" }
-            & cmd /c $StartWailsBat
-            if ($LASTEXITCODE -ne 0) { throw "start-wails 失败 (exit $LASTEXITCODE)" }
-        } else {
-            Write-Host "[3/3] Wails 已在运行, 跳过"
-        }
+        Write-Host "[3/3] Wails UI 已在前序步骤启动"
     } else {
         Write-Host "[3/3] 跳过 Wails (.\make.ps1 start-all-ui 可一并启动 UI)"
     }

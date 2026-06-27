@@ -43234,3 +43234,1097 @@
 2026-06-27 23:45:05.628 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 94: slot=94, fired=0, active=1
 2026-06-27 23:45:06.644 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 95: slot=95, fired=0, active=1
 2026-06-27 23:45:07.658 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 96: slot=96, fired=0, active=1
+2026-06-27 23:45:08.666 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 97: slot=97, fired=0, active=1
+2026-06-27 23:45:09.678 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 98: slot=98, fired=0, active=1
+2026-06-27 23:45:10.681 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 99: slot=99, fired=0, active=1
+2026-06-27 23:45:11.691 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 100: slot=100, fired=0, active=1
+2026-06-27 23:45:12.705 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 101: slot=101, fired=0, active=1
+2026-06-27 23:45:13.719 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 102: slot=102, fired=0, active=1
+2026-06-27 23:45:14.722 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 103: slot=103, fired=0, active=1
+2026-06-27 23:45:15.737 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 104: slot=104, fired=0, active=1
+2026-06-27 23:45:16.739 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 105: slot=105, fired=0, active=1
+2026-06-27 23:45:17.740 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 106: slot=106, fired=0, active=1
+2026-06-27 23:45:18.752 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 107: slot=107, fired=0, active=1
+2026-06-27 23:45:19.767 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 108: slot=108, fired=0, active=1
+2026-06-27 23:45:20.782 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 109: slot=109, fired=0, active=1
+2026-06-27 23:45:21.796 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 110: slot=110, fired=0, active=1
+2026-06-27 23:45:22.802 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 111: slot=111, fired=0, active=1
+2026-06-27 23:45:23.804 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 112: slot=112, fired=0, active=1
+2026-06-27 23:45:24.807 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 113: slot=113, fired=0, active=1
+2026-06-27 23:45:25.809 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 114: slot=114, fired=0, active=1
+2026-06-27 23:45:26.819 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 115: slot=115, fired=0, active=1
+2026-06-27 23:45:27.835 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 116: slot=116, fired=0, active=1
+2026-06-27 23:45:28.836 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 117: slot=117, fired=0, active=1
+2026-06-27 23:45:29.849 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 118: slot=118, fired=0, active=1
+2026-06-27 23:45:30.854 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 119: slot=119, fired=0, active=1
+2026-06-27 23:45:31.870 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 120: slot=120, fired=1, active=1
+2026-06-27 23:45:31.870 [info] <0.120.0>@mnesia_store:do_snapshot:{203,22} snapshot taken, table=hermes_brains_state, entries=2
+2026-06-27 23:45:32.872 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 121: slot=121, fired=0, active=1
+2026-06-27 23:45:33.885 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 122: slot=122, fired=0, active=1
+2026-06-27 23:45:34.899 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 123: slot=123, fired=0, active=1
+2026-06-27 23:45:35.914 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 124: slot=124, fired=0, active=1
+2026-06-27 23:45:36.916 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 125: slot=125, fired=0, active=1
+2026-06-27 23:45:37.919 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 126: slot=126, fired=0, active=1
+2026-06-27 23:45:38.926 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 127: slot=127, fired=0, active=1
+2026-06-27 23:45:39.940 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 128: slot=128, fired=0, active=1
+2026-06-27 23:45:40.955 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 129: slot=129, fired=0, active=1
+2026-06-27 23:45:41.970 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 130: slot=130, fired=0, active=1
+2026-06-27 23:45:42.982 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 131: slot=131, fired=0, active=1
+2026-06-27 23:45:43.983 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 132: slot=132, fired=0, active=1
+2026-06-27 23:45:44.984 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 133: slot=133, fired=0, active=1
+2026-06-27 23:45:45.986 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 134: slot=134, fired=0, active=1
+2026-06-27 23:45:47.001 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 135: slot=135, fired=0, active=1
+2026-06-27 23:45:48.002 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 136: slot=136, fired=0, active=1
+2026-06-27 23:45:49.004 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 137: slot=137, fired=0, active=1
+2026-06-27 23:45:50.015 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 138: slot=138, fired=0, active=1
+2026-06-27 23:45:51.018 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 139: slot=139, fired=0, active=1
+2026-06-27 23:45:52.033 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 140: slot=140, fired=0, active=1
+2026-06-27 23:45:53.048 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 141: slot=141, fired=0, active=1
+2026-06-27 23:45:54.049 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 142: slot=142, fired=0, active=1
+2026-06-27 23:45:55.063 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 143: slot=143, fired=0, active=1
+2026-06-27 23:45:56.077 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 144: slot=144, fired=0, active=1
+2026-06-27 23:45:57.081 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 145: slot=145, fired=0, active=1
+2026-06-27 23:45:58.093 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 146: slot=146, fired=0, active=1
+2026-06-27 23:45:59.096 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 147: slot=147, fired=0, active=1
+2026-06-27 23:46:00.100 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 148: slot=148, fired=0, active=1
+2026-06-27 23:46:01.102 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 149: slot=149, fired=0, active=1
+2026-06-27 23:46:02.104 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 150: slot=150, fired=0, active=1
+2026-06-27 23:46:03.119 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 151: slot=151, fired=0, active=1
+2026-06-27 23:46:04.132 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 152: slot=152, fired=0, active=1
+2026-06-27 23:46:05.147 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 153: slot=153, fired=0, active=1
+2026-06-27 23:46:06.162 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 154: slot=154, fired=0, active=1
+2026-06-27 23:46:07.174 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 155: slot=155, fired=0, active=1
+2026-06-27 23:46:08.189 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 156: slot=156, fired=0, active=1
+2026-06-27 23:46:09.193 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 157: slot=157, fired=0, active=1
+2026-06-27 23:46:10.207 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 158: slot=158, fired=0, active=1
+2026-06-27 23:46:11.212 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 159: slot=159, fired=0, active=1
+2026-06-27 23:46:12.215 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 160: slot=160, fired=0, active=1
+2026-06-27 23:46:13.217 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 161: slot=161, fired=0, active=1
+2026-06-27 23:46:14.218 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 162: slot=162, fired=0, active=1
+2026-06-27 23:46:15.220 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 163: slot=163, fired=0, active=1
+2026-06-27 23:46:16.222 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 164: slot=164, fired=0, active=1
+2026-06-27 23:46:17.225 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 165: slot=165, fired=0, active=1
+2026-06-27 23:46:18.239 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 166: slot=166, fired=0, active=1
+2026-06-27 23:46:19.253 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 167: slot=167, fired=0, active=1
+2026-06-27 23:46:20.255 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 168: slot=168, fired=0, active=1
+2026-06-27 23:46:21.261 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 169: slot=169, fired=0, active=1
+2026-06-27 23:46:22.277 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 170: slot=170, fired=0, active=1
+2026-06-27 23:46:23.279 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 171: slot=171, fired=0, active=1
+2026-06-27 23:46:24.280 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 172: slot=172, fired=0, active=1
+2026-06-27 23:46:25.284 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 173: slot=173, fired=0, active=1
+2026-06-27 23:46:26.286 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 174: slot=174, fired=0, active=1
+2026-06-27 23:46:27.298 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 175: slot=175, fired=0, active=1
+2026-06-27 23:46:28.299 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 176: slot=176, fired=0, active=1
+2026-06-27 23:46:29.312 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 177: slot=177, fired=0, active=1
+2026-06-27 23:46:30.325 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 178: slot=178, fired=0, active=1
+2026-06-27 23:46:31.327 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 179: slot=179, fired=0, active=1
+2026-06-27 23:46:32.329 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 180: slot=180, fired=1, active=1
+2026-06-27 23:46:32.329 [info] <0.120.0>@mnesia_store:do_snapshot:{203,22} snapshot taken, table=hermes_brains_state, entries=2
+2026-06-27 23:46:33.344 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 181: slot=181, fired=0, active=1
+2026-06-27 23:46:34.357 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 182: slot=182, fired=0, active=1
+2026-06-27 23:46:35.370 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 183: slot=183, fired=0, active=1
+2026-06-27 23:46:36.372 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 184: slot=184, fired=0, active=1
+2026-06-27 23:46:37.385 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 185: slot=185, fired=0, active=1
+2026-06-27 23:46:38.400 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 186: slot=186, fired=0, active=1
+2026-06-27 23:46:39.415 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 187: slot=187, fired=0, active=1
+2026-06-27 23:46:40.417 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 188: slot=188, fired=0, active=1
+2026-06-27 23:46:41.432 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 189: slot=189, fired=0, active=1
+2026-06-27 23:46:42.434 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 190: slot=190, fired=0, active=1
+2026-06-27 23:46:43.439 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 191: slot=191, fired=0, active=1
+2026-06-27 23:46:44.448 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 192: slot=192, fired=0, active=1
+2026-06-27 23:46:45.456 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 193: slot=193, fired=0, active=1
+2026-06-27 23:46:46.460 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 194: slot=194, fired=0, active=1
+2026-06-27 23:46:47.470 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 195: slot=195, fired=0, active=1
+2026-06-27 23:46:48.476 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 196: slot=196, fired=0, active=1
+2026-06-27 23:46:49.481 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 197: slot=197, fired=0, active=1
+2026-06-27 23:46:50.485 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 198: slot=198, fired=0, active=1
+2026-06-27 23:46:51.492 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 199: slot=199, fired=0, active=1
+2026-06-27 23:46:52.499 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 200: slot=200, fired=0, active=1
+2026-06-27 23:46:53.504 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 201: slot=201, fired=0, active=1
+2026-06-27 23:46:54.512 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 202: slot=202, fired=0, active=1
+2026-06-27 23:46:55.518 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 203: slot=203, fired=0, active=1
+2026-06-27 23:46:56.524 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 204: slot=204, fired=0, active=1
+2026-06-27 23:46:57.530 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 205: slot=205, fired=0, active=1
+2026-06-27 23:46:58.539 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 206: slot=206, fired=0, active=1
+2026-06-27 23:46:59.549 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 207: slot=207, fired=0, active=1
+2026-06-27 23:47:00.552 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 208: slot=208, fired=0, active=1
+2026-06-27 23:47:01.558 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 209: slot=209, fired=0, active=1
+2026-06-27 23:47:02.564 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 210: slot=210, fired=0, active=1
+2026-06-27 23:47:03.570 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 211: slot=211, fired=0, active=1
+2026-06-27 23:47:04.574 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 212: slot=212, fired=0, active=1
+2026-06-27 23:47:05.578 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 213: slot=213, fired=0, active=1
+2026-06-27 23:47:06.581 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 214: slot=214, fired=0, active=1
+2026-06-27 23:47:07.585 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 215: slot=215, fired=0, active=1
+2026-06-27 23:47:08.590 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 216: slot=216, fired=0, active=1
+2026-06-27 23:47:09.596 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 217: slot=217, fired=0, active=1
+2026-06-27 23:47:10.599 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 218: slot=218, fired=0, active=1
+2026-06-27 23:47:11.604 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 219: slot=219, fired=0, active=1
+2026-06-27 23:47:12.610 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 220: slot=220, fired=0, active=1
+2026-06-27 23:47:13.613 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 221: slot=221, fired=0, active=1
+2026-06-27 23:47:14.616 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 222: slot=222, fired=0, active=1
+2026-06-27 23:47:15.623 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 223: slot=223, fired=0, active=1
+2026-06-27 23:47:16.629 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 224: slot=224, fired=0, active=1
+2026-06-27 23:47:17.634 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 225: slot=225, fired=0, active=1
+2026-06-27 23:47:18.636 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 226: slot=226, fired=0, active=1
+2026-06-27 23:47:19.639 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 227: slot=227, fired=0, active=1
+2026-06-27 23:47:20.645 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 228: slot=228, fired=0, active=1
+2026-06-27 23:47:21.653 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 229: slot=229, fired=0, active=1
+2026-06-27 23:47:22.660 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 230: slot=230, fired=0, active=1
+2026-06-27 23:47:23.668 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 231: slot=231, fired=0, active=1
+2026-06-27 23:47:24.673 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 232: slot=232, fired=0, active=1
+2026-06-27 23:47:25.680 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 233: slot=233, fired=0, active=1
+2026-06-27 23:47:26.687 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 234: slot=234, fired=0, active=1
+2026-06-27 23:47:27.693 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 235: slot=235, fired=0, active=1
+2026-06-27 23:47:28.700 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 236: slot=236, fired=0, active=1
+2026-06-27 23:47:29.709 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 237: slot=237, fired=0, active=1
+2026-06-27 23:47:30.713 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 238: slot=238, fired=0, active=1
+2026-06-27 23:47:31.724 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 239: slot=239, fired=0, active=1
+2026-06-27 23:47:32.730 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 240: slot=240, fired=1, active=1
+2026-06-27 23:47:32.730 [info] <0.120.0>@mnesia_store:do_snapshot:{203,22} snapshot taken, table=hermes_brains_state, entries=2
+2026-06-27 23:47:33.738 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 241: slot=241, fired=0, active=1
+2026-06-27 23:47:34.744 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 242: slot=242, fired=0, active=1
+2026-06-27 23:47:35.749 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 243: slot=243, fired=0, active=1
+2026-06-27 23:47:36.764 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 244: slot=244, fired=0, active=1
+2026-06-27 23:47:37.770 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 245: slot=245, fired=0, active=1
+2026-06-27 23:47:38.773 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 246: slot=246, fired=0, active=1
+2026-06-27 23:47:39.778 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 247: slot=247, fired=0, active=1
+2026-06-27 23:47:40.786 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 248: slot=248, fired=0, active=1
+2026-06-27 23:47:41.789 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 249: slot=249, fired=0, active=1
+2026-06-27 23:47:42.797 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 250: slot=250, fired=0, active=1
+2026-06-27 23:47:43.810 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 251: slot=251, fired=0, active=1
+2026-06-27 23:47:44.814 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 252: slot=252, fired=0, active=1
+2026-06-27 23:47:45.816 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 253: slot=253, fired=0, active=1
+2026-06-27 23:47:46.831 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 254: slot=254, fired=0, active=1
+2026-06-27 23:47:47.835 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 255: slot=255, fired=0, active=1
+2026-06-27 23:47:48.838 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 256: slot=256, fired=0, active=1
+2026-06-27 23:47:49.844 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 257: slot=257, fired=0, active=1
+2026-06-27 23:47:50.847 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 258: slot=258, fired=0, active=1
+2026-06-27 23:47:51.854 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 259: slot=259, fired=0, active=1
+2026-06-27 23:47:52.859 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 260: slot=260, fired=0, active=1
+2026-06-27 23:47:53.864 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 261: slot=261, fired=0, active=1
+2026-06-27 23:47:54.865 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 262: slot=262, fired=0, active=1
+2026-06-27 23:47:55.867 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 263: slot=263, fired=0, active=1
+2026-06-27 23:47:56.870 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 264: slot=264, fired=0, active=1
+2026-06-27 23:47:57.878 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 265: slot=265, fired=0, active=1
+2026-06-27 23:47:58.882 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 266: slot=266, fired=0, active=1
+2026-06-27 23:47:59.897 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 267: slot=267, fired=0, active=1
+2026-06-27 23:48:00.908 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 268: slot=268, fired=0, active=1
+2026-06-27 23:48:01.912 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 269: slot=269, fired=0, active=1
+2026-06-27 23:48:02.916 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 270: slot=270, fired=0, active=1
+2026-06-27 23:48:03.923 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 271: slot=271, fired=0, active=1
+2026-06-27 23:48:04.927 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 272: slot=272, fired=0, active=1
+2026-06-27 23:48:05.932 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 273: slot=273, fired=0, active=1
+2026-06-27 23:48:06.937 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 274: slot=274, fired=0, active=1
+2026-06-27 23:48:07.940 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 275: slot=275, fired=0, active=1
+2026-06-27 23:48:08.943 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 276: slot=276, fired=0, active=1
+2026-06-27 23:48:09.950 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 277: slot=277, fired=0, active=1
+2026-06-27 23:48:10.961 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 278: slot=278, fired=0, active=1
+2026-06-27 23:48:11.964 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 279: slot=279, fired=0, active=1
+2026-06-27 23:48:12.972 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 280: slot=280, fired=0, active=1
+2026-06-27 23:48:13.982 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 281: slot=281, fired=0, active=1
+2026-06-27 23:48:14.990 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 282: slot=282, fired=0, active=1
+2026-06-27 23:48:15.995 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 283: slot=283, fired=0, active=1
+2026-06-27 23:48:16.998 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 284: slot=284, fired=0, active=1
+2026-06-27 23:48:18.002 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 285: slot=285, fired=0, active=1
+2026-06-27 23:48:19.007 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 286: slot=286, fired=0, active=1
+2026-06-27 23:48:20.018 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 287: slot=287, fired=0, active=1
+2026-06-27 23:48:21.030 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 288: slot=288, fired=0, active=1
+2026-06-27 23:48:22.034 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 289: slot=289, fired=0, active=1
+2026-06-27 23:48:23.036 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 290: slot=290, fired=0, active=1
+2026-06-27 23:48:24.044 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 291: slot=291, fired=0, active=1
+2026-06-27 23:48:25.046 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 292: slot=292, fired=0, active=1
+2026-06-27 23:48:26.050 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 293: slot=293, fired=0, active=1
+2026-06-27 23:48:27.056 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 294: slot=294, fired=0, active=1
+2026-06-27 23:48:28.060 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 295: slot=295, fired=0, active=1
+2026-06-27 23:48:29.062 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 296: slot=296, fired=0, active=1
+2026-06-27 23:48:30.076 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 297: slot=297, fired=0, active=1
+2026-06-27 23:48:31.081 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 298: slot=298, fired=0, active=1
+2026-06-27 23:48:32.083 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 299: slot=299, fired=0, active=1
+2026-06-27 23:48:32.622 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=5 method=send
+2026-06-27 23:48:32.622 [info] <0.192.0>@agent_fsm:idle:{185,5} session started, session_id=<<"sess-1782575011238-194594">>, history_len=0
+2026-06-27 23:48:32.622 [info] <0.192.0>@agent_fsm:thinking:{202,5} thinking(enter) fired, model=<<"deepseek-v4-pro">>, history_len=1, loop=0/10
+2026-06-27 23:48:32.623 [info] <0.171.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_search, req_id=rag-102, timeout=10000ms
+2026-06-27 23:48:32.623 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=367 ref=#Ref<0.3563310658.455081989.167020> kind=tool req_id=<<"rag-102">> timeout=10000ms
+2026-06-27 23:48:32.623 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=6 method=brain_status
+2026-06-27 23:48:32.624 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=25 ref=#Ref<0.3563310658.455081989.167020> kind=tool req_id=<<"rag-102">> resp_kind=tool_exec
+2026-06-27 23:48:32.625 [info] <0.192.0>@agent_fsm:thinking:{222,5} llm request dispatched, ref=#Ref<0.3563310658.455081989.167034>
+2026-06-27 23:48:32.625 [info] <0.171.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.3563310658.455081989.167034>, fsm_pid=<0.192.0>
+2026-06-27 23:48:32.626 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=2407 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined timeout=60000ms
+2026-06-27 23:48:33.092 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 300: slot=300, fired=1, active=1
+2026-06-27 23:48:33.092 [info] <0.120.0>@mnesia_store:do_snapshot:{203,22} snapshot taken, table=hermes_brains_state, entries=3
+2026-06-27 23:48:33.364 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.509 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.549 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.549 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.549 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.592 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=16 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.593 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.593 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.593 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.628 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.628 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.630 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=7 method=brain_status
+2026-06-27 23:48:33.667 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.708 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.708 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.708 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.708 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.709 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.709 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.798 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.798 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.798 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.798 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.798 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.799 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.799 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.799 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.799 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.800 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.800 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.800 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.837 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.837 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.837 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.837 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.837 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.837 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.877 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.877 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.877 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.877 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.878 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.917 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.958 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.958 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=16 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.958 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.998 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.998 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.998 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.998 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:33.998 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.037 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.037 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.038 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.038 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.100 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.100 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 301: slot=301, fired=0, active=1
+2026-06-27 23:48:34.100 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.100 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=16 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.101 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.101 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.101 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.120 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.120 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.120 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.120 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.120 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.121 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.162 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.162 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.162 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.200 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.200 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.200 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.200 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.200 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.200 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.200 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.249 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.249 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.249 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.249 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.249 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.249 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.295 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.295 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.295 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.295 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.295 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.295 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.347 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.347 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.347 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.347 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.347 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.347 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.442 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.442 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.442 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.443 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.443 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.443 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.447 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.447 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.447 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.447 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.447 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.448 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.448 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.448 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.486 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.486 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.486 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.526 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.567 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.608 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.608 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=16 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.629 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=8 method=brain_status
+2026-06-27 23:48:34.655 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.655 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.706 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.706 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.733 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.733 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.772 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.815 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.815 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.857 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.857 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.857 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.857 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.900 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.937 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.937 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.975 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:34.975 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.017 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.017 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.052 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.052 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.092 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.092 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.107 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 302: slot=302, fired=0, active=1
+2026-06-27 23:48:35.146 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.146 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.176 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.176 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.222 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.254 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.254 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.297 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.297 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.297 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.348 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.348 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.377 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.377 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.377 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.377 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.416 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.416 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.416 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.416 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.416 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.460 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.460 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.460 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.460 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.500 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.500 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.500 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.540 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.540 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.540 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.595 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.628 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=9 method=brain_status
+2026-06-27 23:48:35.645 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.671 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.712 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.712 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.712 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.713 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.713 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.745 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.745 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.782 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.782 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.845 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.845 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.869 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.869 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.869 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.869 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.869 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.905 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.905 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.905 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.905 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.946 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.986 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.987 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.987 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.987 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:35.987 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.027 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.027 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.027 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.066 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.114 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.114 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.114 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.122 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 303: slot=303, fired=0, active=1
+2026-06-27 23:48:36.150 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.150 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.190 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.190 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.231 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.231 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.231 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.231 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.283 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.320 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.320 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.320 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.320 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.465 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.465 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.465 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.466 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.466 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.466 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.466 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.476 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.476 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.520 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.520 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.564 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.604 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.604 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.605 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.629 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=10 method=brain_status
+2026-06-27 23:48:36.638 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.638 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.688 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.688 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.688 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.688 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.718 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.718 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.718 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.768 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.810 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.810 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.842 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.842 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.842 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.882 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.882 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.882 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.882 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.923 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:36.923 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=16 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.019 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.019 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.019 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.020 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.020 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.020 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.114 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.114 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.114 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.114 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.136 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 304: slot=304, fired=0, active=1
+2026-06-27 23:48:37.141 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.141 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.184 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.184 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.184 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.204 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.204 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.204 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.204 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.246 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.292 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.292 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.363 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.363 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.363 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.386 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:37.631 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=11 method=brain_status
+2026-06-27 23:48:38.143 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 305: slot=305, fired=0, active=1
+2026-06-27 23:48:38.470 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=1745 ref=#Ref<0.3563310658.455081989.167034> kind=llm req_id=undefined resp_kind=llm_infer
+2026-06-27 23:48:38.470 [info] <0.192.0>@agent_fsm:thinking:{240,5} llm_response received, content_size=45, tool_calls=1, prompt_tokens=855
+2026-06-27 23:48:38.470 [info] <0.192.0>@agent_fsm:thinking:{283,13} dispatching 1 tool_calls, entering acting
+2026-06-27 23:48:38.470 [info] <0.192.0>@agent_fsm:acting:{328,5} acting(enter) fired, dispatching 1 tools, pending_count=1
+2026-06-27 23:48:38.470 [info] <0.171.0>@bridge_manager:handle_cast:{161,5} call_tool queued, ref=#Ref<0.3563310658.455081991.167356>, tool=memory_store, req_id=call_00_uCoy3gLlPmlHmDsElPoc6338
+2026-06-27 23:48:38.470 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=398 ref=#Ref<0.3563310658.455081991.167356> kind=tool req_id=<<"call_00_uCoy3gLlPmlHmDsElPoc6338">> timeout=15000ms
+2026-06-27 23:48:38.471 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=71 ref=#Ref<0.3563310658.455081991.167356> kind=tool req_id=<<"call_00_uCoy3gLlPmlHmDsElPoc6338">> resp_kind=tool_exec
+2026-06-27 23:48:38.471 [info] <0.192.0>@agent_fsm:continue_after_observe:{435,13} continue_after_observe: loop=1/10, back to thinking for LLM to decide
+2026-06-27 23:48:38.471 [info] <0.192.0>@agent_fsm:thinking:{202,5} thinking(enter) fired, model=<<"deepseek-v4-pro">>, history_len=3, loop=1/10
+2026-06-27 23:48:38.471 [info] <0.171.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_search, req_id=rag-296, timeout=10000ms
+2026-06-27 23:48:38.471 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=367 ref=#Ref<0.3563310658.455081991.167386> kind=tool req_id=<<"rag-296">> timeout=10000ms
+2026-06-27 23:48:38.471 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=25 ref=#Ref<0.3563310658.455081991.167386> kind=tool req_id=<<"rag-296">> resp_kind=tool_exec
+2026-06-27 23:48:38.471 [info] <0.192.0>@agent_fsm:thinking:{222,5} llm request dispatched, ref=#Ref<0.3563310658.455081991.167404>
+2026-06-27 23:48:38.471 [info] <0.171.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.3563310658.455081991.167404>, fsm_pid=<0.192.0>
+2026-06-27 23:48:38.472 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=2834 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined timeout=60000ms
+2026-06-27 23:48:38.624 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=12 method=brain_status
+2026-06-27 23:48:39.147 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 306: slot=306, fired=0, active=1
+2026-06-27 23:48:39.626 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=13 method=brain_status
+2026-06-27 23:48:40.151 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 307: slot=307, fired=0, active=1
+2026-06-27 23:48:40.284 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.388 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.430 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.430 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.461 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.461 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.461 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.503 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.542 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.542 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.583 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.583 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.583 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.629 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=14 method=brain_status
+2026-06-27 23:48:40.640 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.640 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.720 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.720 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.721 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.721 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.747 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.787 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.828 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.871 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.910 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.910 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.910 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.910 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.910 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.949 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.949 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.949 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.949 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.950 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.990 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.990 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.990 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:40.990 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.035 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.035 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.035 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.035 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.035 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.035 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.071 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.071 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.071 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.071 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.071 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.071 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.113 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.113 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.113 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.113 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.114 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.114 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.157 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 308: slot=308, fired=0, active=1
+2026-06-27 23:48:41.157 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.157 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.157 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.157 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.157 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=16 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.201 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.201 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.201 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.201 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.236 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.236 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.236 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=16 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.236 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.279 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.316 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.316 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.316 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.316 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.316 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.358 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.358 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.358 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.358 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.358 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.358 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.414 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.414 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.414 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.415 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.415 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.415 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.520 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.563 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.563 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.563 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.563 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.564 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.605 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.605 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.605 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.630 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=15 method=brain_status
+2026-06-27 23:48:41.644 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.686 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.728 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.728 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.728 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.728 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.766 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.766 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.766 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.808 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.808 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.808 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.808 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.808 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.808 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.846 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.846 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.846 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.846 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.846 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.846 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.932 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.932 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.932 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.932 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.932 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.932 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.971 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.971 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.971 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:41.971 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.012 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.012 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.012 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.013 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.013 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.013 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.054 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.054 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.054 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.054 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.094 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.169 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 309: slot=309, fired=0, active=1
+2026-06-27 23:48:42.175 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.175 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.214 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.255 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.255 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.294 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.294 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.336 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:48:42.387 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=565 ref=#Ref<0.3563310658.455081991.167404> kind=llm req_id=undefined resp_kind=llm_infer
+2026-06-27 23:48:42.387 [info] <0.192.0>@agent_fsm:thinking:{240,5} llm_response received, content_size=461, tool_calls=0, prompt_tokens=1285
+2026-06-27 23:48:42.387 [info] <0.192.0>@agent_fsm:thinking:{254,13} final answer ready, transitioning thinking -> idle
+2026-06-27 23:48:42.387 [info] <0.171.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.3563310658.455081991.167597>, fsm_pid=<0.177.0>
+2026-06-27 23:48:42.387 [info] <0.177.0>@memory_summarizer:maybe_start_summarize:{171,14} memory_summarizer llm dispatched session=sess-1782575011238-194594 ref=#Ref<0.3563310658.455081991.167597> msgs=4
+2026-06-27 23:48:42.387 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=1247 ref=#Ref<0.3563310658.455081991.167597> kind=llm req_id=undefined timeout=60000ms
+2026-06-27 23:48:42.632 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=16 method=brain_status
+2026-06-27 23:48:43.174 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 310: slot=310, fired=0, active=1
+2026-06-27 23:48:43.638 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=17 method=brain_status
+2026-06-27 23:48:44.177 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 311: slot=311, fired=0, active=1
+2026-06-27 23:48:44.627 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=18 method=brain_status
+2026-06-27 23:48:45.180 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 312: slot=312, fired=0, active=1
+2026-06-27 23:48:45.371 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=772 ref=#Ref<0.3563310658.455081991.167597> kind=llm req_id=undefined resp_kind=llm_infer
+2026-06-27 23:48:45.632 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=19 method=brain_status
+2026-06-27 23:48:46.190 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 313: slot=313, fired=0, active=1
+2026-06-27 23:48:46.637 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=20 method=brain_status
+2026-06-27 23:48:47.196 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 314: slot=314, fired=0, active=1
+2026-06-27 23:48:47.631 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=21 method=brain_status
+2026-06-27 23:48:48.202 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 315: slot=315, fired=0, active=1
+2026-06-27 23:48:48.637 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=22 method=brain_status
+2026-06-27 23:48:49.210 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 316: slot=316, fired=0, active=1
+2026-06-27 23:48:49.624 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=23 method=brain_status
+2026-06-27 23:48:50.219 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 317: slot=317, fired=0, active=1
+2026-06-27 23:48:50.637 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=24 method=brain_status
+2026-06-27 23:48:51.228 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 318: slot=318, fired=0, active=1
+2026-06-27 23:48:51.631 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=25 method=brain_status
+2026-06-27 23:48:52.232 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 319: slot=319, fired=0, active=1
+2026-06-27 23:48:52.635 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=26 method=brain_status
+2026-06-27 23:48:53.235 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 320: slot=320, fired=0, active=1
+2026-06-27 23:48:53.638 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=27 method=brain_status
+2026-06-27 23:48:54.242 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 321: slot=321, fired=0, active=1
+2026-06-27 23:48:54.632 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=28 method=brain_status
+2026-06-27 23:48:55.252 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 322: slot=322, fired=0, active=1
+2026-06-27 23:48:55.637 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=29 method=brain_status
+2026-06-27 23:48:56.254 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 323: slot=323, fired=0, active=1
+2026-06-27 23:48:56.628 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=30 method=brain_status
+2026-06-27 23:48:57.261 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 324: slot=324, fired=0, active=1
+2026-06-27 23:48:57.633 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=31 method=brain_status
+2026-06-27 23:48:58.266 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 325: slot=325, fired=0, active=1
+2026-06-27 23:48:58.624 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=32 method=brain_status
+2026-06-27 23:48:59.277 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 326: slot=326, fired=0, active=1
+2026-06-27 23:48:59.636 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=33 method=brain_status
+2026-06-27 23:49:00.288 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 327: slot=327, fired=0, active=1
+2026-06-27 23:49:00.628 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=34 method=brain_status
+2026-06-27 23:49:01.296 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 328: slot=328, fired=0, active=1
+2026-06-27 23:49:01.638 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=35 method=brain_status
+2026-06-27 23:49:02.303 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 329: slot=329, fired=0, active=1
+2026-06-27 23:49:02.628 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=36 method=brain_status
+2026-06-27 23:49:03.304 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 330: slot=330, fired=0, active=1
+2026-06-27 23:49:03.626 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=37 method=brain_status
+2026-06-27 23:49:04.308 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 331: slot=331, fired=0, active=1
+2026-06-27 23:49:04.632 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=38 method=brain_status
+2026-06-27 23:49:05.310 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 332: slot=332, fired=0, active=1
+2026-06-27 23:49:05.638 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=39 method=brain_status
+2026-06-27 23:49:06.319 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 333: slot=333, fired=0, active=1
+2026-06-27 23:49:06.627 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=40 method=brain_status
+2026-06-27 23:49:07.324 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 334: slot=334, fired=0, active=1
+2026-06-27 23:49:07.635 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=41 method=brain_status
+2026-06-27 23:49:08.330 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 335: slot=335, fired=0, active=1
+2026-06-27 23:49:08.625 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=42 method=brain_status
+2026-06-27 23:49:09.337 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 336: slot=336, fired=0, active=1
+2026-06-27 23:49:09.632 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=43 method=brain_status
+2026-06-27 23:49:10.341 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 337: slot=337, fired=0, active=1
+2026-06-27 23:49:10.638 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=44 method=brain_status
+2026-06-27 23:49:11.348 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 338: slot=338, fired=0, active=1
+2026-06-27 23:49:11.629 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=45 method=brain_status
+2026-06-27 23:49:12.354 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 339: slot=339, fired=0, active=1
+2026-06-27 23:49:12.636 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=46 method=brain_status
+2026-06-27 23:49:13.362 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 340: slot=340, fired=0, active=1
+2026-06-27 23:49:13.624 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=47 method=brain_status
+2026-06-27 23:49:14.366 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 341: slot=341, fired=0, active=1
+2026-06-27 23:49:14.629 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=48 method=brain_status
+2026-06-27 23:49:15.372 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 342: slot=342, fired=0, active=1
+2026-06-27 23:49:15.638 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=49 method=brain_status
+2026-06-27 23:49:16.379 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 343: slot=343, fired=0, active=1
+2026-06-27 23:49:16.627 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=50 method=brain_status
+2026-06-27 23:49:17.384 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 344: slot=344, fired=0, active=1
+2026-06-27 23:49:17.633 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=51 method=brain_status
+2026-06-27 23:49:18.393 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 345: slot=345, fired=0, active=1
+2026-06-27 23:49:18.628 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=52 method=brain_status
+2026-06-27 23:49:19.396 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 346: slot=346, fired=0, active=1
+2026-06-27 23:49:19.628 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=53 method=brain_status
+2026-06-27 23:49:20.401 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 347: slot=347, fired=0, active=1
+2026-06-27 23:49:20.633 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=54 method=brain_status
+2026-06-27 23:49:21.405 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 348: slot=348, fired=0, active=1
+2026-06-27 23:49:21.638 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=55 method=brain_status
+2026-06-27 23:49:22.409 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 349: slot=349, fired=0, active=1
+2026-06-27 23:49:22.627 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=56 method=brain_status
+2026-06-27 23:49:23.416 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 350: slot=350, fired=0, active=1
+2026-06-27 23:49:23.634 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=57 method=brain_status
+2026-06-27 23:49:24.422 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 351: slot=351, fired=0, active=1
+2026-06-27 23:49:24.625 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=58 method=brain_status
+2026-06-27 23:49:25.429 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 352: slot=352, fired=0, active=1
+2026-06-27 23:49:25.629 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=59 method=brain_status
+2026-06-27 23:49:26.431 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 353: slot=353, fired=0, active=1
+2026-06-27 23:49:26.632 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=60 method=brain_status
+2026-06-27 23:49:27.435 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 354: slot=354, fired=0, active=1
+2026-06-27 23:49:27.636 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=61 method=brain_status
+2026-06-27 23:49:28.440 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 355: slot=355, fired=0, active=1
+2026-06-27 23:49:28.624 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=62 method=brain_status
+2026-06-27 23:49:29.443 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 356: slot=356, fired=0, active=1
+2026-06-27 23:49:29.630 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=63 method=brain_status
+2026-06-27 23:49:30.452 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 357: slot=357, fired=0, active=1
+2026-06-27 23:49:30.638 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=64 method=brain_status
+2026-06-27 23:49:31.456 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 358: slot=358, fired=0, active=1
+2026-06-27 23:49:31.627 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=65 method=brain_status
+2026-06-27 23:49:32.459 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 359: slot=359, fired=0, active=1
+2026-06-27 23:49:32.627 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=66 method=brain_status
+2026-06-27 23:49:33.472 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 360: slot=360, fired=1, active=1
+2026-06-27 23:49:33.472 [info] <0.120.0>@mnesia_store:do_snapshot:{203,22} snapshot taken, table=hermes_brains_state, entries=3
+2026-06-27 23:49:33.626 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=67 method=brain_status
+2026-06-27 23:49:34.487 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 361: slot=361, fired=0, active=1
+2026-06-27 23:49:34.628 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=68 method=brain_status
+2026-06-27 23:49:35.502 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 362: slot=362, fired=0, active=1
+2026-06-27 23:49:35.627 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=69 method=brain_status
+2026-06-27 23:49:36.507 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 363: slot=363, fired=0, active=1
+2026-06-27 23:49:36.632 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=70 method=brain_status
+2026-06-27 23:49:37.509 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 364: slot=364, fired=0, active=1
+2026-06-27 23:49:37.634 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52932 id=71 method=brain_status
+2026-06-27 23:49:38.516 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 365: slot=365, fired=0, active=1
+2026-06-27 23:49:38.627 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52929 id=72 method=brain_status
+2026-06-27 23:49:39.524 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 366: slot=366, fired=0, active=1
+2026-06-27 23:49:39.634 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52930 id=73 method=brain_status
+2026-06-27 23:49:40.539 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 367: slot=367, fired=0, active=1
+2026-06-27 23:49:40.735 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:52931 id=74 method=brain_status
+2026-06-27 23:49:40.800 [info] <0.186.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:52931 closed by peer
+2026-06-27 23:49:40.800 [info] <0.188.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:52932 closed by peer
+2026-06-27 23:49:40.800 [info] <0.182.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:52929 closed by peer
+2026-06-27 23:49:40.800 [info] <0.184.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:52930 closed by peer
+2026-06-27 23:49:41.548 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 368: slot=368, fired=0, active=1
+2026-06-27 23:49:42.554 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 369: slot=369, fired=0, active=1
+2026-06-27 23:49:43.560 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 370: slot=370, fired=0, active=1
+2026-06-27 23:49:44.571 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 371: slot=371, fired=0, active=1
+2026-06-27 23:49:45.582 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 372: slot=372, fired=0, active=1
+2026-06-27 23:49:46.597 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 373: slot=373, fired=0, active=1
+2026-06-27 23:49:47.608 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 374: slot=374, fired=0, active=1
+2026-06-27 23:49:48.609 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 375: slot=375, fired=0, active=1
+2026-06-27 23:49:49.622 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 376: slot=376, fired=0, active=1
+2026-06-27 23:49:50.634 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 377: slot=377, fired=0, active=1
+2026-06-27 23:49:51.638 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 378: slot=378, fired=0, active=1
+2026-06-27 23:49:52.646 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 379: slot=379, fired=0, active=1
+2026-06-27 23:49:53.653 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 380: slot=380, fired=0, active=1
+2026-06-27 23:49:54.657 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 381: slot=381, fired=0, active=1
+2026-06-27 23:49:55.672 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 382: slot=382, fired=0, active=1
+2026-06-27 23:49:56.675 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 383: slot=383, fired=0, active=1
+2026-06-27 23:49:57.676 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 384: slot=384, fired=0, active=1
+2026-06-27 23:49:58.677 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 385: slot=385, fired=0, active=1
+2026-06-27 23:49:59.681 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 386: slot=386, fired=0, active=1
+2026-06-27 23:50:00.697 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 387: slot=387, fired=0, active=1
+2026-06-27 23:50:01.699 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 388: slot=388, fired=0, active=1
+2026-06-27 23:53:06.789 [info] <0.117.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-27 23:53:06.794 [info] <0.119.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-27 23:53:06.812 [info] <0.120.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at E:/light-code-ai-1/scrtps/../Agent-brains/config/mnesia
+2026-06-27 23:53:06.840 [info] <0.120.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-27 23:53:06.840 [info] <0.120.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-27 23:53:06.842 [error] <0.120.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-27 23:53:06.842 [warning] <0.167.0>@state_store:init:{104,13} state_store: restore hermes_brains_state failed: {mnesia_read_failed,{no_exists,ets_snapshot}}, starting fresh
+2026-06-27 23:53:06.856 [info] <0.177.0>@bridge_manager:read_addr_file:{481,13} read addr from file E:/light-code-ai-1/scrtps/../bin/run/eion-tools.addr: 127.0.0.1:54148
+2026-06-27 23:53:06.856 [info] <0.177.0>@bridge_manager:init:{117,5} bridge_manager init: addr=127.0.0.1:54148 pool_size=4
+2026-06-27 23:53:06.856 [info] <0.177.0>@bridge_manager:handle_info:{175,5} connect_all: building pool, addr=127.0.0.1:54148 target_size=4
+2026-06-27 23:53:06.863 [info] <0.181.0>@case_store:create_table:{137,14} case_store table already exists: failure_cases
+2026-06-27 23:53:06.863 [info] <0.181.0>@case_store:init:{92,14} case_store started, table=failure_cases, max_cases=200
+2026-06-27 23:53:06.863 [info] <0.183.0>@memory_summarizer:init:{52,14} memory_summarizer started, table=session_summaries
+2026-06-27 23:53:06.865 [info] <0.185.0>@panel_server:init:{122,24} panel addr file written: E:/light-code-ai-1/scrtps/../bin/run/panel.addr (127.0.0.1:54155)
+2026-06-27 23:53:06.873 [info] <0.177.0>@bridge_manager:handle_info:{179,17} pool slot 1/4 connected: socket=#Port<0.5>
+2026-06-27 23:53:06.873 [info] <0.177.0>@bridge_manager:handle_info:{179,17} pool slot 2/4 connected: socket=#Port<0.6>
+2026-06-27 23:53:06.873 [info] <0.177.0>@bridge_manager:handle_info:{179,17} pool slot 3/4 connected: socket=#Port<0.7>
+2026-06-27 23:53:06.873 [info] <0.177.0>@bridge_manager:handle_info:{179,17} pool slot 4/4 connected: socket=#Port<0.8>
+2026-06-27 23:53:06.873 [info] <0.177.0>@bridge_manager:handle_info:{187,5} pool build done: connected=4/4 failed=0
+2026-06-27 23:53:07.802 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 0: slot=0, fired=0, active=1
+2026-06-27 23:53:08.808 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 1: slot=1, fired=0, active=1
+2026-06-27 23:53:09.811 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 2: slot=2, fired=0, active=1
+2026-06-27 23:53:10.817 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 3: slot=3, fired=0, active=1
+2026-06-27 23:53:11.001 [info] <0.186.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:54164
+2026-06-27 23:53:11.001 [info] <0.188.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:54164 pid=<0.188.0>
+2026-06-27 23:53:11.001 [info] <0.187.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:54165
+2026-06-27 23:53:11.001 [info] <0.190.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:54165 pid=<0.190.0>
+2026-06-27 23:53:11.001 [info] <0.189.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:54166
+2026-06-27 23:53:11.001 [info] <0.192.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:54166 pid=<0.192.0>
+2026-06-27 23:53:11.001 [info] <0.191.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:54167
+2026-06-27 23:53:11.001 [info] <0.194.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:54167 pid=<0.194.0>
+2026-06-27 23:53:11.006 [info] <0.190.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54165 id=1 method=start_session
+2026-06-27 23:53:11.007 [info] <0.196.0>@agent_fsm:init:{112,13} agent_fsm fresh start, session_id=<<"sess-1782575591005-764637">>
+2026-06-27 23:53:11.007 [info] <0.195.0>@panel_server:handle_method:{333,14} session started: id=<<"sess-1782575591005-764637">> pid=<0.196.0>
+2026-06-27 23:53:11.008 [info] <0.192.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54166 id=2 method=send
+2026-06-27 23:53:11.008 [info] <0.196.0>@agent_fsm:idle:{185,5} session started, session_id=<<"sess-1782575591005-764637">>, history_len=0
+2026-06-27 23:53:11.008 [info] <0.196.0>@agent_fsm:thinking:{202,5} thinking(enter) fired, model=<<"deepseek-v4-pro">>, history_len=1, loop=0/10
+2026-06-27 23:53:11.009 [info] <0.177.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_search, req_id=rag-295, timeout=10000ms
+2026-06-27 23:53:11.012 [info] <0.177.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=132 ref=#Ref<0.3738954694.725090310.151645> kind=tool req_id=<<"rag-295">> timeout=10000ms
+2026-06-27 23:53:11.014 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=25 ref=#Ref<0.3738954694.725090310.151645> kind=tool req_id=<<"rag-295">> resp_kind=tool_exec
+2026-06-27 23:53:11.014 [info] <0.196.0>@agent_fsm:thinking:{222,5} llm request dispatched, ref=#Ref<0.3738954694.725090310.151666>
+2026-06-27 23:53:11.014 [info] <0.177.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.3738954694.725090310.151666>, fsm_pid=<0.196.0>
+2026-06-27 23:53:11.015 [info] <0.177.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=2247 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined timeout=60000ms
+2026-06-27 23:53:11.822 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 4: slot=4, fired=0, active=1
+2026-06-27 23:53:11.895 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.078 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.097 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.097 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.097 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.097 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.097 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.148 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.148 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.148 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.203 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=15 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.203 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.203 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.204 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.204 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.204 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.259 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.259 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.259 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.259 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.345 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.345 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.376 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.376 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.376 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.376 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.376 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.424 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.424 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.424 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.424 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.425 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.425 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.477 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.477 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=16 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.530 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.582 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.582 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.582 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.582 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.638 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.694 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.694 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.694 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.694 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.694 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.694 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.761 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.801 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.801 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.801 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.830 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 5: slot=5, fired=0, active=1
+2026-06-27 23:53:12.858 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.858 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.858 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.858 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:12.910 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=259 ref=#Ref<0.3738954694.725090310.151666> kind=llm req_id=undefined resp_kind=llm_infer
+2026-06-27 23:53:12.910 [info] <0.196.0>@agent_fsm:thinking:{240,5} llm_response received, content_size=6, tool_calls=0, prompt_tokens=804
+2026-06-27 23:53:12.910 [info] <0.196.0>@agent_fsm:thinking:{254,13} final answer ready, transitioning thinking -> idle
+2026-06-27 23:53:12.910 [info] <0.183.0>@memory_summarizer:maybe_start_summarize:{171,14} memory_summarizer llm dispatched session=sess-1782575591005-764637 ref=#Ref<0.3738954694.725090308.151414> msgs=2
+2026-06-27 23:53:12.910 [info] <0.177.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.3738954694.725090308.151414>, fsm_pid=<0.183.0>
+2026-06-27 23:53:12.910 [info] <0.177.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=434 ref=#Ref<0.3738954694.725090308.151414> kind=llm req_id=undefined timeout=60000ms
+2026-06-27 23:53:13.014 [info] <0.194.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54167 id=3 method=brain_status
+2026-06-27 23:53:13.015 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54164 id=4 method=get_history
+2026-06-27 23:53:13.015 [info] <0.190.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54165 id=5 method=send
+2026-06-27 23:53:13.016 [info] <0.196.0>@agent_fsm:idle:{185,5} session started, session_id=<<"sess-1782575591005-764637">>, history_len=2
+2026-06-27 23:53:13.016 [info] <0.196.0>@agent_fsm:thinking:{202,5} thinking(enter) fired, model=<<"deepseek-v4-pro">>, history_len=3, loop=0/10
+2026-06-27 23:53:13.016 [info] <0.177.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_search, req_id=rag-69, timeout=10000ms
+2026-06-27 23:53:13.016 [info] <0.177.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.6> bytes=131 ref=#Ref<0.3738954694.725090308.151447> kind=tool req_id=<<"rag-69">> timeout=10000ms
+2026-06-27 23:53:13.017 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=25 ref=#Ref<0.3738954694.725090308.151447> kind=tool req_id=<<"rag-69">> resp_kind=tool_exec
+2026-06-27 23:53:13.017 [info] <0.196.0>@agent_fsm:thinking:{222,5} llm request dispatched, ref=#Ref<0.3738954694.725090308.151452>
+2026-06-27 23:53:13.017 [info] <0.177.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.3738954694.725090308.151452>, fsm_pid=<0.196.0>
+2026-06-27 23:53:13.017 [info] <0.177.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.6> bytes=2318 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined timeout=60000ms
+2026-06-27 23:53:13.840 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 6: slot=6, fired=0, active=1
+2026-06-27 23:53:13.842 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=7 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:13.978 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=9 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.019 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=10 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.060 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=7 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.060 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=7 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.060 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=10 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.060 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=9 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.102 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=9 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.145 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=8 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.145 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=15 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.145 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=5 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.191 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=6 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.191 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=10 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.191 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=6 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.232 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=9 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.232 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=7 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.233 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=6 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.274 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=11 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.274 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=19 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.314 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=12 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.357 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=5 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.357 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=7 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.399 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=10 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.399 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=11 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.442 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=5 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.442 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=10 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:53:14.442 [info] <0.177.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=138 ref=#Ref<0.3738954694.725090308.151452> kind=llm req_id=undefined resp_kind=llm_infer
+2026-06-27 23:53:14.442 [info] <0.196.0>@agent_fsm:thinking:{240,5} llm_response received, content_size=6, tool_calls=0, prompt_tokens=819
+2026-06-27 23:53:14.442 [info] <0.196.0>@agent_fsm:thinking:{254,13} final answer ready, transitioning thinking -> idle
+2026-06-27 23:53:14.442 [info] <0.183.0>@memory_summarizer:maybe_start_summarize:{171,14} memory_summarizer llm dispatched session=sess-1782575591005-764637 ref=#Ref<0.3738954694.725090308.151598> msgs=4
+2026-06-27 23:53:14.442 [info] <0.177.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.3738954694.725090308.151598>, fsm_pid=<0.183.0>
+2026-06-27 23:53:14.442 [info] <0.177.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.6> bytes=500 ref=#Ref<0.3738954694.725090308.151598> kind=llm req_id=undefined timeout=60000ms
+2026-06-27 23:53:14.619 [info] <0.192.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54166 id=6 method=brain_status
+2026-06-27 23:53:14.619 [info] <0.194.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54167 id=7 method=get_history
+2026-06-27 23:53:14.620 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54164 id=8 method=stop
+2026-06-27 23:53:14.620 [info] <0.194.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:54167 closed by peer
+2026-06-27 23:53:14.620 [info] <0.190.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:54165 closed by peer
+2026-06-27 23:53:14.620 [info] <0.192.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:54166 closed by peer
+2026-06-27 23:53:14.620 [info] <0.188.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:54164 closed by peer
+2026-06-27 23:54:55.873 [info] <0.117.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-27 23:54:55.877 [info] <0.119.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-27 23:54:55.895 [info] <0.120.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at E:/light-code-ai-1/scrtps/../Agent-brains/config/mnesia
+2026-06-27 23:54:55.921 [info] <0.120.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-27 23:54:55.921 [info] <0.120.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-27 23:54:55.922 [error] <0.120.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-27 23:54:55.922 [warning] <0.165.0>@state_store:init:{104,13} state_store: restore hermes_brains_state failed: {mnesia_read_failed,{no_exists,ets_snapshot}}, starting fresh
+2026-06-27 23:54:55.935 [info] <0.169.0>@bridge_manager:read_addr_file:{481,13} read addr from file E:/light-code-ai-1/scrtps/../bin/run/eion-tools.addr: 127.0.0.1:54934
+2026-06-27 23:54:55.935 [info] <0.169.0>@bridge_manager:init:{117,5} bridge_manager init: addr=127.0.0.1:54934 pool_size=4
+2026-06-27 23:54:55.935 [info] <0.169.0>@bridge_manager:handle_info:{175,5} connect_all: building pool, addr=127.0.0.1:54934 target_size=4
+2026-06-27 23:54:55.943 [info] <0.175.0>@case_store:create_table:{137,14} case_store table already exists: failure_cases
+2026-06-27 23:54:55.943 [info] <0.175.0>@case_store:init:{92,14} case_store started, table=failure_cases, max_cases=200
+2026-06-27 23:54:55.943 [info] <0.177.0>@memory_summarizer:init:{52,14} memory_summarizer started, table=session_summaries
+2026-06-27 23:54:55.945 [info] <0.179.0>@panel_server:init:{122,24} panel addr file written: E:/light-code-ai-1/scrtps/../bin/run/panel.addr (127.0.0.1:54939)
+2026-06-27 23:54:55.953 [info] <0.169.0>@bridge_manager:handle_info:{179,17} pool slot 1/4 connected: socket=#Port<0.5>
+2026-06-27 23:54:55.953 [info] <0.169.0>@bridge_manager:handle_info:{179,17} pool slot 2/4 connected: socket=#Port<0.6>
+2026-06-27 23:54:55.954 [info] <0.169.0>@bridge_manager:handle_info:{179,17} pool slot 3/4 connected: socket=#Port<0.7>
+2026-06-27 23:54:55.954 [info] <0.169.0>@bridge_manager:handle_info:{179,17} pool slot 4/4 connected: socket=#Port<0.8>
+2026-06-27 23:54:55.954 [info] <0.169.0>@bridge_manager:handle_info:{187,5} pool build done: connected=4/4 failed=0
+2026-06-27 23:54:56.890 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 0: slot=0, fired=0, active=1
+2026-06-27 23:54:57.901 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 1: slot=1, fired=0, active=1
+2026-06-27 23:54:58.909 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 2: slot=2, fired=0, active=1
+2026-06-27 23:54:59.912 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 3: slot=3, fired=0, active=1
+2026-06-27 23:55:00.914 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 4: slot=4, fired=0, active=1
+2026-06-27 23:55:01.682 [info] <0.180.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:54952
+2026-06-27 23:55:01.683 [info] <0.182.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:54952 pid=<0.182.0>
+2026-06-27 23:55:01.683 [info] <0.181.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:54953
+2026-06-27 23:55:01.683 [info] <0.184.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:54953 pid=<0.184.0>
+2026-06-27 23:55:01.683 [info] <0.183.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:54954
+2026-06-27 23:55:01.683 [info] <0.186.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:54954 pid=<0.186.0>
+2026-06-27 23:55:01.683 [info] <0.185.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:54955
+2026-06-27 23:55:01.683 [info] <0.188.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:54955 pid=<0.188.0>
+2026-06-27 23:55:01.688 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54953 id=1 method=list_tools
+2026-06-27 23:55:01.688 [info] <0.169.0>@bridge_manager:handle_call:{134,5} list_tools queued, timeout=1500ms
+2026-06-27 23:55:01.692 [info] <0.169.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=2 ref=#Ref<0.3971424700.4215013378.260409> kind=tool_list req_id=<<"list-3">> timeout=1500ms
+2026-06-27 23:55:01.693 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=1896 ref=#Ref<0.3971424700.4215013378.260409> kind=tool_list req_id=<<"list-3">> resp_kind=tool_list
+2026-06-27 23:55:01.693 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54954 id=2 method=start_session
+2026-06-27 23:55:01.694 [info] <0.191.0>@agent_fsm:init:{112,13} agent_fsm fresh start, session_id=<<"sess-1782575701693-445859">>
+2026-06-27 23:55:01.694 [info] <0.190.0>@panel_server:handle_method:{333,14} session started: id=<<"sess-1782575701693-445859">> pid=<0.191.0>
+2026-06-27 23:55:01.695 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54955 id=3 method=brain_status
+2026-06-27 23:55:01.696 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54952 id=4 method=send
+2026-06-27 23:55:01.696 [info] <0.191.0>@agent_fsm:idle:{185,5} session started, session_id=<<"sess-1782575701693-445859">>, history_len=0
+2026-06-27 23:55:01.696 [info] <0.191.0>@agent_fsm:thinking:{202,5} thinking(enter) fired, model=<<"deepseek-v4-pro">>, history_len=1, loop=0/10
+2026-06-27 23:55:01.696 [info] <0.169.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_search, req_id=rag-295, timeout=10000ms
+2026-06-27 23:55:01.696 [info] <0.169.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=118 ref=#Ref<0.3971424700.4215013381.260463> kind=tool req_id=<<"rag-295">> timeout=10000ms
+2026-06-27 23:55:01.697 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=25 ref=#Ref<0.3971424700.4215013381.260463> kind=tool req_id=<<"rag-295">> resp_kind=tool_exec
+2026-06-27 23:55:01.698 [info] <0.191.0>@agent_fsm:thinking:{222,5} llm request dispatched, ref=#Ref<0.3971424700.4215013381.260476>
+2026-06-27 23:55:01.698 [info] <0.169.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.3971424700.4215013381.260476>, fsm_pid=<0.191.0>
+2026-06-27 23:55:01.698 [info] <0.169.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=2237 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined timeout=60000ms
+2026-06-27 23:55:01.929 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 5: slot=5, fired=0, active=1
+2026-06-27 23:55:02.637 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.780 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.822 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.822 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.822 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.822 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.823 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.865 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.865 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.903 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.903 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=15 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.903 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.903 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.903 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.903 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.939 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 6: slot=6, fired=0, active=1
+2026-06-27 23:55:02.944 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.944 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.944 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.944 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=20 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.984 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.984 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:02.984 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.026 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.026 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.026 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.026 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.026 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.066 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.066 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.066 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.105 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.105 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.105 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.105 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.146 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.146 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.186 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.186 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=15 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.186 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.186 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:55:03.186 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=214 ref=#Ref<0.3971424700.4215013381.260476> kind=llm req_id=undefined resp_kind=llm_infer
+2026-06-27 23:55:03.186 [info] <0.191.0>@agent_fsm:thinking:{240,5} llm_response received, content_size=6, tool_calls=0, prompt_tokens=801
+2026-06-27 23:55:03.187 [info] <0.191.0>@agent_fsm:thinking:{254,13} final answer ready, transitioning thinking -> idle
+2026-06-27 23:55:03.187 [info] <0.169.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.3971424700.4215013378.260521>, fsm_pid=<0.177.0>
+2026-06-27 23:55:03.187 [info] <0.177.0>@memory_summarizer:maybe_start_summarize:{171,14} memory_summarizer llm dispatched session=sess-1782575701693-445859 ref=#Ref<0.3971424700.4215013378.260521> msgs=2
+2026-06-27 23:55:03.187 [info] <0.169.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=421 ref=#Ref<0.3971424700.4215013378.260521> kind=llm req_id=undefined timeout=60000ms
+2026-06-27 23:55:03.299 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54953 id=5 method=brain_status
+2026-06-27 23:55:03.299 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54954 id=6 method=get_history
+2026-06-27 23:55:03.299 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54955 id=7 method=delete_session
+2026-06-27 23:55:03.299 [info] <0.169.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_purge_session, req_id=purge-38, timeout=15000ms
+2026-06-27 23:55:03.299 [info] <0.177.0>@memory_summarizer:handle_cast:{84,6} memory_summarizer purged session=sess-1782575701693-445859
+2026-06-27 23:55:03.299 [info] <0.169.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.6> bytes=78 ref=#Ref<0.3971424700.4215013381.260686> kind=tool req_id=<<"purge-38">> timeout=15000ms
+2026-06-27 23:55:03.300 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=58 ref=#Ref<0.3971424700.4215013381.260686> kind=tool req_id=<<"purge-38">> resp_kind=tool_exec
+2026-06-27 23:55:03.300 [info] <0.196.0>@panel_server:handle_method:{403,6} session deleted: id=<<"sess-1782575701693-445859">>
+2026-06-27 23:55:03.300 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:54952 id=8 method=stop
+2026-06-27 23:55:03.300 [info] <0.186.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:54954 closed by peer
+2026-06-27 23:55:03.300 [info] <0.182.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:54952 closed by peer
+2026-06-27 23:55:03.300 [info] <0.188.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:54955 closed by peer
+2026-06-27 23:55:03.300 [info] <0.184.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:54953 closed by peer
