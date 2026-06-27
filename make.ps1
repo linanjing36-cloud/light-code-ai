@@ -51,6 +51,28 @@ function Test-CommandExists($name) {
     return [bool](Get-Command $name -ErrorAction SilentlyContinue)
 }
 
+function Invoke-Wails3Compat {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$CommandLine
+    )
+
+    $prevPath = $env:PATH
+    try {
+        if (-not (Test-CommandExists "uname")) {
+            $shimDir = Join-Path $EnvDir "shim"
+            New-Item -ItemType Directory -Force -Path $shimDir | Out-Null
+            $unameCmd = Join-Path $shimDir "uname.cmd"
+            Set-Content -Path $unameCmd -Value "@echo off`necho Windows" -Encoding ASCII
+            $env:PATH = "$shimDir;$env:PATH"
+        }
+        & cmd.exe /d /c $CommandLine
+    }
+    finally {
+        $env:PATH = $prevPath
+    }
+}
+
 # 把 "29" / "1.26" / "1.26.4" 归一为 [Version] (不足 3 段补 0)
 function ConvertTo-VersionObj($v) {
     if (-not $v) { return $null }
@@ -499,7 +521,7 @@ function Invoke-WailsV3 {
             $prevEAP = $ErrorActionPreference
             $ErrorActionPreference = "Continue"
             try {
-                & wails3 generate build-assets -dir ./build -name hermes -binaryname hermes 2>&1 | Out-Host
+                Invoke-Wails3Compat 'wails3 generate build-assets -dir ./build -name hermes -binaryname hermes'
                 if ($LASTEXITCODE -ne 0) { throw "wails3 generate build-assets 失败 (exit $LASTEXITCODE)" }
             }
             finally { $ErrorActionPreference = $prevEAP }
@@ -511,7 +533,7 @@ function Invoke-WailsV3 {
         $prevEAP = $ErrorActionPreference
         $ErrorActionPreference = "Continue"
         try {
-            & wails3 build 2>&1 | Out-Host
+            Invoke-Wails3Compat 'wails3 build'
             if ($LASTEXITCODE -ne 0) { throw "wails3 build 失败 (exit $LASTEXITCODE)" }
         }
         finally { $ErrorActionPreference = $prevEAP }
@@ -625,13 +647,27 @@ function Test-TcpAddrReachable {
 function Test-AgentHealthy {
     param([string]$PanelAddrFile)
     if (-not (Test-Path $PanelAddrFile)) { return $false }
-    if (-not (Test-CommandExists "erl")) { return $true }
-    & erl -noshell -eval "case net_adm:names() of {ok, Ns} -> case lists:member(hermes_brains, Ns) of true -> halt(0); false -> halt(1) end; _ -> halt(1) end." 2>$null | Out-Null
-    return ($LASTEXITCODE -eq 0)
+    $panelAddr = (Get-Content $PanelAddrFile -Raw).Trim()
+    return (Test-TcpAddrReachable -Addr $panelAddr)
 }
 
 function Test-ErlProcessRunning {
     return [bool](Get-Process -Name "erl" -ErrorAction SilentlyContinue)
+}
+
+function Wait-ProcessRunning {
+    param(
+        [string]$Name,
+        [int]$TimeoutSec = 15,
+        [string]$Label = "process"
+    )
+    for ($i = 0; $i -lt $TimeoutSec; $i++) {
+        if (Get-Process -Name $Name -ErrorAction SilentlyContinue) {
+            return $true
+        }
+        Start-Sleep -Seconds 1
+    }
+    throw "等待 $Label 启动超时 (${TimeoutSec}s): $Name"
 }
 
 function Invoke-StopAll {
@@ -653,7 +689,19 @@ function Invoke-Status {
     Write-Host "Hermes 进程状态"
     Write-Host "----------------"
     $tools = Get-Process -Name "eion-tools-server" -ErrorAction SilentlyContinue
-    Write-Host ("  Eion-tools:    " + $(if ($tools) { "运行中 PID=$($tools.Id -join ',')" } else { "未运行" }))
+    $eionAddr = if (Test-Path $EionAddrFile) { (Get-Content $EionAddrFile -Raw).Trim() } else { "" }
+    $eionReachable = Test-TcpAddrReachable -Addr $eionAddr
+    $wails = Get-Process -Name "hermes" -ErrorAction SilentlyContinue
+    $eionStatus = if ($tools) {
+        "运行中 PID=$($tools.Id -join ',')"
+    } elseif ($wails -and $eionReachable) {
+        "embedded 就绪 @ $eionAddr"
+    } elseif ($eionReachable) {
+        "可达 @ $eionAddr"
+    } else {
+        "未运行"
+    }
+    Write-Host ("  Eion-tools:    " + $eionStatus)
     $erl = Get-Process -Name "erl" -ErrorAction SilentlyContinue
     Write-Host ("  erl.exe:       " + $(if ($erl) { "运行中 PID=$($erl.Id -join ',')" } else { "未运行" }))
     $healthy = Test-AgentHealthy -PanelAddrFile $PanelAddrFile
@@ -663,12 +711,11 @@ function Invoke-Status {
     } else {
         Write-Host "  panel.addr:    (缺失)"
     }
-    if (Test-Path $EionAddrFile) {
-        Write-Host ("  eion-tools.addr: " + (Get-Content $EionAddrFile -Raw).Trim())
+    if ($eionAddr) {
+        Write-Host ("  eion-tools.addr: " + $eionAddr)
     } else {
         Write-Host "  eion-tools.addr: (缺失)"
     }
-    $wails = Get-Process -Name "hermes" -ErrorAction SilentlyContinue
     Write-Host ("  Wails UI:      " + $(if ($wails) { "运行中" } else { "未运行" }))
     if ($erl -and -not $healthy) {
         Write-Host ""
@@ -723,28 +770,7 @@ function Invoke-StartAll {
     Write-Host "========================================"
     Write-Host ""
 
-    if ($Wails) {
-        # UI 模式: Eion-tools 嵌入 Wails，先启 hermes 写 eion-tools.addr，再启 Agent
-        $wailsRunning = [bool](Get-Process -Name "hermes" -ErrorAction SilentlyContinue)
-        if (-not $wailsRunning) {
-            Write-Host "[1/3] 启动 Wails (含 embedded Eion-tools) ..."
-            Remove-Item $EionAddrFile -ErrorAction SilentlyContinue
-            $env:HERMES_EION_ADDR_FILE = $EionAddrFile
-            $env:HERMES_PANEL_ADDR_FILE = $PanelAddrFile
-            if (-not (Test-Path $StartWailsBat)) { throw "未找到 $StartWailsBat" }
-            Start-Process -FilePath "cmd.exe" `
-                -ArgumentList "/c", "`"$StartWailsBat`"" `
-                -WorkingDirectory $ScrtpsDir `
-                -WindowStyle Normal | Out-Null
-            $eionAddr = Wait-AddrFile -Path $EionAddrFile -TimeoutSec 45 -Label "embedded-eion"
-            Write-Host "       embedded Eion-tools @ $eionAddr"
-        } else {
-            Write-Host "[1/3] Wails 已在运行 (embedded Eion-tools), 跳过"
-            if (Test-Path $EionAddrFile) {
-                Write-Host "       Eion-tools @ $((Get-Content $EionAddrFile -Raw).Trim())"
-            }
-        }
-    } else {
+    if (-not $Wails) {
         $toolsRunning = [bool](Get-Process -Name "eion-tools-server" -ErrorAction SilentlyContinue)
         if ($toolsRunning -and (Test-Path $EionAddrFile)) {
             $eionAddrKnown = (Get-Content $EionAddrFile -Raw).Trim()
@@ -772,14 +798,15 @@ function Invoke-StartAll {
         }
     }
 
+    $AgentStep = if ($Wails) { "[1/3]" } else { "[2/3]" }
     if (Test-AgentHealthy -PanelAddrFile $PanelAddrFile) {
-        Write-Host "[2/3] Agent-brains 已在运行, 跳过"
+        Write-Host "$AgentStep Agent-brains 已在运行, 跳过"
         Write-Host "       panel_server @ $((Get-Content $PanelAddrFile -Raw).Trim())"
     } elseif (Test-ErlProcessRunning) {
-        Write-Host "[2/3] 检测到残留 erl (hermes_brains 节点占用), 正在清理..."
+        Write-Host "$AgentStep 检测到残留 erl (hermes_brains 节点占用), 正在清理..."
         Invoke-StopAll -Force
         Start-Sleep -Seconds 2
-        Write-Host "[2/3] 启动 Agent-brains ..."
+        Write-Host "$AgentStep 启动 Agent-brains ..."
         Remove-Item $PanelAddrFile -ErrorAction SilentlyContinue
         Start-Process -FilePath "cmd.exe" `
             -ArgumentList "/k", "`"$StartAgentBat`"" `
@@ -796,7 +823,7 @@ function Invoke-StartAll {
             throw
         }
     } else {
-        Write-Host "[2/3] 启动 Agent-brains ..."
+        Write-Host "$AgentStep 启动 Agent-brains ..."
         Remove-Item $PanelAddrFile -ErrorAction SilentlyContinue
         Start-Process -FilePath "cmd.exe" `
             -ArgumentList "/k", "`"$StartAgentBat`"" `
@@ -815,7 +842,27 @@ function Invoke-StartAll {
     }
 
     if ($Wails) {
-        Write-Host "[3/3] Wails UI 已在前序步骤启动"
+        $wailsRunning = [bool](Get-Process -Name "hermes" -ErrorAction SilentlyContinue)
+        if (-not $wailsRunning) {
+            Write-Host "[2/3] 启动 Wails (含 embedded Eion-tools) ..."
+            Remove-Item $EionAddrFile -ErrorAction SilentlyContinue
+            $env:HERMES_EION_ADDR_FILE = $EionAddrFile
+            $env:HERMES_PANEL_ADDR_FILE = $PanelAddrFile
+            if (-not (Test-Path $StartWailsBat)) { throw "未找到 $StartWailsBat" }
+            Start-Process -FilePath "cmd.exe" `
+                -ArgumentList "/c", "`"$StartWailsBat`"" `
+                -WorkingDirectory $ScrtpsDir `
+                -WindowStyle Normal | Out-Null
+            Wait-ProcessRunning -Name "hermes" -TimeoutSec 20 -Label "Wails UI" | Out-Null
+            Write-Host "       Wails UI 已启动"
+        } else {
+            Write-Host "[2/3] Wails 已在运行, 跳过"
+        }
+        if (Test-Path $EionAddrFile) {
+            Write-Host "[3/3] embedded Eion-tools @ $((Get-Content $EionAddrFile -Raw).Trim())"
+        } else {
+            Write-Host "[3/3] embedded Eion-tools addr 未写出，继续使用 panel exec 模式"
+        }
     } else {
         Write-Host "[3/3] 跳过 Wails (.\make.ps1 start-all-ui 可一并启动 UI)"
     }

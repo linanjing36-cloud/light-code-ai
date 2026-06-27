@@ -6,9 +6,6 @@
 // @ts-ignore: Unused imports
 import { Create as $Create } from "@wailsio/runtime";
 
-/**
- * HistoryEntry 单条对话历史 (与 panel.proto HistoryEntry 对齐)
- */
 export class HistoryEntry {
     /**
      * Creates a new HistoryEntry instance.
@@ -29,12 +26,12 @@ export class HistoryEntry {
              */
             this["content"] = "";
         }
-        if (!("tool_calls" in $$source)) {
+        if (/** @type {any} */(false)) {
             /**
              * @member
-             * @type {Array<any>}
+             * @type {ToolCall[] | undefined}
              */
-            this["tool_calls"] = [];
+            this["tool_calls"] = undefined;
         }
         if (!("tool_call_id" in $$source)) {
             /**
@@ -53,14 +50,15 @@ export class HistoryEntry {
      * @returns {HistoryEntry}
      */
     static createFrom($$source = {}) {
+        const $$createField2_0 = $$createType1;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("tool_calls" in $$parsedSource) {
+            $$parsedSource["tool_calls"] = $$createField2_0($$parsedSource["tool_calls"]);
+        }
         return new HistoryEntry(/** @type {Partial<HistoryEntry>} */($$parsedSource));
     }
 }
 
-/**
- * SendResult: Send 返回值
- */
 export class SendResult {
     /**
      * Creates a new SendResult instance.
@@ -89,9 +87,6 @@ export class SendResult {
     }
 }
 
-/**
- * SessionInfo: StartSession 返回值
- */
 export class SessionInfo {
     /**
      * Creates a new SessionInfo instance.
@@ -127,9 +122,6 @@ export class SessionInfo {
     }
 }
 
-/**
- * SessionStartRequest 新建会话参数 (模型/凭证可按会话覆盖 app env)
- */
 export class SessionStartRequest {
     /**
      * Creates a new SessionStartRequest instance.
@@ -179,9 +171,52 @@ export class SessionStartRequest {
     }
 }
 
-/**
- * ToolDesc 工具描述 (与 panel.proto ListToolsResult 对齐)
- */
+export class ToolCall {
+    /**
+     * Creates a new ToolCall instance.
+     * @param {Partial<ToolCall>} [$$source = {}] - The source object to create the ToolCall.
+     */
+    constructor($$source = {}) {
+        if (!("id" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["id"] = "";
+        }
+        if (!("type" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["type"] = "";
+        }
+        if (!("function" in $$source)) {
+            /**
+             * @member
+             * @type {ToolFunction}
+             */
+            this["function"] = (new ToolFunction());
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ToolCall instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {ToolCall}
+     */
+    static createFrom($$source = {}) {
+        const $$createField2_0 = $$createType2;
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("function" in $$parsedSource) {
+            $$parsedSource["function"] = $$createField2_0($$parsedSource["function"]);
+        }
+        return new ToolCall(/** @type {Partial<ToolCall>} */($$parsedSource));
+    }
+}
+
 export class ToolDesc {
     /**
      * Creates a new ToolDesc instance.
@@ -202,12 +237,12 @@ export class ToolDesc {
              */
             this["description"] = "";
         }
-        if (!("parameters" in $$source)) {
+        if (/** @type {any} */(false)) {
             /**
              * @member
-             * @type {any}
+             * @type {any | undefined}
              */
-            this["parameters"] = null;
+            this["parameters"] = undefined;
         }
 
         Object.assign(this, $$source);
@@ -223,3 +258,43 @@ export class ToolDesc {
         return new ToolDesc(/** @type {Partial<ToolDesc>} */($$parsedSource));
     }
 }
+
+export class ToolFunction {
+    /**
+     * Creates a new ToolFunction instance.
+     * @param {Partial<ToolFunction>} [$$source = {}] - The source object to create the ToolFunction.
+     */
+    constructor($$source = {}) {
+        if (!("name" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["name"] = "";
+        }
+        if (/** @type {any} */(false)) {
+            /**
+             * @member
+             * @type {any | undefined}
+             */
+            this["arguments"] = undefined;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new ToolFunction instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {ToolFunction}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new ToolFunction(/** @type {Partial<ToolFunction>} */($$parsedSource));
+    }
+}
+
+// Private type creation functions
+const $$createType0 = ToolCall.createFrom;
+const $$createType1 = $Create.Array($$createType0);
+const $$createType2 = ToolFunction.createFrom;

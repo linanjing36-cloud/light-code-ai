@@ -7,10 +7,14 @@ REM     for Wails to discover and connect (connection pool).
 REM   - bridge_manager connects to Eion-tools via TCP connection pool,
 REM     reading Eion-tools addr from bin/run/eion-tools.addr.
 REM
-REM Startup order (must run in this order):
-REM   1. start-tools.bat   (Eion-tools server, writes eion-tools.addr)
-REM   2. start-agent.bat   (this script, writes panel.addr, reads eion-tools.addr)
-REM   3. start-wails.bat   (Wails GUI, reads panel.addr)
+REM Startup order:
+REM   - Standalone tools mode:
+REM       1. start-tools.bat
+REM       2. start-agent.bat
+REM       3. start-wails.bat
+REM   - Panel exec mode (HERMES_EXEC_VIA_PANEL=1, recommended):
+REM       1. start-agent.bat
+REM       2. start-wails.bat
 REM
 REM Usage:
 REM   bin\start-agent.bat                          REM default dev mode

@@ -7,10 +7,14 @@ REM
 REM Wails reads bin/run/panel.addr (written by start-agent.bat) to discover
 REM the panel_server address, then opens N TCP connections (connection pool).
 REM
-REM Startup order (must run in this order):
-REM   1. start-wails.bat   (Wails + embedded Eion-tools, writes eion-tools.addr)
-REM   2. start-agent.bat   (Erlang brain, reads eion-tools.addr, writes panel.addr)
-REM   3. Wails UI connects panel.addr (Bridge pool)
+REM Startup order in panel-exec mode (recommended):
+REM   1. start-agent.bat   (Erlang brain, writes panel.addr)
+REM   2. start-wails.bat   (Wails + embedded Eion-tools, reads panel.addr)
+REM
+REM Note:
+REM   In HERMES_EXEC_VIA_PANEL=1 mode, Agent-brains does not depend on
+REM   eion-tools.addr at startup time. embedded Eion is started in hermes.exe
+REM   and serves panel exec requests in-process.
 REM
 REM Usage: bin\start-wails.bat
 REM Exit:  close window / bin\stop-wails.bat

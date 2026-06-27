@@ -59,8 +59,15 @@ func (r *Router) ServiceStartup(ctx context.Context, _ application.ServiceOption
 
 	r.hub.SetPanelEmitter(defaultPanelEmitter)
 	brain.SetStreamHandler(r.hub.Dispatch)
-	if r.eionEmb != nil && r.eionEmb.Server() != nil {
-		r.AttachEion(r.eionEmb.Server())
+	if r.eionEmb != nil {
+		if r.eionEmb.Server() == nil {
+			if err := r.eionEmb.ServiceStartup(ctx, application.ServiceOptions{}); err != nil {
+				return err
+			}
+		}
+		if srv := r.eionEmb.Server(); srv != nil {
+			r.AttachEion(srv)
+		}
 	}
 	brain.SetExecHandler(r.handlePanelExec)
 	log.Println("[router] stream hub installed (chunk/tool→panel; final→panel after erlang commit)")

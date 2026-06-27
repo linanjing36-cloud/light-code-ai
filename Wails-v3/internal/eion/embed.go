@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -19,6 +20,7 @@ import (
 
 // Embedded 实现 Wails Service 生命周期，在 UI 启动前拉起 loopback listener。
 type Embedded struct {
+	mu  sync.Mutex
 	srv *eionserver.Server
 }
 
@@ -27,8 +29,15 @@ func NewEmbedded() *Embedded {
 }
 
 func (e *Embedded) ServiceStartup(ctx context.Context, _ application.ServiceOptions) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	if os.Getenv("HERMES_EMBED_EION") == "0" {
 		log.Println("[eion] HERMES_EMBED_EION=0, 使用外部 eion-tools 进程")
+		return nil
+	}
+	if e.srv != nil && e.srv.ListenAddr() != "" {
+		log.Printf("[eion] embedded eion-tools already running %s", e.srv.ListenAddr())
 		return nil
 	}
 
@@ -53,15 +62,21 @@ func (e *Embedded) ServiceStartup(ctx context.Context, _ application.ServiceOpti
 
 // Server 返回已启动的 embedded 实例 (未启动时为 nil)。
 func (e *Embedded) Server() *eionserver.Server {
+	e.mu.Lock()
+	defer e.mu.Unlock()
 	return e.srv
 }
 
 func (e *Embedded) ServiceShutdown() error {
+	e.mu.Lock()
 	if e.srv == nil {
+		e.mu.Unlock()
 		return nil
 	}
-	err := e.srv.Stop()
+	srv := e.srv
 	e.srv = nil
+	e.mu.Unlock()
+	err := srv.Stop()
 	log.Println("[eion] embedded eion-tools stopped")
 	return err
 }

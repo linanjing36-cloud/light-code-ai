@@ -12,5 +12,7 @@ export {
     SendResult,
     SessionInfo,
     SessionStartRequest,
-    ToolDesc
+    ToolCall,
+    ToolDesc,
+    ToolFunction
 } from "./models.js";

@@ -53,3 +53,4 @@ Wails-v3/extract/
 .vscode/
 Agent-brains/config/mnesia/LATEST.LOG
 Agent-brains/log/hermes_brains.log
+erl_crash.dump

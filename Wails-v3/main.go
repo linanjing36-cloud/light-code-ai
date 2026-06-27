@@ -8,6 +8,7 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"log"
 
@@ -23,6 +24,16 @@ var assets embed.FS
 
 func main() {
 	embeddedEion := eion.NewEmbedded()
+	bootstrapCtx, bootstrapCancel := context.WithCancel(context.Background())
+	defer bootstrapCancel()
+	if err := embeddedEion.ServiceStartup(bootstrapCtx, application.ServiceOptions{}); err != nil {
+		log.Fatalf("embedded eion startup failed: %v", err)
+	}
+	defer func() {
+		if err := embeddedEion.ServiceShutdown(); err != nil {
+			log.Printf("embedded eion shutdown error: %v", err)
+		}
+	}()
 	bridge := brain.NewBridge()
 	rt := router.New(bridge, embeddedEion)
 	svc := NewHermesService(rt)
