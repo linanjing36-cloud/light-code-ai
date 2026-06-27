@@ -8,9 +8,9 @@ option go_package = "hermes/proto/gen/panelpb;panelpb";
 //
 // 帧格式: 4 字节大端长度前缀 + PanelFrame 的 Protobuf 二进制。
 // 通信模型:
-//   - client (Wails brain.Bridge) 永远发 PanelFrame{request: ...}
-//   - server (Erlang panel_server) 在同一连接上回 PanelFrame{response: ...}
-//     或对 send 方法持续 push PanelFrame{stream: ...} 直到 final/error
+//   - client (Wails brain.Bridge) 发 PanelFrame{request: ...} 或 PanelFrame{exec_result: ...}
+//   - server (Erlang panel_server) 回 PanelFrame{response: ...}、PanelFrame{stream: ...}
+//     或 Phase B: PanelFrame{exec: ...} (经 panel 连接进程内执行 hermes AgentRequest)
 //
 // 设计原则: 无 method 字符串 dispatch 歧义; args/result 用 bytes 嵌套编码,
 // 让 panel_server 按 method 字符串选对应 Args/Result message 解码/编码。
@@ -18,10 +18,25 @@ option go_package = "hermes/proto/gen/panelpb;panelpb";
 // 顶层帧包装。
 message PanelFrame {
   oneof payload {
-    PanelRequest request = 1;    // client -> server
-    PanelResponse response = 2;  // server -> client (一次性响应)
-    PanelStream stream = 3;      // server -> client (流式 push, 仅 send 方法)
+    PanelRequest request = 1;       // client -> server
+    PanelResponse response = 2;     // server -> client (一次性响应)
+    PanelStream stream = 3;         // server -> client (流式 push, 仅 send 方法)
+    PanelExec exec = 4;             // server -> client (Phase B: 进程内 LLM/工具)
+    PanelExecResult exec_result = 5; // client -> server (Phase B: exec 响应帧)
   }
+}
+
+// Phase B: Erlang bridge_manager 经 panel 连接让 Wails Go 进程内执行 hermes AgentRequest。
+message PanelExec {
+  uint64 id = 1;
+  bytes agent_request = 2;  // hermes.AgentRequest protobuf
+}
+
+message PanelExecResult {
+  uint64 id = 1;
+  bytes agent_response = 2;  // hermes.AgentResponse protobuf (流式时多帧)
+  string error = 3;          // 非空表示失败
+  bool terminal = 4;         // true=本次 exec 结束
 }
 
 // 一次性请求。

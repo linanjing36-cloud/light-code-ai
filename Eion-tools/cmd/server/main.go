@@ -7,7 +7,7 @@ import (
 	"os/signal"
 
 	"github.com/light-code-ai/eion-tools/internal/logging"
-	"github.com/light-code-ai/eion-tools/internal/server"
+	"github.com/light-code-ai/eion-tools/pkg/server"
 	"go.uber.org/zap"
 )
 

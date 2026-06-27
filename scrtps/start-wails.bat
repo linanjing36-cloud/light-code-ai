@@ -40,11 +40,13 @@ REM Tell Wails where to find panel addr file (written by start-agent.bat).
 REM bridge.go resolvePanelAddr() reads HERMES_PANEL_ADDR_FILE env first,
 REM then falls back to default <repo>/bin/run/panel.addr.
 set "HERMES_PANEL_ADDR_FILE=%RUN_DIR%\panel.addr"
+set "HERMES_EXEC_VIA_PANEL=1"
 
 echo ==> Starting Hermes Agent Workbench (Wails v3, Eion-tools embedded)
 echo    binary              = %BIN%
 echo    EION_TOOLS_ADDR     = %EION_TOOLS_ADDR_FILE%
 echo    HERMES_PANEL_ADDR   = %HERMES_PANEL_ADDR_FILE%
+echo    HERMES_EXEC_VIA_PANEL = 1
 echo    (close window to exit / bin\stop-wails.bat)
 echo.
 

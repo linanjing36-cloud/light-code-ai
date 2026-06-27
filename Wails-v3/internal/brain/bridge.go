@@ -8,6 +8,7 @@
 //   - 每连接独立 reader goroutine 持续读帧, 按 req id 路由 PanelResponse
 //   - PanelStream 帧异步 EmitEvent("panel:stream"), 不阻塞 RPC 调用方
 //   - send 收到 stream_id 即返回; chunk/final 由前端事件驱动
+//   - PanelExec 帧 (Phase B): server 发起, Bridge 进程内调 Eion 并回 PanelExecResult
 package brain
 
 import (
@@ -283,8 +284,52 @@ func (b *Bridge) connReader(ctx context.Context, slot *connSlot, pending *sync.M
 		}
 		if stream := frame.GetStream(); stream != nil {
 			emitPanelStream(stream)
+			continue
+		}
+		if exec := frame.GetExec(); exec != nil {
+			go b.handleExec(ctx, slot, exec)
 		}
 	}
+}
+
+func (b *Bridge) handleExec(ctx context.Context, slot *connSlot, exec *panelpb.PanelExec) {
+	execHandlerMu.RLock()
+	fn := execHandler
+	execHandlerMu.RUnlock()
+
+	emit := func(respBin []byte, errMsg string, terminal bool) error {
+		return b.writeExecResult(slot, &panelpb.PanelExecResult{
+			Id:            exec.GetId(),
+			AgentResponse: respBin,
+			Error:         errMsg,
+			Terminal:      terminal,
+		})
+	}
+
+	if fn == nil {
+		_ = emit(nil, "exec handler not configured", true)
+		return
+	}
+	if err := fn(ctx, exec.GetId(), exec.GetAgentRequest(), emit); err != nil {
+		_ = emit(nil, err.Error(), true)
+	}
+}
+
+func (b *Bridge) writeExecResult(slot *connSlot, result *panelpb.PanelExecResult) error {
+	frame := &panelpb.PanelFrame{
+		Payload: &panelpb.PanelFrame_ExecResult{ExecResult: result},
+	}
+	frameBin, err := proto.Marshal(frame)
+	if err != nil {
+		return err
+	}
+	out := make([]byte, 4+len(frameBin))
+	binary.BigEndian.PutUint32(out[:4], uint32(len(frameBin)))
+	copy(out[4:], frameBin)
+	slot.writeMu.Lock()
+	defer slot.writeMu.Unlock()
+	_, err = slot.conn.Write(out)
+	return err
 }
 
 func (b *Bridge) markSlotBroken(slot *connSlot, remote string) {
@@ -432,4 +477,19 @@ func SetStreamHandler(fn func(StreamEvent)) {
 	streamHandlerMu.Lock()
 	streamHandler = fn
 	streamHandlerMu.Unlock()
+}
+
+// ExecHandler 处理 Erlang 经 panel 连接发起的 PanelExec (Phase B)。
+type ExecHandler func(ctx context.Context, id uint64, reqBin []byte, emit func(agentResp []byte, errMsg string, terminal bool) error) error
+
+var (
+	execHandlerMu sync.RWMutex
+	execHandler   ExecHandler
+)
+
+// SetExecHandler 注册进程内 LLM/工具执行器; nil 清除。
+func SetExecHandler(fn ExecHandler) {
+	execHandlerMu.Lock()
+	execHandler = fn
+	execHandlerMu.Unlock()
 }

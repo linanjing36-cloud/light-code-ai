@@ -1,9 +1,9 @@
 // 面板端全流程 e2e（不启动 Wails UI）
 //
 // 走与 HermesService + 前端 main.ts 相同的路径:
-//   Bridge.Start → ListTools 探活 → StartSession → Send → panel:stream → BrainStatus → GetHistory → DeleteSession
+//   Router → ListTools 探活 → StartSession → Send → stream hub → BrainStatus → GetHistory
 //
-// 前置: Agent-brains 已启动 (Eion-tools 由本进程 embedded 拉起)
+// 前置: Agent-brains 已启动且 HERMES_EXEC_VIA_PANEL=1 (或 UI 模式)
 //   go run ./cmd/panel_full_e2e
 package main
 
@@ -15,13 +15,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/wailsapp/wails/v3/pkg/application"
+
 	"hermes/internal/brain"
 	"hermes/internal/eion"
+	"hermes/internal/router"
 )
 
-// panelClient 模拟 Wails HermesService 薄封装（与 app.go 同路径）
+// panelClient 经 Router 转发 (与 HermesService 同路径)。
 type panelClient struct {
-	b *brain.Bridge
+	r *router.Router
 }
 
 func main() {
@@ -29,31 +32,37 @@ func main() {
 	defer cancel()
 
 	b := brain.NewBridge()
-	pc := &panelClient{b: b}
+	eionEmb := eion.NewEmbedded()
+	rt := router.New(b, eionEmb)
+	pc := &panelClient{r: rt}
 
 	var streamMu sync.Mutex
 	streams := make(map[string][]brain.StreamEvent)
-	brain.SetStreamHandler(func(ev brain.StreamEvent) {
+	rt.SetStreamTap(func(ev brain.StreamEvent) {
 		streamMu.Lock()
 		streams[ev.StreamID] = append(streams[ev.StreamID], ev)
 		streamMu.Unlock()
 	})
-	defer brain.SetStreamHandler(nil)
 
 	fmt.Println("=== 面板端全流程 e2e（无 Wails UI）===")
 
-	stopEion, err := eion.StartHeadless(ctx, "")
-	if err != nil {
-		fail("embedded eion", err)
-	}
-	defer stopEion()
-	fmt.Println("[0] embedded Eion-tools started")
+	_ = os.Setenv("HERMES_EXEC_VIA_PANEL", "1")
 
-	fmt.Println("[0b] Bridge.Start (等同 Wails 启动时连 panel)")
+	fmt.Println("[0] embedded Eion-tools (in-process via panel exec)")
+	if err := eionEmb.ServiceStartup(ctx, application.ServiceOptions{}); err != nil {
+		fail("eion embed", err)
+	}
+	defer eionEmb.ServiceShutdown()
+
+	fmt.Println("[0b] Bridge.Start + Router stream hub + exec handler")
 	if err := b.Start(ctx); err != nil {
 		fail("Bridge.Start", err)
 	}
 	defer b.Stop()
+	if err := rt.ServiceStartup(ctx, application.ServiceOptions{}); err != nil {
+		fail("Router.ServiceStartup", err)
+	}
+	defer rt.ServiceShutdown()
 
 	// [1] 等同 checkBrainReady: ListTools 探活
 	fmt.Println("[1] HermesService.ListTools (探活)")
@@ -132,7 +141,7 @@ type historyEntry struct {
 }
 
 func (p *panelClient) listTools() ([]toolDesc, error) {
-	out, err := p.b.Call("list_tools", nil)
+	out, err := p.r.CallPanel("list_tools", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +163,7 @@ func (p *panelClient) listTools() ([]toolDesc, error) {
 }
 
 func (p *panelClient) startSession(prompt, model string) (string, error) {
-	out, err := p.b.Call("start_session", map[string]any{
+	out, err := p.r.CallPanel("start_session", map[string]any{
 		"system_prompt": prompt,
 		"model":         model,
 	})
@@ -170,7 +179,7 @@ func (p *panelClient) startSession(prompt, model string) (string, error) {
 }
 
 func (p *panelClient) send(sessionID, message string) (string, error) {
-	out, err := p.b.Call("send", map[string]any{
+	out, err := p.r.CallPanel("send", map[string]any{
 		"session_id": sessionID,
 		"message":    message,
 	})
@@ -186,7 +195,7 @@ func (p *panelClient) send(sessionID, message string) (string, error) {
 }
 
 func (p *panelClient) brainStatus(sessionID string) (map[string]any, error) {
-	out, err := p.b.Call("brain_status", map[string]any{"session_id": sessionID})
+	out, err := p.r.CallPanel("brain_status", map[string]any{"session_id": sessionID})
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +207,7 @@ func (p *panelClient) brainStatus(sessionID string) (map[string]any, error) {
 }
 
 func (p *panelClient) getHistory(sessionID string) ([]historyEntry, error) {
-	out, err := p.b.Call("get_history", map[string]any{"session_id": sessionID})
+	out, err := p.r.CallPanel("get_history", map[string]any{"session_id": sessionID})
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +230,7 @@ func (p *panelClient) getHistory(sessionID string) ([]historyEntry, error) {
 }
 
 func (p *panelClient) deleteSession(sessionID string) (bool, error) {
-	out, err := p.b.Call("delete_session", map[string]any{"session_id": sessionID})
+	out, err := p.r.CallPanel("delete_session", map[string]any{"session_id": sessionID})
 	if err != nil {
 		return false, err
 	}

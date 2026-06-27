@@ -26,11 +26,13 @@
     pack_stream_tool_event/2, %% (StreamId, EventMap) -> binary()
     pack_stream_final/2,      %% (StreamId, FinalMap) -> binary()
     pack_stream_err/2,        %% (StreamId, ErrMsg) -> binary()
+    pack_exec/2,              %% (Id, AgentReqBin) -> binary()
     %% 解码: binary -> 业务级 tagged tuple
     unpack_frame/1            %% (Bin) -> {request, Id, Method, ArgsMap}
                               %%       | {response, Id, ok, ResultBytes}
                               %%       | {response, Id, error, ErrMsg}
                               %%       | {stream, StreamId, StreamPayload}
+                              %%       | {exec_result, Id, AgentRespBin, Err, Terminal}
                               %%       | {error, Reason}
 ]).
 
@@ -100,6 +102,12 @@ pack_stream_err(StreamId, ErrMsg) ->
               error => #{message => ErrMsg}},
     ?PANEL_PB:encode_msg(#{stream => Inner}, 'PanelFrame').
 
+%% Phase B: Erlang 经 panel 连接让 Wails 进程内执行 hermes AgentRequest
+-spec pack_exec(non_neg_integer(), binary()) -> binary().
+pack_exec(Id, AgentReqBin) ->
+    Frame = #{exec => #{id => Id, agent_request => AgentReqBin}},
+    ?PANEL_PB:encode_msg(Frame, 'PanelFrame').
+
 %%%===================================================================
 %%% 解码: binary -> 业务级 tagged tuple
 %%%===================================================================
@@ -117,6 +125,7 @@ pack_stream_err(StreamId, ErrMsg) ->
     {response, non_neg_integer(), ok, binary()} |
     {response, non_neg_integer(), error, binary()} |
     {stream, binary(), {chunk | tool_event | final | error, map()}} |
+    {exec_result, non_neg_integer(), binary(), binary(), boolean()} |
     {error, term()}.
 unpack_frame(Bin) ->
     try ?PANEL_PB:decode_msg(Bin, 'PanelFrame') of
@@ -132,10 +141,12 @@ decode_frame_map(Frame) ->
     IsReq = maps:is_key(request, Frame),
     IsResp = maps:is_key(response, Frame),
     IsStream = maps:is_key(stream, Frame),
+    IsExecResult = maps:is_key(exec_result, Frame),
     if
         IsReq -> decode_request(maps:get(request, Frame));
         IsResp -> decode_response(maps:get(response, Frame));
         IsStream -> decode_stream(maps:get(stream, Frame));
+        IsExecResult -> decode_exec_result(maps:get(exec_result, Frame));
         true -> {error, empty_frame}
     end.
 
@@ -199,6 +210,14 @@ decode_stream(Stream) ->
                     end
             end
     end.
+
+%% PanelExecResult -> {exec_result, Id, AgentRespBin, Err, Terminal}
+decode_exec_result(R) ->
+    Id = maps:get(id, R, 0),
+    AgentResp = maps:get(agent_response, R, <<>>),
+    Err = maps:get(error, R, <<>>),
+    Terminal = maps:get(terminal, R, false),
+    {exec_result, Id, AgentResp, Err, Terminal}.
 
 %%%===================================================================
 %%% 按 method 路由的 Args/Result 编解码

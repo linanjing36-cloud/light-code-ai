@@ -35,7 +35,7 @@
 
 %% 对外接口
 -export([start_link/0, call_llm/2, call_tool_batch/2, call_tool/2, call_tool_sync/2,
-         list_tools/1, pool_info/0]).
+         list_tools/1, pool_info/0, inject_llm_creds/1]).
 %% gen_server 回调
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
@@ -52,8 +52,9 @@
 }).
 
 -record(state, {
-    addr :: string(),
-    pool_size :: pos_integer(),
+    exec_via_panel = false :: boolean(),
+    addr :: string() | undefined,
+    pool_size :: pos_integer() | undefined,
     conns = [] :: [#conn{}],
     %% FIFO 队列: 等待 idle 连接的请求
     %%   {Ref, FsmPid, Kind, ReqId, Payload, Timeout}
@@ -113,12 +114,20 @@ pool_info() ->
 %%%===================================================================
 
 init([]) ->
-    {Addr, PoolSize} = resolve_addr(),
-    lager:info("bridge_manager init: addr=~s pool_size=~p", [Addr, PoolSize]),
-    %% 异步建立连接池 (不阻塞 init)
-    self() ! connect_all,
-    {ok, #state{addr = Addr, pool_size = PoolSize}}.
+    case go_exec:enabled() of
+        true ->
+            lager:info("bridge_manager init: exec_via_panel=true, skip Eion TCP pool"),
+            {ok, #state{exec_via_panel = true}};
+        false ->
+            {Addr, PoolSize} = resolve_addr(),
+            lager:info("bridge_manager init: addr=~s pool_size=~p", [Addr, PoolSize]),
+            self() ! connect_all,
+            {ok, #state{exec_via_panel = false, addr = Addr, pool_size = PoolSize}}
+    end.
 
+handle_call({call_tool_sync, Id, Name, Args, TimeoutMs}, _From, #state{exec_via_panel = true} = State) ->
+    Tool = #{id => Id, name => Name, arguments => Args},
+    {reply, go_exec:call_tool_sync(Tool, TimeoutMs), State};
 handle_call({call_tool_sync, Id, Name, Args, TimeoutMs}, From, State) ->
     lager:info("call_tool_sync queued, tool=~s, req_id=~s, timeout=~pms", [Name, Id, TimeoutMs]),
     BizReq = #{kind => tool_exec,
@@ -130,6 +139,8 @@ handle_call({call_tool_sync, Id, Name, Args, TimeoutMs}, From, State) ->
     Item = {Ref, undefined, tool, Id, Payload, TimeoutMs},
     State1 = State#state{sync_waiters = maps:put(Id, From, State#state.sync_waiters)},
     {noreply, dispatch(State1, Item)};
+handle_call({list_tools, TimeoutMs}, _From, #state{exec_via_panel = true} = State) ->
+    {reply, go_exec:list_tools(TimeoutMs), State};
 handle_call({list_tools, TimeoutMs}, From, State) ->
     lager:info("list_tools queued, timeout=~pms", [TimeoutMs]),
     Id = iolist_to_binary(["list-", integer_to_binary(erlang:unique_integer([positive]))]),
@@ -138,6 +149,9 @@ handle_call({list_tools, TimeoutMs}, From, State) ->
     Item = {Ref, undefined, tool_list, Id, Payload, TimeoutMs},
     State1 = State#state{sync_waiters = maps:put(Id, From, State#state.sync_waiters)},
     {noreply, dispatch(State1, Item)};
+handle_call(pool_info, _From, #state{exec_via_panel = true} = State) ->
+    Info = #{mode => exec_via_panel, wails_exec => true},
+    {reply, Info, State};
 handle_call(pool_info, _From, State) ->
     Info = #{addr => State#state.addr,
              pool_size => State#state.pool_size,
@@ -150,6 +164,9 @@ handle_call(pool_info, _From, State) ->
 handle_call(_Request, _From, State) ->
     {reply, {error, not_implemented}, State}.
 
+handle_cast({call_llm, FsmPid, Ref, Req}, #state{exec_via_panel = true} = State) ->
+    go_exec:call_llm(FsmPid, Ref, Req),
+    {noreply, State};
 handle_cast({call_llm, FsmPid, Ref, Req}, State) ->
     lager:info("call_llm queued, ref=~p, fsm_pid=~p", [Ref, FsmPid]),
     BizReq = inject_llm_creds(Req),
@@ -157,6 +174,9 @@ handle_cast({call_llm, FsmPid, Ref, Req}, State) ->
     Item = {Ref, FsmPid, llm, undefined, Payload, ?LLM_TIMEOUT},
     {noreply, dispatch(State, Item)};
 
+handle_cast({call_tool, FsmPid, Ref, Id, Name, Args}, #state{exec_via_panel = true} = State) ->
+    go_exec:call_tool(FsmPid, Ref, Id, Name, Args),
+    {noreply, State};
 handle_cast({call_tool, FsmPid, Ref, Id, Name, Args}, State) ->
     lager:info("call_tool queued, ref=~p, tool=~s, req_id=~s", [Ref, Name, Id]),
     BizReq = #{kind => tool_exec,

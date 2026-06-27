@@ -6,12 +6,15 @@ package eion
 import (
 	"context"
 	"log"
+	"net"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 
-	eionserver "github.com/light-code-ai/eion-tools/internal/server"
+	eionserver "github.com/light-code-ai/eion-tools/pkg/server"
 )
 
 // Embedded 实现 Wails Service 生命周期，在 UI 启动前拉起 loopback listener。
@@ -48,6 +51,11 @@ func (e *Embedded) ServiceStartup(ctx context.Context, _ application.ServiceOpti
 	return nil
 }
 
+// Server 返回已启动的 embedded 实例 (未启动时为 nil)。
+func (e *Embedded) Server() *eionserver.Server {
+	return e.srv
+}
+
 func (e *Embedded) ServiceShutdown() error {
 	if e.srv == nil {
 		return nil
@@ -69,6 +77,40 @@ func StartHeadless(ctx context.Context, addrFile string) (stop func(), err error
 		return nil, err
 	}
 	return func() { _ = e.ServiceShutdown() }, nil
+}
+
+// EnsureHeadless 若 addr 文件指向的服务不可达则 embedded 启动，否则复用外部进程。
+func EnsureHeadless(ctx context.Context, addrFile string) (stop func(), started bool, err error) {
+	if addrFile == "" {
+		addrFile = resolveAddrFile()
+	}
+	if addrReachable(addrFile) {
+		log.Printf("[eion] reusing external eion-tools @ %s", readAddr(addrFile))
+		return func() {}, false, nil
+	}
+	stop, err = StartHeadless(ctx, addrFile)
+	return stop, true, err
+}
+
+func addrReachable(addrFile string) bool {
+	addr := strings.TrimSpace(readAddr(addrFile))
+	if addr == "" {
+		return false
+	}
+	conn, err := net.DialTimeout("tcp", addr, 800*time.Millisecond)
+	if err != nil {
+		return false
+	}
+	_ = conn.Close()
+	return true
+}
+
+func readAddr(addrFile string) string {
+	b, err := os.ReadFile(addrFile)
+	if err != nil {
+		return ""
+	}
+	return string(b)
 }
 
 func resolveAddrFile() string {

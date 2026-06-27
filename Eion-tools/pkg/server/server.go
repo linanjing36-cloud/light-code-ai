@@ -63,6 +63,14 @@ func New(opts Options) (*Server, error) {
 	return &Server{opts: opts, d: d}, nil
 }
 
+// Dispatcher 返回进程内命令分发器 (Phase B: Router 经 Bridge exec 帧 in-process 调用)。
+func (s *Server) Dispatcher() *dispatcher.Command_Dispatcher {
+	if s == nil {
+		return nil
+	}
+	return s.d
+}
+
 // Start 监听并接受连接；返回实际地址 (已写入 AddrFile)。
 func (s *Server) Start(parent context.Context) (string, error) {
 	s.mu.Lock()
@@ -141,6 +149,16 @@ func (s *Server) Stop() error {
 	}
 	s.wg.Wait()
 	return nil
+}
+
+// ListenAddr 返回当前监听地址 (未 Start 时为空)。
+func (s *Server) ListenAddr() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.ln == nil {
+		return ""
+	}
+	return s.ln.Addr().String()
 }
 
 func (s *Server) handleConn(ctx context.Context, conn net.Conn) {

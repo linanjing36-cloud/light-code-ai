@@ -626,6 +626,11 @@ function Invoke-StartAll {
     }
     New-Item -ItemType Directory -Force -Path $RunDir | Out-Null
     $env:EION_TOOLS_ADDR_FILE = $EionAddrFile
+    if ($Wails) {
+        $env:HERMES_EXEC_VIA_PANEL = "1"
+    } else {
+        Remove-Item Env:HERMES_EXEC_VIA_PANEL -ErrorAction SilentlyContinue
+    }
 
     Write-Host ""
     Write-Host "========================================"

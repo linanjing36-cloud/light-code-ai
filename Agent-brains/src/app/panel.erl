@@ -55,7 +55,21 @@
 -type 'PanelFrame'() ::
       #{request                 => 'PanelRequest'(), % = 1, optional
         response                => 'PanelResponse'(), % = 2, optional
-        stream                  => 'PanelStream'()  % = 3, optional
+        stream                  => 'PanelStream'(), % = 3, optional
+        exec                    => 'PanelExec'(),   % = 4, optional
+        exec_result             => 'PanelExecResult'() % = 5, optional
+       }.
+
+-type 'PanelExec'() ::
+      #{id                      => non_neg_integer(), % = 1, optional, 64 bits
+        agent_request           => iodata()         % = 2, optional
+       }.
+
+-type 'PanelExecResult'() ::
+      #{id                      => non_neg_integer(), % = 1, optional, 64 bits
+        agent_response          => iodata(),        % = 2, optional
+        error                   => unicode:chardata(), % = 3, optional
+        terminal                => boolean() | 0 | 1 % = 4, optional
        }.
 
 -type 'PanelRequest'() ::
@@ -180,9 +194,9 @@
       #{ok                      => boolean() | 0 | 1 % = 1, optional
        }.
 
--export_type(['PanelFrame'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'LlmChunk'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
--type '$msg_name'() :: 'PanelFrame' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'LlmChunk' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
--type '$msg'() :: 'PanelFrame'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'LlmChunk'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
+-export_type(['PanelFrame'/0, 'PanelExec'/0, 'PanelExecResult'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'LlmChunk'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
+-type '$msg_name'() :: 'PanelFrame' | 'PanelExec' | 'PanelExecResult' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'LlmChunk' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
+-type '$msg'() :: 'PanelFrame'() | 'PanelExec'() | 'PanelExecResult'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'LlmChunk'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
 -export_type(['$msg_name'/0, '$msg'/0]).
 
 -if(?OTP_RELEASE >= 24).
@@ -203,6 +217,8 @@ encode_msg(Msg, MsgName, Opts) ->
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
         'PanelFrame' -> encode_msg_PanelFrame(id(Msg, TrUserData), TrUserData);
+        'PanelExec' -> encode_msg_PanelExec(id(Msg, TrUserData), TrUserData);
+        'PanelExecResult' -> encode_msg_PanelExecResult(id(Msg, TrUserData), TrUserData);
         'PanelRequest' -> encode_msg_PanelRequest(id(Msg, TrUserData), TrUserData);
         'PanelResponse' -> encode_msg_PanelResponse(id(Msg, TrUserData), TrUserData);
         'PanelStream' -> encode_msg_PanelStream(id(Msg, TrUserData), TrUserData);
@@ -237,7 +253,82 @@ encode_msg_PanelFrame(#{} = M, Bin, TrUserData) ->
         #{request := OF1} -> id(begin TrOF1 = id(OF1, TrUserData), e_mfield_PanelFrame_request(TrOF1, <<Bin/binary, 10>>, TrUserData) end, TrUserData);
         #{response := OF1} -> id(begin TrOF1 = id(OF1, TrUserData), e_mfield_PanelFrame_response(TrOF1, <<Bin/binary, 18>>, TrUserData) end, TrUserData);
         #{stream := OF1} -> id(begin TrOF1 = id(OF1, TrUserData), e_mfield_PanelFrame_stream(TrOF1, <<Bin/binary, 26>>, TrUserData) end, TrUserData);
+        #{exec := OF1} -> id(begin TrOF1 = id(OF1, TrUserData), e_mfield_PanelFrame_exec(TrOF1, <<Bin/binary, 34>>, TrUserData) end, TrUserData);
+        #{exec_result := OF1} -> id(begin TrOF1 = id(OF1, TrUserData), e_mfield_PanelFrame_exec_result(TrOF1, <<Bin/binary, 42>>, TrUserData) end, TrUserData);
         _ -> Bin
+    end.
+
+encode_msg_PanelExec(Msg, TrUserData) -> encode_msg_PanelExec(Msg, <<>>, TrUserData).
+
+
+encode_msg_PanelExec(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{id := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     if TrF1 =:= 0 -> Bin;
+                        true -> e_varint(TrF1, <<Bin/binary, 8>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    case M of
+        #{agent_request := F2} ->
+            begin
+                TrF2 = id(F2, TrUserData),
+                case iolist_size(TrF2) of
+                    0 -> B1;
+                    _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
+                end
+            end;
+        _ -> B1
+    end.
+
+encode_msg_PanelExecResult(Msg, TrUserData) -> encode_msg_PanelExecResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_PanelExecResult(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{id := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     if TrF1 =:= 0 -> Bin;
+                        true -> e_varint(TrF1, <<Bin/binary, 8>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{agent_response := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     case iolist_size(TrF2) of
+                         0 -> B1;
+                         _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    B3 = case M of
+             #{error := F3} ->
+                 begin
+                     TrF3 = id(F3, TrUserData),
+                     case is_empty_string(TrF3) of
+                         true -> B2;
+                         false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                     end
+                 end;
+             _ -> B2
+         end,
+    case M of
+        #{terminal := F4} ->
+            begin
+                TrF4 = id(F4, TrUserData),
+                if TrF4 =:= false -> B3;
+                   true -> e_type_bool(TrF4, <<B3/binary, 32>>, TrUserData)
+                end
+            end;
+        _ -> B3
     end.
 
 encode_msg_PanelRequest(Msg, TrUserData) -> encode_msg_PanelRequest(Msg, <<>>, TrUserData).
@@ -880,6 +971,16 @@ e_mfield_PanelFrame_stream(Msg, Bin, TrUserData) ->
     Bin2 = e_varint(byte_size(SubBin), Bin),
     <<Bin2/binary, SubBin/binary>>.
 
+e_mfield_PanelFrame_exec(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_PanelExec(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_mfield_PanelFrame_exec_result(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_PanelExecResult(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
 e_mfield_PanelStream_chunk(Msg, Bin, TrUserData) ->
     SubBin = encode_msg_LlmChunk(Msg, <<>>, TrUserData),
     Bin2 = e_varint(byte_size(SubBin), Bin),
@@ -1052,6 +1153,8 @@ decode_msg_1_catch(Bin, MsgName, TrUserData) ->
     end.
 
 decode_msg_2_doit('PanelFrame', Bin, TrUserData) -> id(decode_msg_PanelFrame(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('PanelExec', Bin, TrUserData) -> id(decode_msg_PanelExec(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('PanelExecResult', Bin, TrUserData) -> id(decode_msg_PanelExecResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PanelRequest', Bin, TrUserData) -> id(decode_msg_PanelRequest(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PanelResponse', Bin, TrUserData) -> id(decode_msg_PanelResponse(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PanelStream', Bin, TrUserData) -> id(decode_msg_PanelStream(Bin, TrUserData), TrUserData);
@@ -1083,6 +1186,8 @@ decode_msg_PanelFrame(Bin, TrUserData) -> dfp_read_field_def_PanelFrame(Bin, 0, 
 dfp_read_field_def_PanelFrame(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_PanelFrame_request(Rest, Z1, Z2, F, F@_1, TrUserData);
 dfp_read_field_def_PanelFrame(<<18, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_PanelFrame_response(Rest, Z1, Z2, F, F@_1, TrUserData);
 dfp_read_field_def_PanelFrame(<<26, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_PanelFrame_stream(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_PanelFrame(<<34, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_PanelFrame_exec(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_PanelFrame(<<42, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_PanelFrame_exec_result(Rest, Z1, Z2, F, F@_1, TrUserData);
 dfp_read_field_def_PanelFrame(<<>>, 0, 0, _, F@_1, _) ->
     S1 = #{},
     if F@_1 == '$undef' -> S1;
@@ -1099,6 +1204,8 @@ dg_read_field_def_PanelFrame(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserD
         10 -> d_field_PanelFrame_request(Rest, 0, 0, 0, F@_1, TrUserData);
         18 -> d_field_PanelFrame_response(Rest, 0, 0, 0, F@_1, TrUserData);
         26 -> d_field_PanelFrame_stream(Rest, 0, 0, 0, F@_1, TrUserData);
+        34 -> d_field_PanelFrame_exec(Rest, 0, 0, 0, F@_1, TrUserData);
+        42 -> d_field_PanelFrame_exec_result(Rest, 0, 0, 0, F@_1, TrUserData);
         _ ->
             case Key band 7 of
                 0 -> skip_varint_PanelFrame(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
@@ -1158,6 +1265,34 @@ d_field_PanelFrame_stream(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData
                                   end,
                                   TrUserData).
 
+d_field_PanelFrame_exec(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_PanelFrame_exec(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_PanelFrame_exec(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_PanelExec(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_PanelFrame(RestF,
+                                  0,
+                                  0,
+                                  F,
+                                  case Prev of
+                                      '$undef' -> id({exec, NewFValue}, TrUserData);
+                                      {exec, MVPrev} -> id({exec, merge_msg_PanelExec(MVPrev, NewFValue, TrUserData)}, TrUserData);
+                                      _ -> id({exec, NewFValue}, TrUserData)
+                                  end,
+                                  TrUserData).
+
+d_field_PanelFrame_exec_result(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_PanelFrame_exec_result(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_PanelFrame_exec_result(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_PanelExecResult(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_PanelFrame(RestF,
+                                  0,
+                                  0,
+                                  F,
+                                  case Prev of
+                                      '$undef' -> id({exec_result, NewFValue}, TrUserData);
+                                      {exec_result, MVPrev} -> id({exec_result, merge_msg_PanelExecResult(MVPrev, NewFValue, TrUserData)}, TrUserData);
+                                      _ -> id({exec_result, NewFValue}, TrUserData)
+                                  end,
+                                  TrUserData).
+
 skip_varint_PanelFrame(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_PanelFrame(Rest, Z1, Z2, F, F@_1, TrUserData);
 skip_varint_PanelFrame(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_PanelFrame(Rest, Z1, Z2, F, F@_1, TrUserData).
 
@@ -1174,6 +1309,122 @@ skip_group_PanelFrame(Bin, _, Z2, FNum, F@_1, TrUserData) ->
 skip_32_PanelFrame(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_PanelFrame(Rest, Z1, Z2, F, F@_1, TrUserData).
 
 skip_64_PanelFrame(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_PanelFrame(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_PanelExec(Bin, TrUserData) -> dfp_read_field_def_PanelExec(Bin, 0, 0, 0, id(0, TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_PanelExec(<<8, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_PanelExec_id(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_PanelExec(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_PanelExec_agent_request(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_PanelExec(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{id => F@_1, agent_request => F@_2};
+dfp_read_field_def_PanelExec(Other, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dg_read_field_def_PanelExec(Other, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+dg_read_field_def_PanelExec(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_PanelExec(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+dg_read_field_def_PanelExec(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_PanelExec_id(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        18 -> d_field_PanelExec_agent_request(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_PanelExec(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                1 -> skip_64_PanelExec(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_PanelExec(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                3 -> skip_group_PanelExec(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                5 -> skip_32_PanelExec(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData)
+            end
+    end;
+dg_read_field_def_PanelExec(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{id => F@_1, agent_request => F@_2}.
+
+d_field_PanelExec_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_PanelExec_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_PanelExec_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = {id((X bsl N + Acc) band 18446744073709551615, TrUserData), Rest},
+    dfp_read_field_def_PanelExec(RestF, 0, 0, F, NewFValue, F@_2, TrUserData).
+
+d_field_PanelExec_agent_request(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_PanelExec_agent_request(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_PanelExec_agent_request(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PanelExec(RestF, 0, 0, F, F@_1, NewFValue, TrUserData).
+
+skip_varint_PanelExec(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_PanelExec(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+skip_varint_PanelExec(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_PanelExec(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_PanelExec(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_PanelExec(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+skip_length_delimited_PanelExec(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_PanelExec(Rest2, 0, 0, F, F@_1, F@_2, TrUserData).
+
+skip_group_PanelExec(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_PanelExec(Rest, 0, Z2, FNum, F@_1, F@_2, TrUserData).
+
+skip_32_PanelExec(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_PanelExec(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_64_PanelExec(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_PanelExec(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_PanelExecResult(Bin, TrUserData) -> dfp_read_field_def_PanelExecResult(Bin, 0, 0, 0, id(0, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(false, TrUserData), TrUserData).
+
+dfp_read_field_def_PanelExecResult(<<8, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_PanelExecResult_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_PanelExecResult(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_PanelExecResult_agent_response(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_PanelExecResult(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_PanelExecResult_error(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_PanelExecResult(<<32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_PanelExecResult_terminal(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_PanelExecResult(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, _) -> #{id => F@_1, agent_response => F@_2, error => F@_3, terminal => F@_4};
+dfp_read_field_def_PanelExecResult(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dg_read_field_def_PanelExecResult(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+dg_read_field_def_PanelExecResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 32 - 7 -> dg_read_field_def_PanelExecResult(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dg_read_field_def_PanelExecResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_PanelExecResult_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        18 -> d_field_PanelExecResult_agent_response(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        26 -> d_field_PanelExecResult_error(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        32 -> d_field_PanelExecResult_terminal(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_PanelExecResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                1 -> skip_64_PanelExecResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                2 -> skip_length_delimited_PanelExecResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                3 -> skip_group_PanelExecResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                5 -> skip_32_PanelExecResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData)
+            end
+    end;
+dg_read_field_def_PanelExecResult(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, _) -> #{id => F@_1, agent_response => F@_2, error => F@_3, terminal => F@_4}.
+
+d_field_PanelExecResult_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_PanelExecResult_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_PanelExecResult_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = {id((X bsl N + Acc) band 18446744073709551615, TrUserData), Rest},
+    dfp_read_field_def_PanelExecResult(RestF, 0, 0, F, NewFValue, F@_2, F@_3, F@_4, TrUserData).
+
+d_field_PanelExecResult_agent_response(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_PanelExecResult_agent_response(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_PanelExecResult_agent_response(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PanelExecResult(RestF, 0, 0, F, F@_1, NewFValue, F@_3, F@_4, TrUserData).
+
+d_field_PanelExecResult_error(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_PanelExecResult_error(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_PanelExecResult_error(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PanelExecResult(RestF, 0, 0, F, F@_1, F@_2, NewFValue, F@_4, TrUserData).
+
+d_field_PanelExecResult_terminal(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_PanelExecResult_terminal(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_PanelExecResult_terminal(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_PanelExecResult(RestF, 0, 0, F, F@_1, F@_2, F@_3, NewFValue, TrUserData).
+
+skip_varint_PanelExecResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> skip_varint_PanelExecResult(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_varint_PanelExecResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_PanelExecResult(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_length_delimited_PanelExecResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> skip_length_delimited_PanelExecResult(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_length_delimited_PanelExecResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_PanelExecResult(Rest2, 0, 0, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_group_PanelExecResult(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_PanelExecResult(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_32_PanelExecResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_PanelExecResult(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_64_PanelExecResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_PanelExecResult(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
 decode_msg_PanelRequest(Bin, TrUserData) -> dfp_read_field_def_PanelRequest(Bin, 0, 0, 0, id(0, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
 
@@ -2541,6 +2792,8 @@ merge_msgs(Prev, New, MsgName, Opts) ->
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
         'PanelFrame' -> merge_msg_PanelFrame(Prev, New, TrUserData);
+        'PanelExec' -> merge_msg_PanelExec(Prev, New, TrUserData);
+        'PanelExecResult' -> merge_msg_PanelExecResult(Prev, New, TrUserData);
         'PanelRequest' -> merge_msg_PanelRequest(Prev, New, TrUserData);
         'PanelResponse' -> merge_msg_PanelResponse(Prev, New, TrUserData);
         'PanelStream' -> merge_msg_PanelStream(Prev, New, TrUserData);
@@ -2573,13 +2826,57 @@ merge_msg_PanelFrame(PMsg, NMsg, TrUserData) ->
         {#{request := PFrequest}, #{request := NFrequest}} -> S1#{request => merge_msg_PanelRequest(PFrequest, NFrequest, TrUserData)};
         {#{response := PFresponse}, #{response := NFresponse}} -> S1#{response => merge_msg_PanelResponse(PFresponse, NFresponse, TrUserData)};
         {#{stream := PFstream}, #{stream := NFstream}} -> S1#{stream => merge_msg_PanelStream(PFstream, NFstream, TrUserData)};
+        {#{exec := PFexec}, #{exec := NFexec}} -> S1#{exec => merge_msg_PanelExec(PFexec, NFexec, TrUserData)};
+        {#{exec_result := PFexec_result}, #{exec_result := NFexec_result}} -> S1#{exec_result => merge_msg_PanelExecResult(PFexec_result, NFexec_result, TrUserData)};
         {_, #{request := NFrequest}} -> S1#{request => NFrequest};
         {_, #{response := NFresponse}} -> S1#{response => NFresponse};
         {_, #{stream := NFstream}} -> S1#{stream => NFstream};
+        {_, #{exec := NFexec}} -> S1#{exec => NFexec};
+        {_, #{exec_result := NFexec_result}} -> S1#{exec_result => NFexec_result};
         {#{request := PFrequest}, _} -> S1#{request => PFrequest};
         {#{response := PFresponse}, _} -> S1#{response => PFresponse};
         {#{stream := PFstream}, _} -> S1#{stream => PFstream};
+        {#{exec := PFexec}, _} -> S1#{exec => PFexec};
+        {#{exec_result := PFexec_result}, _} -> S1#{exec_result => PFexec_result};
         _ -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_PanelExec/3}).
+merge_msg_PanelExec(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{id := NFid}} -> S1#{id => NFid};
+             {#{id := PFid}, _} -> S1#{id => PFid};
+             _ -> S1
+         end,
+    case {PMsg, NMsg} of
+        {_, #{agent_request := NFagent_request}} -> S2#{agent_request => NFagent_request};
+        {#{agent_request := PFagent_request}, _} -> S2#{agent_request => PFagent_request};
+        _ -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_PanelExecResult/3}).
+merge_msg_PanelExecResult(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{id := NFid}} -> S1#{id => NFid};
+             {#{id := PFid}, _} -> S1#{id => PFid};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{agent_response := NFagent_response}} -> S2#{agent_response => NFagent_response};
+             {#{agent_response := PFagent_response}, _} -> S2#{agent_response => PFagent_response};
+             _ -> S2
+         end,
+    S4 = case {PMsg, NMsg} of
+             {_, #{error := NFerror}} -> S3#{error => NFerror};
+             {#{error := PFerror}, _} -> S3#{error => PFerror};
+             _ -> S3
+         end,
+    case {PMsg, NMsg} of
+        {_, #{terminal := NFterminal}} -> S4#{terminal => NFterminal};
+        {#{terminal := PFterminal}, _} -> S4#{terminal => PFterminal};
+        _ -> S4
     end.
 
 -compile({nowarn_unused_function,merge_msg_PanelRequest/3}).
@@ -2940,6 +3237,8 @@ verify_msg(Msg, MsgName, Opts) ->
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
         'PanelFrame' -> v_msg_PanelFrame(Msg, [MsgName], TrUserData);
+        'PanelExec' -> v_msg_PanelExec(Msg, [MsgName], TrUserData);
+        'PanelExecResult' -> v_msg_PanelExecResult(Msg, [MsgName], TrUserData);
         'PanelRequest' -> v_msg_PanelRequest(Msg, [MsgName], TrUserData);
         'PanelResponse' -> v_msg_PanelResponse(Msg, [MsgName], TrUserData);
         'PanelStream' -> v_msg_PanelStream(Msg, [MsgName], TrUserData);
@@ -2972,26 +3271,40 @@ verify_msg(Msg, MsgName, Opts) ->
 v_msg_PanelFrame(#{} = M, Path, TrUserData) ->
     case M of
         #{request := OF1} ->
-            case maps:keys(maps:with([request, response, stream], M)) of
+            case maps:keys(maps:with([request, response, stream, exec, exec_result], M)) of
                 [_] -> ok;
                 OFDupsOF1 -> mk_type_error({multiple_oneof_keys, OFDupsOF1, payload}, M, [payload | Path])
             end,
             v_submsg_PanelRequest(OF1, [request | Path], TrUserData);
         #{response := OF1} ->
-            case maps:keys(maps:with([request, response, stream], M)) of
+            case maps:keys(maps:with([request, response, stream, exec, exec_result], M)) of
                 [_] -> ok;
                 OFDupsOF1 -> mk_type_error({multiple_oneof_keys, OFDupsOF1, payload}, M, [payload | Path])
             end,
             v_submsg_PanelResponse(OF1, [response | Path], TrUserData);
         #{stream := OF1} ->
-            case maps:keys(maps:with([request, response, stream], M)) of
+            case maps:keys(maps:with([request, response, stream, exec, exec_result], M)) of
                 [_] -> ok;
                 OFDupsOF1 -> mk_type_error({multiple_oneof_keys, OFDupsOF1, payload}, M, [payload | Path])
             end,
             v_submsg_PanelStream(OF1, [stream | Path], TrUserData);
+        #{exec := OF1} ->
+            case maps:keys(maps:with([request, response, stream, exec, exec_result], M)) of
+                [_] -> ok;
+                OFDupsOF1 -> mk_type_error({multiple_oneof_keys, OFDupsOF1, payload}, M, [payload | Path])
+            end,
+            v_submsg_PanelExec(OF1, [exec | Path], TrUserData);
+        #{exec_result := OF1} ->
+            case maps:keys(maps:with([request, response, stream, exec, exec_result], M)) of
+                [_] -> ok;
+                OFDupsOF1 -> mk_type_error({multiple_oneof_keys, OFDupsOF1, payload}, M, [payload | Path])
+            end,
+            v_submsg_PanelExecResult(OF1, [exec_result | Path], TrUserData);
         _ -> ok
     end,
-    lists:foreach(fun (stream) -> ok;
+    lists:foreach(fun (exec_result) -> ok;
+                      (exec) -> ok;
+                      (stream) -> ok;
                       (response) -> ok;
                       (request) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
@@ -3000,6 +3313,64 @@ v_msg_PanelFrame(#{} = M, Path, TrUserData) ->
     ok;
 v_msg_PanelFrame(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PanelFrame'}, M, Path);
 v_msg_PanelFrame(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PanelFrame'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_PanelExec/3}).
+-dialyzer({nowarn_function,v_submsg_PanelExec/3}).
+v_submsg_PanelExec(Msg, Path, TrUserData) -> v_msg_PanelExec(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_PanelExec/3}).
+-dialyzer({nowarn_function,v_msg_PanelExec/3}).
+v_msg_PanelExec(#{} = M, Path, TrUserData) ->
+    case M of
+        #{id := F1} -> v_type_uint64(F1, [id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{agent_request := F2} -> v_type_bytes(F2, [agent_request | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (agent_request) -> ok;
+                      (id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_PanelExec(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PanelExec'}, M, Path);
+v_msg_PanelExec(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PanelExec'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_PanelExecResult/3}).
+-dialyzer({nowarn_function,v_submsg_PanelExecResult/3}).
+v_submsg_PanelExecResult(Msg, Path, TrUserData) -> v_msg_PanelExecResult(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_PanelExecResult/3}).
+-dialyzer({nowarn_function,v_msg_PanelExecResult/3}).
+v_msg_PanelExecResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{id := F1} -> v_type_uint64(F1, [id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{agent_response := F2} -> v_type_bytes(F2, [agent_response | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{error := F3} -> v_type_string(F3, [error | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{terminal := F4} -> v_type_bool(F4, [terminal | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (terminal) -> ok;
+                      (error) -> ok;
+                      (agent_response) -> ok;
+                      (id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_PanelExecResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PanelExecResult'}, M, Path);
+v_msg_PanelExecResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PanelExecResult'}, X, Path).
 
 -compile({nowarn_unused_function,v_submsg_PanelRequest/3}).
 -dialyzer({nowarn_function,v_submsg_PanelRequest/3}).
@@ -3640,8 +4011,16 @@ get_msg_defs() ->
          fields =>
              [#{name => request, fnum => 1, rnum => 2, type => {msg, 'PanelRequest'}, occurrence => optional, opts => []},
               #{name => response, fnum => 2, rnum => 2, type => {msg, 'PanelResponse'}, occurrence => optional, opts => []},
-              #{name => stream, fnum => 3, rnum => 2, type => {msg, 'PanelStream'}, occurrence => optional, opts => []}],
+              #{name => stream, fnum => 3, rnum => 2, type => {msg, 'PanelStream'}, occurrence => optional, opts => []},
+              #{name => exec, fnum => 4, rnum => 2, type => {msg, 'PanelExec'}, occurrence => optional, opts => []},
+              #{name => exec_result, fnum => 5, rnum => 2, type => {msg, 'PanelExecResult'}, occurrence => optional, opts => []}],
          opts => []}]},
+     {{msg, 'PanelExec'}, [#{name => id, fnum => 1, rnum => 2, type => uint64, occurrence => optional, opts => []}, #{name => agent_request, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'PanelExecResult'},
+      [#{name => id, fnum => 1, rnum => 2, type => uint64, occurrence => optional, opts => []},
+       #{name => agent_response, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
+       #{name => error, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+       #{name => terminal, fnum => 4, rnum => 5, type => bool, occurrence => optional, opts => []}]},
      {{msg, 'PanelRequest'},
       [#{name => id, fnum => 1, rnum => 2, type => uint64, occurrence => optional, opts => []},
        #{name => method, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
@@ -3707,6 +4086,8 @@ get_msg_defs() ->
 
 get_msg_names() ->
     ['PanelFrame',
+     'PanelExec',
+     'PanelExecResult',
      'PanelRequest',
      'PanelResponse',
      'PanelStream',
@@ -3737,6 +4118,8 @@ get_group_names() -> [].
 
 get_msg_or_group_names() ->
     ['PanelFrame',
+     'PanelExec',
+     'PanelExecResult',
      'PanelRequest',
      'PanelResponse',
      'PanelStream',
@@ -3781,8 +4164,16 @@ find_msg_def('PanelFrame') ->
        fields =>
            [#{name => request, fnum => 1, rnum => 2, type => {msg, 'PanelRequest'}, occurrence => optional, opts => []},
             #{name => response, fnum => 2, rnum => 2, type => {msg, 'PanelResponse'}, occurrence => optional, opts => []},
-            #{name => stream, fnum => 3, rnum => 2, type => {msg, 'PanelStream'}, occurrence => optional, opts => []}],
+            #{name => stream, fnum => 3, rnum => 2, type => {msg, 'PanelStream'}, occurrence => optional, opts => []},
+            #{name => exec, fnum => 4, rnum => 2, type => {msg, 'PanelExec'}, occurrence => optional, opts => []},
+            #{name => exec_result, fnum => 5, rnum => 2, type => {msg, 'PanelExecResult'}, occurrence => optional, opts => []}],
        opts => []}];
+find_msg_def('PanelExec') -> [#{name => id, fnum => 1, rnum => 2, type => uint64, occurrence => optional, opts => []}, #{name => agent_request, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}];
+find_msg_def('PanelExecResult') ->
+    [#{name => id, fnum => 1, rnum => 2, type => uint64, occurrence => optional, opts => []},
+     #{name => agent_response, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
+     #{name => error, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+     #{name => terminal, fnum => 4, rnum => 5, type => bool, occurrence => optional, opts => []}];
 find_msg_def('PanelRequest') ->
     [#{name => id, fnum => 1, rnum => 2, type => uint64, occurrence => optional, opts => []},
      #{name => method, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
@@ -3903,6 +4294,8 @@ service_and_rpc_name_to_fqbins(S, R) -> error({gpb_error, {badservice_or_rpc, {S
 
 
 fqbin_to_msg_name(<<"panel.PanelFrame">>) -> 'PanelFrame';
+fqbin_to_msg_name(<<"panel.PanelExec">>) -> 'PanelExec';
+fqbin_to_msg_name(<<"panel.PanelExecResult">>) -> 'PanelExecResult';
 fqbin_to_msg_name(<<"panel.PanelRequest">>) -> 'PanelRequest';
 fqbin_to_msg_name(<<"panel.PanelResponse">>) -> 'PanelResponse';
 fqbin_to_msg_name(<<"panel.PanelStream">>) -> 'PanelStream';
@@ -3930,6 +4323,8 @@ fqbin_to_msg_name(E) -> error({gpb_error, {badmsg, E}}).
 
 
 msg_name_to_fqbin('PanelFrame') -> <<"panel.PanelFrame">>;
+msg_name_to_fqbin('PanelExec') -> <<"panel.PanelExec">>;
+msg_name_to_fqbin('PanelExecResult') -> <<"panel.PanelExecResult">>;
 msg_name_to_fqbin('PanelRequest') -> <<"panel.PanelRequest">>;
 msg_name_to_fqbin('PanelResponse') -> <<"panel.PanelResponse">>;
 msg_name_to_fqbin('PanelStream') -> <<"panel.PanelStream">>;
@@ -4004,6 +4399,8 @@ get_msg_containment("panel") ->
      'HistoryEntry',
      'ListToolsResult',
      'LlmChunk',
+     'PanelExec',
+     'PanelExecResult',
      'PanelFrame',
      'PanelRequest',
      'PanelResponse',
@@ -4036,6 +4433,8 @@ get_enum_containment(P) -> error({gpb_error, {badproto, P}}).
 
 
 get_proto_by_msg_name_as_fqbin(<<"panel.PanelFrame">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelExec">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelExecResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.PanelRequest">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.PanelResponse">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.PanelStream">>) -> "panel";

@@ -44328,3 +44328,954 @@
 2026-06-27 23:55:03.300 [info] <0.182.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:54952 closed by peer
 2026-06-27 23:55:03.300 [info] <0.188.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:54955 closed by peer
 2026-06-27 23:55:03.300 [info] <0.184.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:54953 closed by peer
+2026-06-27 23:59:21.701 [info] <0.117.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-27 23:59:21.706 [info] <0.119.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-27 23:59:21.724 [info] <0.120.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at E:/light-code-ai-1/scrtps/../Agent-brains/config/mnesia
+2026-06-27 23:59:21.751 [info] <0.120.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-27 23:59:21.751 [info] <0.120.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-27 23:59:21.752 [error] <0.120.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-27 23:59:21.752 [warning] <0.167.0>@state_store:init:{104,13} state_store: restore hermes_brains_state failed: {mnesia_read_failed,{no_exists,ets_snapshot}}, starting fresh
+2026-06-27 23:59:21.765 [info] <0.171.0>@bridge_manager:read_addr_file:{481,13} read addr from file E:/light-code-ai-1/scrtps/../bin/run/eion-tools.addr: 127.0.0.1:62970
+2026-06-27 23:59:21.765 [info] <0.171.0>@bridge_manager:init:{117,5} bridge_manager init: addr=127.0.0.1:62970 pool_size=4
+2026-06-27 23:59:21.765 [info] <0.171.0>@bridge_manager:handle_info:{175,5} connect_all: building pool, addr=127.0.0.1:62970 target_size=4
+2026-06-27 23:59:21.772 [info] <0.175.0>@case_store:create_table:{137,14} case_store table already exists: failure_cases
+2026-06-27 23:59:21.773 [info] <0.175.0>@case_store:init:{92,14} case_store started, table=failure_cases, max_cases=200
+2026-06-27 23:59:21.773 [info] <0.177.0>@memory_summarizer:init:{52,14} memory_summarizer started, table=session_summaries
+2026-06-27 23:59:21.775 [info] <0.179.0>@panel_server:init:{122,24} panel addr file written: E:/light-code-ai-1/scrtps/../bin/run/panel.addr (127.0.0.1:62975)
+2026-06-27 23:59:21.782 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 1/4 connected: socket=#Port<0.5>
+2026-06-27 23:59:21.783 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 2/4 connected: socket=#Port<0.6>
+2026-06-27 23:59:21.783 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 3/4 connected: socket=#Port<0.7>
+2026-06-27 23:59:21.783 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 4/4 connected: socket=#Port<0.8>
+2026-06-27 23:59:21.783 [info] <0.171.0>@bridge_manager:handle_info:{187,5} pool build done: connected=4/4 failed=0
+2026-06-27 23:59:22.719 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 0: slot=0, fired=0, active=1
+2026-06-27 23:59:23.727 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 1: slot=1, fired=0, active=1
+2026-06-27 23:59:24.729 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 2: slot=2, fired=0, active=1
+2026-06-27 23:59:25.735 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 3: slot=3, fired=0, active=1
+2026-06-27 23:59:26.749 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 4: slot=4, fired=0, active=1
+2026-06-27 23:59:27.753 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 5: slot=5, fired=0, active=1
+2026-06-27 23:59:28.762 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 6: slot=6, fired=0, active=1
+2026-06-27 23:59:29.767 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 7: slot=7, fired=0, active=1
+2026-06-27 23:59:30.774 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 8: slot=8, fired=0, active=1
+2026-06-27 23:59:31.786 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 9: slot=9, fired=0, active=1
+2026-06-27 23:59:32.792 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 10: slot=10, fired=0, active=1
+2026-06-27 23:59:33.808 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 11: slot=11, fired=0, active=1
+2026-06-27 23:59:34.820 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 12: slot=12, fired=0, active=1
+2026-06-27 23:59:35.826 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 13: slot=13, fired=0, active=1
+2026-06-27 23:59:36.834 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 14: slot=14, fired=0, active=1
+2026-06-27 23:59:37.842 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 15: slot=15, fired=0, active=1
+2026-06-27 23:59:38.848 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 16: slot=16, fired=0, active=1
+2026-06-27 23:59:39.462 [warning] <0.171.0>@bridge_manager:handle_info:{328,13} tcp connection closed: socket=#Port<0.8> slot=4 (no in-flight req)
+2026-06-27 23:59:39.462 [info] <0.171.0>@bridge_manager:handle_info:{340,13} scheduling reconnect for slot 4 in 2000ms
+2026-06-27 23:59:39.462 [warning] <0.171.0>@bridge_manager:handle_info:{328,13} tcp connection closed: socket=#Port<0.5> slot=1 (no in-flight req)
+2026-06-27 23:59:39.462 [info] <0.171.0>@bridge_manager:handle_info:{340,13} scheduling reconnect for slot 1 in 2000ms
+2026-06-27 23:59:39.462 [warning] <0.171.0>@bridge_manager:handle_info:{328,13} tcp connection closed: socket=#Port<0.6> slot=2 (no in-flight req)
+2026-06-27 23:59:39.462 [info] <0.171.0>@bridge_manager:handle_info:{340,13} scheduling reconnect for slot 2 in 2000ms
+2026-06-27 23:59:39.462 [warning] <0.171.0>@bridge_manager:handle_info:{328,13} tcp connection closed: socket=#Port<0.7> slot=3 (no in-flight req)
+2026-06-27 23:59:39.462 [info] <0.171.0>@bridge_manager:handle_info:{340,13} scheduling reconnect for slot 3 in 2000ms
+2026-06-27 23:59:39.850 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 17: slot=17, fired=0, active=1
+2026-06-27 23:59:40.851 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 18: slot=18, fired=0, active=1
+2026-06-27 23:59:51.198 [info] <0.117.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-27 23:59:51.202 [info] <0.119.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-27 23:59:51.219 [info] <0.120.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at E:/light-code-ai-1/scrtps/../Agent-brains/config/mnesia
+2026-06-27 23:59:51.249 [info] <0.120.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-27 23:59:51.249 [info] <0.120.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-27 23:59:51.250 [error] <0.120.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-27 23:59:51.250 [warning] <0.167.0>@state_store:init:{104,13} state_store: restore hermes_brains_state failed: {mnesia_read_failed,{no_exists,ets_snapshot}}, starting fresh
+2026-06-27 23:59:51.264 [info] <0.171.0>@bridge_manager:read_addr_file:{481,13} read addr from file E:/light-code-ai-1/scrtps/../bin/run/eion-tools.addr: 127.0.0.1:63057
+2026-06-27 23:59:51.264 [info] <0.171.0>@bridge_manager:init:{117,5} bridge_manager init: addr=127.0.0.1:63057 pool_size=4
+2026-06-27 23:59:51.264 [info] <0.171.0>@bridge_manager:handle_info:{175,5} connect_all: building pool, addr=127.0.0.1:63057 target_size=4
+2026-06-27 23:59:51.272 [info] <0.175.0>@case_store:create_table:{137,14} case_store table already exists: failure_cases
+2026-06-27 23:59:51.272 [info] <0.175.0>@case_store:init:{92,14} case_store started, table=failure_cases, max_cases=200
+2026-06-27 23:59:51.274 [info] <0.177.0>@memory_summarizer:init:{52,14} memory_summarizer started, table=session_summaries
+2026-06-27 23:59:51.275 [info] <0.179.0>@panel_server:init:{122,24} panel addr file written: E:/light-code-ai-1/scrtps/../bin/run/panel.addr (127.0.0.1:63070)
+2026-06-27 23:59:51.283 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 1/4 connected: socket=#Port<0.5>
+2026-06-27 23:59:51.283 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 2/4 connected: socket=#Port<0.6>
+2026-06-27 23:59:51.283 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 3/4 connected: socket=#Port<0.7>
+2026-06-27 23:59:51.284 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 4/4 connected: socket=#Port<0.8>
+2026-06-27 23:59:51.284 [info] <0.171.0>@bridge_manager:handle_info:{187,5} pool build done: connected=4/4 failed=0
+2026-06-27 23:59:52.214 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 0: slot=0, fired=0, active=1
+2026-06-27 23:59:52.219 [info] <0.180.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:57029
+2026-06-27 23:59:52.219 [info] <0.182.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:57029 pid=<0.182.0>
+2026-06-27 23:59:52.220 [info] <0.181.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:57030
+2026-06-27 23:59:52.220 [info] <0.184.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:57030 pid=<0.184.0>
+2026-06-27 23:59:52.220 [info] <0.183.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:57031
+2026-06-27 23:59:52.220 [info] <0.186.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:57031 pid=<0.186.0>
+2026-06-27 23:59:52.220 [info] <0.185.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:57032
+2026-06-27 23:59:52.220 [info] <0.188.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:57032 pid=<0.188.0>
+2026-06-27 23:59:52.226 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:57030 id=1 method=list_tools
+2026-06-27 23:59:52.226 [info] <0.171.0>@bridge_manager:handle_call:{134,5} list_tools queued, timeout=1500ms
+2026-06-27 23:59:52.230 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=2 ref=#Ref<0.487519423.1800404994.26816> kind=tool_list req_id=<<"list-1475">> timeout=1500ms
+2026-06-27 23:59:52.230 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=1896 ref=#Ref<0.487519423.1800404994.26816> kind=tool_list req_id=<<"list-1475">> resp_kind=tool_list
+2026-06-27 23:59:52.231 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:57031 id=2 method=start_session
+2026-06-27 23:59:52.231 [info] <0.191.0>@agent_fsm:init:{112,13} agent_fsm fresh start, session_id=<<"sess-1782575992230-74561">>
+2026-06-27 23:59:52.231 [info] <0.190.0>@panel_server:handle_method:{333,14} session started: id=<<"sess-1782575992230-74561">> pid=<0.191.0>
+2026-06-27 23:59:52.231 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:57032 id=3 method=brain_status
+2026-06-27 23:59:52.233 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:57029 id=4 method=send
+2026-06-27 23:59:52.233 [info] <0.191.0>@agent_fsm:idle:{185,5} session started, session_id=<<"sess-1782575992230-74561">>, history_len=0
+2026-06-27 23:59:52.233 [info] <0.191.0>@agent_fsm:thinking:{202,5} thinking(enter) fired, model=<<"deepseek-v4-pro">>, history_len=1, loop=0/10
+2026-06-27 23:59:52.233 [info] <0.171.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_search, req_id=rag-70, timeout=10000ms
+2026-06-27 23:59:52.234 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=116 ref=#Ref<0.487519423.1800404997.25821> kind=tool req_id=<<"rag-70">> timeout=10000ms
+2026-06-27 23:59:52.234 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=25 ref=#Ref<0.487519423.1800404997.25821> kind=tool req_id=<<"rag-70">> resp_kind=tool_exec
+2026-06-27 23:59:52.235 [info] <0.191.0>@agent_fsm:thinking:{222,5} llm request dispatched, ref=#Ref<0.487519423.1800404997.25834>
+2026-06-27 23:59:52.235 [info] <0.171.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.487519423.1800404997.25834>, fsm_pid=<0.191.0>
+2026-06-27 23:59:52.235 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=2237 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined timeout=60000ms
+2026-06-27 23:59:53.110 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.227 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 1: slot=1, fired=0, active=1
+2026-06-27 23:59:53.330 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.369 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.369 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.369 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.370 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.408 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.408 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.408 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=16 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.408 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.450 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.450 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.450 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.450 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.494 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.530 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.530 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.530 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.530 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.530 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.579 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.579 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.613 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.613 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.613 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.613 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.613 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.659 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-27 23:59:53.659 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=176 ref=#Ref<0.487519423.1800404997.25834> kind=llm req_id=undefined resp_kind=llm_infer
+2026-06-27 23:59:53.659 [info] <0.191.0>@agent_fsm:thinking:{240,5} llm_response received, content_size=6, tool_calls=0, prompt_tokens=801
+2026-06-27 23:59:53.659 [info] <0.191.0>@agent_fsm:thinking:{254,13} final answer ready, transitioning thinking -> idle
+2026-06-27 23:59:53.659 [info] <0.171.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.487519423.1800404993.25667>, fsm_pid=<0.177.0>
+2026-06-27 23:59:53.659 [info] <0.177.0>@memory_summarizer:maybe_start_summarize:{171,14} memory_summarizer llm dispatched session=sess-1782575992230-74561 ref=#Ref<0.487519423.1800404993.25667> msgs=2
+2026-06-27 23:59:53.659 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=421 ref=#Ref<0.487519423.1800404993.25667> kind=llm req_id=undefined timeout=60000ms
+2026-06-27 23:59:53.836 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:57030 id=5 method=brain_status
+2026-06-27 23:59:53.837 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:57031 id=6 method=get_history
+2026-06-27 23:59:53.837 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:57032 id=7 method=delete_session
+2026-06-27 23:59:53.837 [info] <0.171.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_purge_session, req_id=purge-102, timeout=15000ms
+2026-06-27 23:59:53.837 [info] <0.177.0>@memory_summarizer:handle_cast:{84,6} memory_summarizer purged session=sess-1782575992230-74561
+2026-06-27 23:59:53.837 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.6> bytes=78 ref=#Ref<0.487519423.1800404994.27043> kind=tool req_id=<<"purge-102">> timeout=15000ms
+2026-06-27 23:59:53.838 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=57 ref=#Ref<0.487519423.1800404994.27043> kind=tool req_id=<<"purge-102">> resp_kind=tool_exec
+2026-06-27 23:59:53.838 [info] <0.196.0>@panel_server:handle_method:{403,6} session deleted: id=<<"sess-1782575992230-74561">>
+2026-06-27 23:59:53.838 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:57029 id=8 method=stop
+2026-06-27 23:59:53.838 [info] <0.186.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:57031 closed by peer
+2026-06-27 23:59:53.839 [info] <0.184.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:57030 closed by peer
+2026-06-27 23:59:53.839 [info] <0.188.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:57032 closed by peer
+2026-06-27 23:59:53.839 [info] <0.182.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:57029 closed by peer
+2026-06-28 00:12:39.437 [info] <0.117.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-28 00:12:39.442 [info] <0.119.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-28 00:12:39.459 [info] <0.120.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at E:/light-code-ai-1/scrtps/../Agent-brains/config/mnesia
+2026-06-28 00:12:39.487 [info] <0.120.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-28 00:12:39.487 [info] <0.120.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-28 00:12:39.488 [error] <0.120.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-28 00:12:39.488 [warning] <0.167.0>@state_store:init:{104,13} state_store: restore hermes_brains_state failed: {mnesia_read_failed,{no_exists,ets_snapshot}}, starting fresh
+2026-06-28 00:12:39.502 [info] <0.169.0>@bridge_manager:read_addr_file:{481,13} read addr from file E:/light-code-ai-1/scrtps/../bin/run/eion-tools.addr: 127.0.0.1:63057
+2026-06-28 00:12:39.502 [info] <0.169.0>@bridge_manager:init:{117,5} bridge_manager init: addr=127.0.0.1:63057 pool_size=4
+2026-06-28 00:12:39.502 [info] <0.169.0>@bridge_manager:handle_info:{175,5} connect_all: building pool, addr=127.0.0.1:63057 target_size=4
+2026-06-28 00:12:39.509 [info] <0.175.0>@case_store:create_table:{137,14} case_store table already exists: failure_cases
+2026-06-28 00:12:39.509 [info] <0.175.0>@case_store:init:{92,14} case_store started, table=failure_cases, max_cases=200
+2026-06-28 00:12:39.512 [info] <0.177.0>@memory_summarizer:init:{52,14} memory_summarizer started, table=session_summaries
+2026-06-28 00:12:39.513 [info] <0.179.0>@panel_server:init:{122,24} panel addr file written: E:/light-code-ai-1/scrtps/../bin/run/panel.addr (127.0.0.1:58550)
+2026-06-28 00:12:39.521 [info] <0.169.0>@bridge_manager:handle_info:{179,17} pool slot 1/4 connected: socket=#Port<0.5>
+2026-06-28 00:12:39.521 [info] <0.169.0>@bridge_manager:handle_info:{179,17} pool slot 2/4 connected: socket=#Port<0.6>
+2026-06-28 00:12:39.521 [info] <0.169.0>@bridge_manager:handle_info:{179,17} pool slot 3/4 connected: socket=#Port<0.7>
+2026-06-28 00:12:39.521 [info] <0.169.0>@bridge_manager:handle_info:{179,17} pool slot 4/4 connected: socket=#Port<0.8>
+2026-06-28 00:12:39.521 [info] <0.169.0>@bridge_manager:handle_info:{187,5} pool build done: connected=4/4 failed=0
+2026-06-28 00:12:40.449 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 0: slot=0, fired=0, active=1
+2026-06-28 00:12:40.449 [info] <0.180.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:58557
+2026-06-28 00:12:40.449 [info] <0.182.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:58557 pid=<0.182.0>
+2026-06-28 00:12:40.449 [info] <0.181.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:58558
+2026-06-28 00:12:40.449 [info] <0.184.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:58558 pid=<0.184.0>
+2026-06-28 00:12:40.449 [info] <0.183.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:58559
+2026-06-28 00:12:40.449 [info] <0.186.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:58559 pid=<0.186.0>
+2026-06-28 00:12:40.449 [info] <0.185.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:58560
+2026-06-28 00:12:40.449 [info] <0.188.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:58560 pid=<0.188.0>
+2026-06-28 00:12:40.455 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:58558 id=1 method=list_tools
+2026-06-28 00:12:40.455 [info] <0.169.0>@bridge_manager:handle_call:{134,5} list_tools queued, timeout=1500ms
+2026-06-28 00:12:40.459 [info] <0.169.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=2 ref=#Ref<0.2809074767.2069889030.200085> kind=tool_list req_id=<<"list-263">> timeout=1500ms
+2026-06-28 00:12:40.459 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=1896 ref=#Ref<0.2809074767.2069889030.200085> kind=tool_list req_id=<<"list-263">> resp_kind=tool_list
+2026-06-28 00:12:40.459 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:58559 id=2 method=start_session
+2026-06-28 00:12:40.461 [info] <0.191.0>@agent_fsm:init:{112,13} agent_fsm fresh start, session_id=<<"sess-1782576760458-407297">>
+2026-06-28 00:12:40.461 [info] <0.190.0>@panel_server:handle_method:{333,14} session started: id=<<"sess-1782576760458-407297">> pid=<0.191.0>
+2026-06-28 00:12:40.461 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:58560 id=3 method=brain_status
+2026-06-28 00:12:40.463 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:58557 id=4 method=send
+2026-06-28 00:12:40.463 [info] <0.191.0>@agent_fsm:idle:{185,5} session started, session_id=<<"sess-1782576760458-407297">>, history_len=0
+2026-06-28 00:12:40.463 [info] <0.191.0>@agent_fsm:thinking:{202,5} thinking(enter) fired, model=<<"deepseek-v4-pro">>, history_len=1, loop=0/10
+2026-06-28 00:12:40.463 [info] <0.169.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_search, req_id=rag-1347, timeout=10000ms
+2026-06-28 00:12:40.463 [info] <0.169.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=119 ref=#Ref<0.2809074767.2069889026.200467> kind=tool req_id=<<"rag-1347">> timeout=10000ms
+2026-06-28 00:12:40.464 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=25 ref=#Ref<0.2809074767.2069889026.200467> kind=tool req_id=<<"rag-1347">> resp_kind=tool_exec
+2026-06-28 00:12:40.465 [info] <0.191.0>@agent_fsm:thinking:{222,5} llm request dispatched, ref=#Ref<0.2809074767.2069889026.200492>
+2026-06-28 00:12:40.465 [info] <0.169.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.2809074767.2069889026.200492>, fsm_pid=<0.191.0>
+2026-06-28 00:12:40.465 [info] <0.169.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=2237 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined timeout=60000ms
+2026-06-28 00:12:41.457 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 1: slot=1, fired=0, active=1
+2026-06-28 00:12:41.468 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.779 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.832 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.832 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.832 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.832 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.832 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.849 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.887 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.887 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=15 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.887 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.887 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.887 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.887 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.925 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.925 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:41.962 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.002 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.040 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=16 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.040 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.040 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.080 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.080 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.080 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.080 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.080 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.080 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.119 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.157 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.157 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.157 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.157 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.195 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.195 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.235 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=15 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.235 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.235 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:12:42.236 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=194 ref=#Ref<0.2809074767.2069889026.200492> kind=llm req_id=undefined resp_kind=llm_infer
+2026-06-28 00:12:42.236 [info] <0.191.0>@agent_fsm:thinking:{240,5} llm_response received, content_size=6, tool_calls=0, prompt_tokens=801
+2026-06-28 00:12:42.236 [info] <0.191.0>@agent_fsm:thinking:{254,13} final answer ready, transitioning thinking -> idle
+2026-06-28 00:12:42.236 [info] <0.169.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.2809074767.2069889026.200521>, fsm_pid=<0.177.0>
+2026-06-28 00:12:42.236 [info] <0.177.0>@memory_summarizer:maybe_start_summarize:{171,14} memory_summarizer llm dispatched session=sess-1782576760458-407297 ref=#Ref<0.2809074767.2069889026.200521> msgs=2
+2026-06-28 00:12:42.236 [info] <0.169.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=421 ref=#Ref<0.2809074767.2069889026.200521> kind=llm req_id=undefined timeout=60000ms
+2026-06-28 00:12:42.267 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:58558 id=5 method=brain_status
+2026-06-28 00:12:42.267 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:58559 id=6 method=get_history
+2026-06-28 00:12:42.267 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:58560 id=7 method=delete_session
+2026-06-28 00:12:42.267 [info] <0.169.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_purge_session, req_id=purge-5, timeout=15000ms
+2026-06-28 00:12:42.267 [info] <0.169.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.6> bytes=77 ref=#Ref<0.2809074767.2069889028.199636> kind=tool req_id=<<"purge-5">> timeout=15000ms
+2026-06-28 00:12:42.267 [info] <0.177.0>@memory_summarizer:handle_cast:{84,6} memory_summarizer purged session=sess-1782576760458-407297
+2026-06-28 00:12:42.268 [info] <0.169.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=58 ref=#Ref<0.2809074767.2069889028.199636> kind=tool req_id=<<"purge-5">> resp_kind=tool_exec
+2026-06-28 00:12:42.268 [info] <0.196.0>@panel_server:handle_method:{403,6} session deleted: id=<<"sess-1782576760458-407297">>
+2026-06-28 00:12:42.268 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:58557 id=8 method=stop
+2026-06-28 00:12:42.268 [info] <0.186.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:58559 closed by peer
+2026-06-28 00:12:42.268 [info] <0.188.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:58560 closed by peer
+2026-06-28 00:12:42.269 [info] <0.182.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:58557 closed by peer
+2026-06-28 00:12:42.269 [info] <0.184.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:58558 closed by peer
+2026-06-28 00:18:38.571 [info] <0.117.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-28 00:18:38.575 [info] <0.119.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-28 00:18:38.594 [info] <0.120.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at e:/light-code-ai-1/scrtps/../Agent-brains/config/mnesia
+2026-06-28 00:18:38.626 [info] <0.120.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-28 00:18:38.626 [info] <0.120.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-28 00:18:38.628 [error] <0.120.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-28 00:18:38.628 [warning] <0.165.0>@state_store:init:{104,13} state_store: restore hermes_brains_state failed: {mnesia_read_failed,{no_exists,ets_snapshot}}, starting fresh
+2026-06-28 00:18:38.642 [info] <0.171.0>@bridge_manager:read_addr_file:{481,13} read addr from file e:/light-code-ai-1/scrtps/../bin/run/eion-tools.addr: 127.0.0.1:63057
+2026-06-28 00:18:38.642 [info] <0.171.0>@bridge_manager:init:{117,5} bridge_manager init: addr=127.0.0.1:63057 pool_size=4
+2026-06-28 00:18:38.642 [info] <0.171.0>@bridge_manager:handle_info:{175,5} connect_all: building pool, addr=127.0.0.1:63057 target_size=4
+2026-06-28 00:18:38.651 [info] <0.175.0>@case_store:create_table:{137,14} case_store table already exists: failure_cases
+2026-06-28 00:18:38.651 [info] <0.175.0>@case_store:init:{92,14} case_store started, table=failure_cases, max_cases=200
+2026-06-28 00:18:38.652 [info] <0.177.0>@memory_summarizer:init:{52,14} memory_summarizer started, table=session_summaries
+2026-06-28 00:18:38.654 [info] <0.179.0>@panel_server:init:{122,24} panel addr file written: e:/light-code-ai-1/scrtps/../bin/run/panel.addr (127.0.0.1:51781)
+2026-06-28 00:18:38.662 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 1/4 connected: socket=#Port<0.5>
+2026-06-28 00:18:38.663 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 2/4 connected: socket=#Port<0.6>
+2026-06-28 00:18:38.663 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 3/4 connected: socket=#Port<0.7>
+2026-06-28 00:18:38.664 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 4/4 connected: socket=#Port<0.8>
+2026-06-28 00:18:38.664 [info] <0.171.0>@bridge_manager:handle_info:{187,5} pool build done: connected=4/4 failed=0
+2026-06-28 00:18:39.585 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 0: slot=0, fired=0, active=1
+2026-06-28 00:18:40.588 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 1: slot=1, fired=0, active=1
+2026-06-28 00:18:41.597 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 2: slot=2, fired=0, active=1
+2026-06-28 00:18:42.602 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 3: slot=3, fired=0, active=1
+2026-06-28 00:18:43.609 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 4: slot=4, fired=0, active=1
+2026-06-28 00:18:44.612 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 5: slot=5, fired=0, active=1
+2026-06-28 00:18:45.486 [info] <0.180.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:51795
+2026-06-28 00:18:45.487 [info] <0.182.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:51795 pid=<0.182.0>
+2026-06-28 00:18:45.487 [info] <0.181.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:51796
+2026-06-28 00:18:45.487 [info] <0.184.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:51796 pid=<0.184.0>
+2026-06-28 00:18:45.487 [info] <0.183.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:51797
+2026-06-28 00:18:45.487 [info] <0.186.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:51797 pid=<0.186.0>
+2026-06-28 00:18:45.487 [info] <0.185.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:51798
+2026-06-28 00:18:45.487 [info] <0.188.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:51798 pid=<0.188.0>
+2026-06-28 00:18:45.492 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:51796 id=1 method=list_tools
+2026-06-28 00:18:45.492 [info] <0.171.0>@bridge_manager:handle_call:{134,5} list_tools queued, timeout=1500ms
+2026-06-28 00:18:45.497 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=2 ref=#Ref<0.896644141.3949985793.169847> kind=tool_list req_id=<<"list-1282">> timeout=1500ms
+2026-06-28 00:18:45.497 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=1896 ref=#Ref<0.896644141.3949985793.169847> kind=tool_list req_id=<<"list-1282">> resp_kind=tool_list
+2026-06-28 00:18:45.497 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:51797 id=2 method=start_session
+2026-06-28 00:18:45.498 [info] <0.191.0>@agent_fsm:init:{112,13} agent_fsm fresh start, session_id=<<"sess-1782577125497-63357">>
+2026-06-28 00:18:45.498 [info] <0.190.0>@panel_server:handle_method:{333,14} session started: id=<<"sess-1782577125497-63357">> pid=<0.191.0>
+2026-06-28 00:18:45.498 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:51798 id=3 method=brain_status
+2026-06-28 00:18:45.499 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:51795 id=4 method=send
+2026-06-28 00:18:45.499 [info] <0.191.0>@agent_fsm:idle:{185,5} session started, session_id=<<"sess-1782577125497-63357">>, history_len=0
+2026-06-28 00:18:45.499 [info] <0.191.0>@agent_fsm:thinking:{202,5} thinking(enter) fired, model=<<"deepseek-v4-pro">>, history_len=1, loop=0/10
+2026-06-28 00:18:45.500 [info] <0.171.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_search, req_id=rag-292, timeout=10000ms
+2026-06-28 00:18:45.500 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=117 ref=#Ref<0.896644141.3949985795.170240> kind=tool req_id=<<"rag-292">> timeout=10000ms
+2026-06-28 00:18:45.500 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=25 ref=#Ref<0.896644141.3949985795.170240> kind=tool req_id=<<"rag-292">> resp_kind=tool_exec
+2026-06-28 00:18:45.501 [info] <0.191.0>@agent_fsm:thinking:{222,5} llm request dispatched, ref=#Ref<0.896644141.3949985795.170265>
+2026-06-28 00:18:45.501 [info] <0.171.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.896644141.3949985795.170265>, fsm_pid=<0.191.0>
+2026-06-28 00:18:45.501 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=2237 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined timeout=60000ms
+2026-06-28 00:18:45.627 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 6: slot=6, fired=0, active=1
+2026-06-28 00:18:46.234 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.384 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.421 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.421 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.421 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.421 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.461 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.461 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.500 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.538 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.538 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=15 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.538 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.538 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.538 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.538 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.575 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.575 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.575 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.575 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.613 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.613 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.613 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.632 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 7: slot=7, fired=0, active=1
+2026-06-28 00:18:46.650 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.650 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.650 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.650 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.652 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.652 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.693 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.694 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=6 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.694 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=11 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.694 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.694 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.729 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=9 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.729 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=12 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.729 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.769 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=8 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.769 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=15 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.769 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.769 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:18:46.769 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=209 ref=#Ref<0.896644141.3949985795.170265> kind=llm req_id=undefined resp_kind=llm_infer
+2026-06-28 00:18:46.769 [info] <0.191.0>@agent_fsm:thinking:{240,5} llm_response received, content_size=6, tool_calls=0, prompt_tokens=801
+2026-06-28 00:18:46.769 [info] <0.191.0>@agent_fsm:thinking:{254,13} final answer ready, transitioning thinking -> idle
+2026-06-28 00:18:46.769 [info] <0.177.0>@memory_summarizer:maybe_start_summarize:{171,14} memory_summarizer llm dispatched session=sess-1782577125497-63357 ref=#Ref<0.896644141.3949985795.170530> msgs=2
+2026-06-28 00:18:46.769 [info] <0.171.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.896644141.3949985795.170530>, fsm_pid=<0.177.0>
+2026-06-28 00:18:46.769 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=421 ref=#Ref<0.896644141.3949985795.170530> kind=llm req_id=undefined timeout=60000ms
+2026-06-28 00:18:46.901 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:51796 id=5 method=brain_status
+2026-06-28 00:18:46.902 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:51797 id=6 method=get_history
+2026-06-28 00:18:46.902 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:51798 id=7 method=delete_session
+2026-06-28 00:18:46.902 [info] <0.171.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_purge_session, req_id=purge-324, timeout=15000ms
+2026-06-28 00:18:46.902 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.6> bytes=78 ref=#Ref<0.896644141.3949985795.170542> kind=tool req_id=<<"purge-324">> timeout=15000ms
+2026-06-28 00:18:46.902 [info] <0.177.0>@memory_summarizer:handle_cast:{84,6} memory_summarizer purged session=sess-1782577125497-63357
+2026-06-28 00:18:46.903 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=57 ref=#Ref<0.896644141.3949985795.170542> kind=tool req_id=<<"purge-324">> resp_kind=tool_exec
+2026-06-28 00:18:46.903 [info] <0.196.0>@panel_server:handle_method:{403,6} session deleted: id=<<"sess-1782577125497-63357">>
+2026-06-28 00:18:46.903 [info] <0.182.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:51795 id=8 method=stop
+2026-06-28 00:18:46.904 [info] <0.188.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:51798 closed by peer
+2026-06-28 00:18:46.904 [info] <0.186.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:51797 closed by peer
+2026-06-28 00:18:46.904 [info] <0.182.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:51795 closed by peer
+2026-06-28 00:18:46.904 [info] <0.184.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:51796 closed by peer
+2026-06-28 00:19:53.850 [info] <0.117.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-28 00:19:53.855 [info] <0.119.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-28 00:19:53.874 [info] <0.120.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at e:/light-code-ai-1/scrtps/../Agent-brains/config/mnesia
+2026-06-28 00:19:53.905 [info] <0.120.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-28 00:19:53.905 [info] <0.120.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-28 00:19:53.906 [error] <0.120.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-28 00:19:53.906 [warning] <0.167.0>@state_store:init:{104,13} state_store: restore hermes_brains_state failed: {mnesia_read_failed,{no_exists,ets_snapshot}}, starting fresh
+2026-06-28 00:19:53.920 [info] <0.171.0>@bridge_manager:read_addr_file:{481,13} read addr from file e:/light-code-ai-1/scrtps/../bin/run/eion-tools.addr: 127.0.0.1:51794
+2026-06-28 00:19:53.920 [info] <0.171.0>@bridge_manager:init:{117,5} bridge_manager init: addr=127.0.0.1:51794 pool_size=4
+2026-06-28 00:19:53.920 [info] <0.171.0>@bridge_manager:handle_info:{175,5} connect_all: building pool, addr=127.0.0.1:51794 target_size=4
+2026-06-28 00:19:53.928 [info] <0.175.0>@case_store:create_table:{137,14} case_store table already exists: failure_cases
+2026-06-28 00:19:53.928 [info] <0.175.0>@case_store:init:{92,14} case_store started, table=failure_cases, max_cases=200
+2026-06-28 00:19:53.929 [info] <0.177.0>@memory_summarizer:init:{52,14} memory_summarizer started, table=session_summaries
+2026-06-28 00:19:53.931 [info] <0.179.0>@panel_server:init:{122,24} panel addr file written: e:/light-code-ai-1/scrtps/../bin/run/panel.addr (127.0.0.1:51928)
+2026-06-28 00:19:54.490 [info] <0.180.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:51930
+2026-06-28 00:19:54.490 [info] <0.182.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:51930 pid=<0.182.0>
+2026-06-28 00:19:54.492 [info] <0.182.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:51930 closed by peer
+2026-06-28 00:19:54.867 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 0: slot=0, fired=0, active=1
+2026-06-28 00:19:55.881 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 1: slot=1, fired=0, active=1
+2026-06-28 00:19:55.975 [warning] <0.171.0>@bridge_manager:handle_info:{182,17} pool slot 1/4 connect failed: econnrefused
+2026-06-28 00:19:56.889 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 2: slot=2, fired=0, active=1
+2026-06-28 00:19:57.892 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 3: slot=3, fired=0, active=1
+2026-06-28 00:19:58.014 [warning] <0.171.0>@bridge_manager:handle_info:{182,17} pool slot 2/4 connect failed: econnrefused
+2026-06-28 00:19:58.515 [info] <0.181.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:51945
+2026-06-28 00:19:58.515 [info] <0.184.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:51945 pid=<0.184.0>
+2026-06-28 00:19:58.515 [info] <0.183.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:51946
+2026-06-28 00:19:58.515 [info] <0.186.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:51946 pid=<0.186.0>
+2026-06-28 00:19:58.515 [info] <0.185.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:51947
+2026-06-28 00:19:58.515 [info] <0.188.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:51947 pid=<0.188.0>
+2026-06-28 00:19:58.515 [info] <0.187.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:51948
+2026-06-28 00:19:58.515 [info] <0.190.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:51948 pid=<0.190.0>
+2026-06-28 00:19:58.520 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:51946 id=1 method=list_tools
+2026-06-28 00:19:58.906 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 4: slot=4, fired=0, active=1
+2026-06-28 00:19:59.911 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 5: slot=5, fired=0, active=1
+2026-06-28 00:20:00.051 [warning] <0.171.0>@bridge_manager:handle_info:{182,17} pool slot 3/4 connect failed: econnrefused
+2026-06-28 00:20:00.916 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 6: slot=6, fired=0, active=1
+2026-06-28 00:20:01.921 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 7: slot=7, fired=0, active=1
+2026-06-28 00:20:02.030 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:51947 id=2 method=start_session
+2026-06-28 00:20:02.031 [info] <0.193.0>@agent_fsm:init:{112,13} agent_fsm fresh start, session_id=<<"sess-1782577202030-854114">>
+2026-06-28 00:20:02.031 [info] <0.192.0>@panel_server:handle_method:{333,14} session started: id=<<"sess-1782577202030-854114">> pid=<0.193.0>
+2026-06-28 00:20:02.031 [info] <0.190.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:51948 id=3 method=brain_status
+2026-06-28 00:20:02.033 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:51945 id=4 method=send
+2026-06-28 00:20:02.033 [info] <0.193.0>@agent_fsm:idle:{185,5} session started, session_id=<<"sess-1782577202030-854114">>, history_len=0
+2026-06-28 00:20:02.033 [info] <0.193.0>@agent_fsm:thinking:{202,5} thinking(enter) fired, model=<<"deepseek-v4-pro">>, history_len=1, loop=0/10
+2026-06-28 00:20:02.092 [warning] <0.171.0>@bridge_manager:handle_info:{182,17} pool slot 4/4 connect failed: econnrefused
+2026-06-28 00:20:02.092 [info] <0.171.0>@bridge_manager:handle_info:{187,5} pool build done: connected=0/4 failed=4
+2026-06-28 00:20:02.092 [warning] <0.171.0>@bridge_manager:handle_info:{192,13} all pool connections failed, full retry in 2000ms
+2026-06-28 00:20:02.092 [info] <0.171.0>@bridge_manager:handle_call:{134,5} list_tools queued, timeout=1500ms
+2026-06-28 00:20:02.095 [info] <0.171.0>@bridge_manager:dispatch:{514,13} no idle conn, request queued: queue_len=1
+2026-06-28 00:20:02.095 [info] <0.171.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_search, req_id=rag-1544, timeout=10000ms
+2026-06-28 00:20:02.095 [info] <0.171.0>@bridge_manager:dispatch:{514,13} no idle conn, request queued: queue_len=2
+2026-06-28 00:20:02.932 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 8: slot=8, fired=0, active=1
+2026-06-28 00:20:03.940 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 9: slot=9, fired=0, active=1
+2026-06-28 00:20:04.097 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:51794 target_size=4
+2026-06-28 00:20:04.951 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 10: slot=10, fired=0, active=1
+2026-06-28 00:20:05.960 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 11: slot=11, fired=0, active=1
+2026-06-28 00:20:06.144 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:20:06.964 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 12: slot=12, fired=0, active=1
+2026-06-28 00:20:07.969 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 13: slot=13, fired=0, active=1
+2026-06-28 00:20:08.154 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:51794 target_size=4
+2026-06-28 00:20:08.972 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 14: slot=14, fired=0, active=1
+2026-06-28 00:20:09.974 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 15: slot=15, fired=0, active=1
+2026-06-28 00:20:10.189 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:20:10.990 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 16: slot=16, fired=0, active=1
+2026-06-28 00:20:12.004 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 17: slot=17, fired=0, active=1
+2026-06-28 00:20:12.203 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:51794 target_size=4
+2026-06-28 00:20:13.008 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 18: slot=18, fired=0, active=1
+2026-06-28 00:20:14.012 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 19: slot=19, fired=0, active=1
+2026-06-28 00:20:14.045 [info] <0.193.0>@agent_fsm:thinking:{222,5} llm request dispatched, ref=#Ref<0.3888768794.2608332801.166153>
+2026-06-28 00:20:14.245 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:20:14.245 [info] <0.171.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.3888768794.2608332801.166153>, fsm_pid=<0.193.0>
+2026-06-28 00:20:14.245 [info] <0.171.0>@bridge_manager:dispatch:{514,13} no idle conn, request queued: queue_len=3
+2026-06-28 00:20:15.019 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 20: slot=20, fired=0, active=1
+2026-06-28 00:20:16.021 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 21: slot=21, fired=0, active=1
+2026-06-28 00:20:16.253 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:51794 target_size=4
+2026-06-28 00:20:17.027 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 22: slot=22, fired=0, active=1
+2026-06-28 00:20:18.032 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 23: slot=23, fired=0, active=1
+2026-06-28 00:20:18.294 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:20:19.047 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 24: slot=24, fired=0, active=1
+2026-06-28 00:20:36.806 [info] <0.117.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-28 00:20:36.811 [info] <0.119.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-28 00:20:36.830 [info] <0.120.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at e:/light-code-ai-1/scrtps/../Agent-brains/config/mnesia
+2026-06-28 00:20:36.857 [info] <0.120.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-28 00:20:36.857 [info] <0.120.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-28 00:20:36.859 [error] <0.120.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-28 00:20:36.859 [warning] <0.167.0>@state_store:init:{104,13} state_store: restore hermes_brains_state failed: {mnesia_read_failed,{no_exists,ets_snapshot}}, starting fresh
+2026-06-28 00:20:36.873 [info] <0.171.0>@bridge_manager:read_addr_file:{481,13} read addr from file e:/light-code-ai-1/scrtps/../bin/run/eion-tools.addr: 127.0.0.1:51944
+2026-06-28 00:20:36.873 [info] <0.171.0>@bridge_manager:init:{117,5} bridge_manager init: addr=127.0.0.1:51944 pool_size=4
+2026-06-28 00:20:36.873 [info] <0.171.0>@bridge_manager:handle_info:{175,5} connect_all: building pool, addr=127.0.0.1:51944 target_size=4
+2026-06-28 00:20:36.880 [info] <0.175.0>@case_store:create_table:{137,14} case_store table already exists: failure_cases
+2026-06-28 00:20:36.880 [info] <0.175.0>@case_store:init:{92,14} case_store started, table=failure_cases, max_cases=200
+2026-06-28 00:20:36.881 [info] <0.177.0>@memory_summarizer:init:{52,14} memory_summarizer started, table=session_summaries
+2026-06-28 00:20:36.883 [info] <0.179.0>@panel_server:init:{122,24} panel addr file written: e:/light-code-ai-1/scrtps/../bin/run/panel.addr (127.0.0.1:52063)
+2026-06-28 00:20:36.890 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 1/4 connected: socket=#Port<0.5>
+2026-06-28 00:20:36.890 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 2/4 connected: socket=#Port<0.6>
+2026-06-28 00:20:36.890 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 3/4 connected: socket=#Port<0.7>
+2026-06-28 00:20:36.890 [info] <0.171.0>@bridge_manager:handle_info:{179,17} pool slot 4/4 connected: socket=#Port<0.8>
+2026-06-28 00:20:36.890 [info] <0.171.0>@bridge_manager:handle_info:{187,5} pool build done: connected=4/4 failed=0
+2026-06-28 00:20:37.169 [info] <0.180.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:52068
+2026-06-28 00:20:37.169 [info] <0.182.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:52068 pid=<0.182.0>
+2026-06-28 00:20:37.170 [info] <0.182.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:52068 closed by peer
+2026-06-28 00:20:37.828 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 0: slot=0, fired=0, active=1
+2026-06-28 00:20:38.840 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 1: slot=1, fired=0, active=1
+2026-06-28 00:20:39.847 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 2: slot=2, fired=0, active=1
+2026-06-28 00:20:40.852 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 3: slot=3, fired=0, active=1
+2026-06-28 00:20:41.441 [info] <0.181.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:61170
+2026-06-28 00:20:41.441 [info] <0.184.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:61170 pid=<0.184.0>
+2026-06-28 00:20:41.441 [info] <0.183.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:61171
+2026-06-28 00:20:41.442 [info] <0.186.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:61171 pid=<0.186.0>
+2026-06-28 00:20:41.442 [info] <0.185.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:61172
+2026-06-28 00:20:41.442 [info] <0.188.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:61172 pid=<0.188.0>
+2026-06-28 00:20:41.442 [info] <0.187.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:61173
+2026-06-28 00:20:41.442 [info] <0.190.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:61173 pid=<0.190.0>
+2026-06-28 00:20:41.447 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:61171 id=1 method=list_tools
+2026-06-28 00:20:41.448 [info] <0.171.0>@bridge_manager:handle_call:{134,5} list_tools queued, timeout=1500ms
+2026-06-28 00:20:41.450 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=2 ref=#Ref<0.1625050149.1266155528.232174> kind=tool_list req_id=<<"list-201">> timeout=1500ms
+2026-06-28 00:20:41.450 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=1896 ref=#Ref<0.1625050149.1266155528.232174> kind=tool_list req_id=<<"list-201">> resp_kind=tool_list
+2026-06-28 00:20:41.452 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:61172 id=2 method=start_session
+2026-06-28 00:20:41.453 [info] <0.193.0>@agent_fsm:init:{112,13} agent_fsm fresh start, session_id=<<"sess-1782577241450-195186">>
+2026-06-28 00:20:41.453 [info] <0.192.0>@panel_server:handle_method:{333,14} session started: id=<<"sess-1782577241450-195186">> pid=<0.193.0>
+2026-06-28 00:20:41.453 [info] <0.190.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:61173 id=3 method=brain_status
+2026-06-28 00:20:41.454 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:61170 id=4 method=send
+2026-06-28 00:20:41.454 [info] <0.193.0>@agent_fsm:idle:{185,5} session started, session_id=<<"sess-1782577241450-195186">>, history_len=0
+2026-06-28 00:20:41.454 [info] <0.193.0>@agent_fsm:thinking:{202,5} thinking(enter) fired, model=<<"deepseek-v4-pro">>, history_len=1, loop=0/10
+2026-06-28 00:20:41.455 [info] <0.171.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_search, req_id=rag-265, timeout=10000ms
+2026-06-28 00:20:41.455 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=118 ref=#Ref<0.1625050149.1266155528.232205> kind=tool req_id=<<"rag-265">> timeout=10000ms
+2026-06-28 00:20:41.455 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=25 ref=#Ref<0.1625050149.1266155528.232205> kind=tool req_id=<<"rag-265">> resp_kind=tool_exec
+2026-06-28 00:20:41.456 [info] <0.171.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.1625050149.1266155528.232218>, fsm_pid=<0.193.0>
+2026-06-28 00:20:41.456 [info] <0.193.0>@agent_fsm:thinking:{222,5} llm request dispatched, ref=#Ref<0.1625050149.1266155528.232218>
+2026-06-28 00:20:41.456 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=2237 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined timeout=60000ms
+2026-06-28 00:20:41.867 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 4: slot=4, fired=0, active=1
+2026-06-28 00:20:42.275 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.419 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.456 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.456 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.456 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.456 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.456 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.492 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.492 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.533 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.612 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.612 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=13 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.612 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.626 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.626 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.626 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.689 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.689 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.689 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.701 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.701 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=5 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.701 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.701 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=7 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.701 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=10 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_chunk
+2026-06-28 00:20:42.736 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.5> bytes=137 ref=#Ref<0.1625050149.1266155528.232218> kind=llm req_id=undefined resp_kind=llm_infer
+2026-06-28 00:20:42.736 [info] <0.193.0>@agent_fsm:thinking:{240,5} llm_response received, content_size=6, tool_calls=0, prompt_tokens=801
+2026-06-28 00:20:42.736 [info] <0.193.0>@agent_fsm:thinking:{254,13} final answer ready, transitioning thinking -> idle
+2026-06-28 00:20:42.736 [info] <0.177.0>@memory_summarizer:maybe_start_summarize:{171,14} memory_summarizer llm dispatched session=sess-1782577241450-195186 ref=#Ref<0.1625050149.1266155528.232308> msgs=2
+2026-06-28 00:20:42.736 [info] <0.171.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.1625050149.1266155528.232308>, fsm_pid=<0.177.0>
+2026-06-28 00:20:42.736 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.5> bytes=421 ref=#Ref<0.1625050149.1266155528.232308> kind=llm req_id=undefined timeout=60000ms
+2026-06-28 00:20:42.857 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:61171 id=5 method=brain_status
+2026-06-28 00:20:42.857 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:61172 id=6 method=get_history
+2026-06-28 00:20:42.857 [info] <0.190.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:61173 id=7 method=delete_session
+2026-06-28 00:20:42.857 [info] <0.171.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_purge_session, req_id=purge-297, timeout=15000ms
+2026-06-28 00:20:42.857 [info] <0.171.0>@bridge_manager:send_item:{539,13} request sent: socket=#Port<0.6> bytes=79 ref=#Ref<0.1625050149.1266155528.232350> kind=tool req_id=<<"purge-297">> timeout=15000ms
+2026-06-28 00:20:42.857 [info] <0.177.0>@memory_summarizer:handle_cast:{84,6} memory_summarizer purged session=sess-1782577241450-195186
+2026-06-28 00:20:42.858 [info] <0.171.0>@bridge_manager:handle_info:{262,13} tcp response received: socket=#Port<0.6> bytes=58 ref=#Ref<0.1625050149.1266155528.232350> kind=tool req_id=<<"purge-297">> resp_kind=tool_exec
+2026-06-28 00:20:42.858 [info] <0.198.0>@panel_server:handle_method:{403,6} session deleted: id=<<"sess-1782577241450-195186">>
+2026-06-28 00:20:42.858 [info] <0.184.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:61170 id=8 method=stop
+2026-06-28 00:20:42.858 [info] <0.186.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:61171 closed by peer
+2026-06-28 00:20:42.859 [info] <0.190.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:61173 closed by peer
+2026-06-28 00:20:42.859 [info] <0.188.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:61172 closed by peer
+2026-06-28 00:20:42.859 [info] <0.184.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:61170 closed by peer
+2026-06-28 00:20:42.877 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 5: slot=5, fired=0, active=1
+2026-06-28 00:22:30.837 [info] <0.117.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-28 00:22:30.842 [info] <0.119.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-28 00:22:30.859 [info] <0.120.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at e:/light-code-ai-1/scrtps/../Agent-brains/config/mnesia
+2026-06-28 00:22:30.886 [info] <0.120.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-28 00:22:30.886 [info] <0.120.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-28 00:22:30.888 [error] <0.120.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-28 00:22:30.888 [warning] <0.165.0>@state_store:init:{104,13} state_store: restore hermes_brains_state failed: {mnesia_read_failed,{no_exists,ets_snapshot}}, starting fresh
+2026-06-28 00:22:30.901 [info] <0.171.0>@bridge_manager:read_addr_file:{481,13} read addr from file e:/light-code-ai-1/scrtps/../bin/run/eion-tools.addr: 127.0.0.1:61169
+2026-06-28 00:22:30.901 [info] <0.171.0>@bridge_manager:init:{117,5} bridge_manager init: addr=127.0.0.1:61169 pool_size=4
+2026-06-28 00:22:30.901 [info] <0.171.0>@bridge_manager:handle_info:{175,5} connect_all: building pool, addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:22:30.909 [info] <0.175.0>@case_store:create_table:{137,14} case_store table already exists: failure_cases
+2026-06-28 00:22:30.909 [info] <0.175.0>@case_store:init:{92,14} case_store started, table=failure_cases, max_cases=200
+2026-06-28 00:22:30.910 [info] <0.177.0>@memory_summarizer:init:{52,14} memory_summarizer started, table=session_summaries
+2026-06-28 00:22:30.911 [info] <0.179.0>@panel_server:init:{122,24} panel addr file written: e:/light-code-ai-1/scrtps/../bin/run/panel.addr (127.0.0.1:56004)
+2026-06-28 00:22:31.264 [info] <0.180.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:56007
+2026-06-28 00:22:31.264 [info] <0.182.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:56007 pid=<0.182.0>
+2026-06-28 00:22:31.264 [info] <0.182.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:56007 closed by peer
+2026-06-28 00:22:31.842 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 0: slot=0, fired=0, active=1
+2026-06-28 00:22:32.850 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 1: slot=1, fired=0, active=1
+2026-06-28 00:22:32.961 [warning] <0.171.0>@bridge_manager:handle_info:{182,17} pool slot 1/4 connect failed: econnrefused
+2026-06-28 00:22:33.860 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 2: slot=2, fired=0, active=1
+2026-06-28 00:22:34.864 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 3: slot=3, fired=0, active=1
+2026-06-28 00:22:35.003 [warning] <0.171.0>@bridge_manager:handle_info:{182,17} pool slot 2/4 connect failed: econnrefused
+2026-06-28 00:22:35.880 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 4: slot=4, fired=0, active=1
+2026-06-28 00:22:36.894 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 5: slot=5, fired=0, active=1
+2026-06-28 00:22:37.033 [warning] <0.171.0>@bridge_manager:handle_info:{182,17} pool slot 3/4 connect failed: econnrefused
+2026-06-28 00:22:37.898 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 6: slot=6, fired=0, active=1
+2026-06-28 00:22:38.165 [info] <0.181.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:56024
+2026-06-28 00:22:38.165 [info] <0.184.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:56024 pid=<0.184.0>
+2026-06-28 00:22:38.165 [info] <0.183.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:56025
+2026-06-28 00:22:38.166 [info] <0.186.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:56025 pid=<0.186.0>
+2026-06-28 00:22:38.166 [info] <0.185.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:56026
+2026-06-28 00:22:38.166 [info] <0.188.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:56026 pid=<0.188.0>
+2026-06-28 00:22:38.166 [info] <0.187.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:56027
+2026-06-28 00:22:38.166 [info] <0.190.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:56027 pid=<0.190.0>
+2026-06-28 00:22:38.171 [info] <0.186.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:56025 id=1 method=start_session
+2026-06-28 00:22:38.172 [info] <0.192.0>@agent_fsm:init:{112,13} agent_fsm fresh start, session_id=<<"sess-1782577358171-921905">>
+2026-06-28 00:22:38.172 [info] <0.191.0>@panel_server:handle_method:{333,14} session started: id=<<"sess-1782577358171-921905">> pid=<0.192.0>
+2026-06-28 00:22:38.173 [info] <0.188.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:56026 id=2 method=send
+2026-06-28 00:22:38.173 [info] <0.192.0>@agent_fsm:idle:{185,5} session started, session_id=<<"sess-1782577358171-921905">>, history_len=0
+2026-06-28 00:22:38.173 [info] <0.192.0>@agent_fsm:thinking:{202,5} thinking(enter) fired, model=<<"deepseek-v4-pro">>, history_len=1, loop=0/10
+2026-06-28 00:22:38.902 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 7: slot=7, fired=0, active=1
+2026-06-28 00:22:39.072 [warning] <0.171.0>@bridge_manager:handle_info:{182,17} pool slot 4/4 connect failed: econnrefused
+2026-06-28 00:22:39.072 [info] <0.171.0>@bridge_manager:handle_info:{187,5} pool build done: connected=0/4 failed=4
+2026-06-28 00:22:39.072 [warning] <0.171.0>@bridge_manager:handle_info:{192,13} all pool connections failed, full retry in 2000ms
+2026-06-28 00:22:39.072 [info] <0.171.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_search, req_id=rag-297, timeout=10000ms
+2026-06-28 00:22:39.075 [info] <0.171.0>@bridge_manager:dispatch:{514,13} no idle conn, request queued: queue_len=1
+2026-06-28 00:22:39.906 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 8: slot=8, fired=0, active=1
+2026-06-28 00:22:40.916 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 9: slot=9, fired=0, active=1
+2026-06-28 00:22:41.087 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:22:41.922 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 10: slot=10, fired=0, active=1
+2026-06-28 00:22:42.926 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 11: slot=11, fired=0, active=1
+2026-06-28 00:22:43.126 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:22:43.933 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 12: slot=12, fired=0, active=1
+2026-06-28 00:22:44.949 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 13: slot=13, fired=0, active=1
+2026-06-28 00:22:45.135 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:22:45.958 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 14: slot=14, fired=0, active=1
+2026-06-28 00:22:46.975 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 15: slot=15, fired=0, active=1
+2026-06-28 00:22:47.176 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:22:47.977 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 16: slot=16, fired=0, active=1
+2026-06-28 00:22:48.990 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 17: slot=17, fired=0, active=1
+2026-06-28 00:22:49.190 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:22:49.995 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 18: slot=18, fired=0, active=1
+2026-06-28 00:22:50.183 [info] <0.192.0>@agent_fsm:thinking:{222,5} llm request dispatched, ref=#Ref<0.3857772804.1803550728.35680>
+2026-06-28 00:22:50.998 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 19: slot=19, fired=0, active=1
+2026-06-28 00:22:51.229 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:22:51.229 [info] <0.171.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.3857772804.1803550728.35680>, fsm_pid=<0.192.0>
+2026-06-28 00:22:51.229 [info] <0.171.0>@bridge_manager:dispatch:{514,13} no idle conn, request queued: queue_len=2
+2026-06-28 00:22:52.016 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 20: slot=20, fired=0, active=1
+2026-06-28 00:22:53.026 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 21: slot=21, fired=0, active=1
+2026-06-28 00:22:53.241 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:22:54.032 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 22: slot=22, fired=0, active=1
+2026-06-28 00:22:55.035 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 23: slot=23, fired=0, active=1
+2026-06-28 00:22:55.282 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:22:56.036 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 24: slot=24, fired=0, active=1
+2026-06-28 00:22:57.040 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 25: slot=25, fired=0, active=1
+2026-06-28 00:22:57.287 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:22:58.041 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 26: slot=26, fired=0, active=1
+2026-06-28 00:22:59.047 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 27: slot=27, fired=0, active=1
+2026-06-28 00:22:59.324 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:00.050 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 28: slot=28, fired=0, active=1
+2026-06-28 00:23:01.066 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 29: slot=29, fired=0, active=1
+2026-06-28 00:23:01.329 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:02.067 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 30: slot=30, fired=0, active=1
+2026-06-28 00:23:03.070 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 31: slot=31, fired=0, active=1
+2026-06-28 00:23:03.365 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:04.074 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 32: slot=32, fired=0, active=1
+2026-06-28 00:23:05.079 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 33: slot=33, fired=0, active=1
+2026-06-28 00:23:05.375 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:06.087 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 34: slot=34, fired=0, active=1
+2026-06-28 00:23:07.089 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 35: slot=35, fired=0, active=1
+2026-06-28 00:23:07.414 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:08.096 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 36: slot=36, fired=0, active=1
+2026-06-28 00:23:09.100 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 37: slot=37, fired=0, active=1
+2026-06-28 00:23:09.427 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:10.104 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 38: slot=38, fired=0, active=1
+2026-06-28 00:23:11.111 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 39: slot=39, fired=0, active=1
+2026-06-28 00:23:11.468 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:12.116 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 40: slot=40, fired=0, active=1
+2026-06-28 00:23:13.122 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 41: slot=41, fired=0, active=1
+2026-06-28 00:23:13.481 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:14.132 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 42: slot=42, fired=0, active=1
+2026-06-28 00:23:15.134 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 43: slot=43, fired=0, active=1
+2026-06-28 00:23:15.522 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:16.142 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 44: slot=44, fired=0, active=1
+2026-06-28 00:23:17.146 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 45: slot=45, fired=0, active=1
+2026-06-28 00:23:17.533 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:18.149 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 46: slot=46, fired=0, active=1
+2026-06-28 00:23:19.152 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 47: slot=47, fired=0, active=1
+2026-06-28 00:23:19.568 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:20.156 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 48: slot=48, fired=0, active=1
+2026-06-28 00:23:21.164 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 49: slot=49, fired=0, active=1
+2026-06-28 00:23:21.579 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:22.165 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 50: slot=50, fired=0, active=1
+2026-06-28 00:23:23.172 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 51: slot=51, fired=0, active=1
+2026-06-28 00:23:23.617 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:24.187 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 52: slot=52, fired=0, active=1
+2026-06-28 00:23:25.192 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 53: slot=53, fired=0, active=1
+2026-06-28 00:23:25.627 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:26.194 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 54: slot=54, fired=0, active=1
+2026-06-28 00:23:27.201 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 55: slot=55, fired=0, active=1
+2026-06-28 00:23:27.662 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:28.203 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 56: slot=56, fired=0, active=1
+2026-06-28 00:23:29.210 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 57: slot=57, fired=0, active=1
+2026-06-28 00:23:29.675 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:30.212 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 58: slot=58, fired=0, active=1
+2026-06-28 00:23:31.215 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 59: slot=59, fired=0, active=1
+2026-06-28 00:23:31.709 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:32.220 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 60: slot=60, fired=1, active=1
+2026-06-28 00:23:32.220 [info] <0.120.0>@mnesia_store:do_snapshot:{203,22} snapshot taken, table=hermes_brains_state, entries=3
+2026-06-28 00:23:33.226 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 61: slot=61, fired=0, active=1
+2026-06-28 00:23:33.718 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:34.226 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 62: slot=62, fired=0, active=1
+2026-06-28 00:23:35.229 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 63: slot=63, fired=0, active=1
+2026-06-28 00:23:35.756 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:36.236 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 64: slot=64, fired=0, active=1
+2026-06-28 00:23:37.242 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 65: slot=65, fired=0, active=1
+2026-06-28 00:23:37.770 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:38.249 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 66: slot=66, fired=0, active=1
+2026-06-28 00:23:39.252 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 67: slot=67, fired=0, active=1
+2026-06-28 00:23:39.808 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:40.267 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 68: slot=68, fired=0, active=1
+2026-06-28 00:23:41.272 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 69: slot=69, fired=0, active=1
+2026-06-28 00:23:41.814 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:42.278 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 70: slot=70, fired=0, active=1
+2026-06-28 00:23:43.281 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 71: slot=71, fired=0, active=1
+2026-06-28 00:23:43.855 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:44.284 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 72: slot=72, fired=0, active=1
+2026-06-28 00:23:45.289 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 73: slot=73, fired=0, active=1
+2026-06-28 00:23:45.860 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:46.295 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 74: slot=74, fired=0, active=1
+2026-06-28 00:23:47.302 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 75: slot=75, fired=0, active=1
+2026-06-28 00:23:47.906 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:48.308 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 76: slot=76, fired=0, active=1
+2026-06-28 00:23:49.315 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 77: slot=77, fired=0, active=1
+2026-06-28 00:23:49.917 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:50.320 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 78: slot=78, fired=0, active=1
+2026-06-28 00:23:51.327 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 79: slot=79, fired=0, active=1
+2026-06-28 00:23:51.966 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:52.338 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 80: slot=80, fired=0, active=1
+2026-06-28 00:23:53.341 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 81: slot=81, fired=0, active=1
+2026-06-28 00:23:53.976 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:54.350 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 82: slot=82, fired=0, active=1
+2026-06-28 00:23:55.356 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 83: slot=83, fired=0, active=1
+2026-06-28 00:23:56.020 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:23:56.358 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 84: slot=84, fired=0, active=1
+2026-06-28 00:23:57.366 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 85: slot=85, fired=0, active=1
+2026-06-28 00:23:58.025 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:23:58.380 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 86: slot=86, fired=0, active=1
+2026-06-28 00:23:59.387 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 87: slot=87, fired=0, active=1
+2026-06-28 00:24:00.070 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:00.394 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 88: slot=88, fired=0, active=1
+2026-06-28 00:24:01.399 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 89: slot=89, fired=0, active=1
+2026-06-28 00:24:02.082 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:02.408 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 90: slot=90, fired=0, active=1
+2026-06-28 00:24:03.416 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 91: slot=91, fired=0, active=1
+2026-06-28 00:24:04.130 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:04.425 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 92: slot=92, fired=0, active=1
+2026-06-28 00:24:05.427 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 93: slot=93, fired=0, active=1
+2026-06-28 00:24:06.140 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:06.433 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 94: slot=94, fired=0, active=1
+2026-06-28 00:24:07.435 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 95: slot=95, fired=0, active=1
+2026-06-28 00:24:08.180 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:08.326 [info] <0.186.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:56025 closed by peer
+2026-06-28 00:24:08.326 [info] <0.184.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:56024 closed by peer
+2026-06-28 00:24:08.326 [info] <0.188.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:56026 closed by peer
+2026-06-28 00:24:08.326 [info] <0.190.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:56027 closed by peer
+2026-06-28 00:24:08.440 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 96: slot=96, fired=0, active=1
+2026-06-28 00:24:09.447 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 97: slot=97, fired=0, active=1
+2026-06-28 00:24:10.187 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:10.451 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 98: slot=98, fired=0, active=1
+2026-06-28 00:24:11.454 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 99: slot=99, fired=0, active=1
+2026-06-28 00:24:12.230 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:12.465 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 100: slot=100, fired=0, active=1
+2026-06-28 00:24:13.469 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 101: slot=101, fired=0, active=1
+2026-06-28 00:24:14.243 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:14.475 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 102: slot=102, fired=0, active=1
+2026-06-28 00:24:15.478 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 103: slot=103, fired=0, active=1
+2026-06-28 00:24:16.282 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:16.483 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 104: slot=104, fired=0, active=1
+2026-06-28 00:24:17.371 [info] <0.189.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:57963
+2026-06-28 00:24:17.371 [info] <0.195.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:57963 pid=<0.195.0>
+2026-06-28 00:24:17.371 [info] <0.194.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:57964
+2026-06-28 00:24:17.371 [info] <0.197.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:57964 pid=<0.197.0>
+2026-06-28 00:24:17.371 [info] <0.196.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:57965
+2026-06-28 00:24:17.371 [info] <0.199.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:57965 pid=<0.199.0>
+2026-06-28 00:24:17.371 [info] <0.198.0>@panel_server:accept_loop:{207,14} connection accepted: remote=127.0.0.1:57966
+2026-06-28 00:24:17.371 [info] <0.201.0>@panel_server:connection_recv_loop:{237,6} connection handler ready: remote=127.0.0.1:57966 pid=<0.201.0>
+2026-06-28 00:24:17.371 [info] <0.197.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:57964 id=1 method=list_tools
+2026-06-28 00:24:17.371 [info] <0.171.0>@bridge_manager:handle_call:{134,5} list_tools queued, timeout=1500ms
+2026-06-28 00:24:17.371 [info] <0.171.0>@bridge_manager:dispatch:{514,13} no idle conn, request queued: queue_len=3
+2026-06-28 00:24:17.489 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 105: slot=105, fired=0, active=1
+2026-06-28 00:24:18.298 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:18.500 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 106: slot=106, fired=0, active=1
+2026-06-28 00:24:19.515 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 107: slot=107, fired=0, active=1
+2026-06-28 00:24:20.334 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:20.520 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 108: slot=108, fired=0, active=1
+2026-06-28 00:24:20.875 [info] <0.199.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:57965 id=2 method=start_session
+2026-06-28 00:24:20.876 [info] <0.204.0>@agent_fsm:init:{112,13} agent_fsm fresh start, session_id=<<"sess-1782577460875-907341">>
+2026-06-28 00:24:20.876 [info] <0.203.0>@panel_server:handle_method:{333,14} session started: id=<<"sess-1782577460875-907341">> pid=<0.204.0>
+2026-06-28 00:24:20.876 [info] <0.201.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:57966 id=3 method=brain_status
+2026-06-28 00:24:20.878 [info] <0.195.0>@panel_server:handle_client_frame:{265,14} request received: remote=127.0.0.1:57963 id=4 method=send
+2026-06-28 00:24:20.878 [info] <0.204.0>@agent_fsm:idle:{185,5} session started, session_id=<<"sess-1782577460875-907341">>, history_len=0
+2026-06-28 00:24:20.878 [info] <0.204.0>@agent_fsm:thinking:{202,5} thinking(enter) fired, model=<<"deepseek-v4-pro">>, history_len=1, loop=0/10
+2026-06-28 00:24:20.878 [info] <0.171.0>@bridge_manager:handle_call:{123,5} call_tool_sync queued, tool=memory_search, req_id=rag-101, timeout=10000ms
+2026-06-28 00:24:20.878 [info] <0.171.0>@bridge_manager:dispatch:{514,13} no idle conn, request queued: queue_len=4
+2026-06-28 00:24:21.527 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 109: slot=109, fired=0, active=1
+2026-06-28 00:24:22.347 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:22.532 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 110: slot=110, fired=0, active=1
+2026-06-28 00:24:23.533 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 111: slot=111, fired=0, active=1
+2026-06-28 00:24:24.380 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:24.536 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 112: slot=112, fired=0, active=1
+2026-06-28 00:24:25.539 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 113: slot=113, fired=0, active=1
+2026-06-28 00:24:26.383 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:26.553 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 114: slot=114, fired=0, active=1
+2026-06-28 00:24:27.558 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 115: slot=115, fired=0, active=1
+2026-06-28 00:24:28.422 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:28.559 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 116: slot=116, fired=0, active=1
+2026-06-28 00:24:29.567 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 117: slot=117, fired=0, active=1
+2026-06-28 00:24:30.433 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:30.574 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 118: slot=118, fired=0, active=1
+2026-06-28 00:24:31.586 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 119: slot=119, fired=0, active=1
+2026-06-28 00:24:32.469 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:32.594 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 120: slot=120, fired=1, active=1
+2026-06-28 00:24:32.594 [info] <0.120.0>@mnesia_store:do_snapshot:{203,22} snapshot taken, table=hermes_brains_state, entries=6
+2026-06-28 00:24:32.890 [info] <0.204.0>@agent_fsm:thinking:{222,5} llm request dispatched, ref=#Ref<0.3857772804.1803550724.35465>
+2026-06-28 00:24:32.890 [info] <0.171.0>@bridge_manager:handle_cast:{154,5} call_llm queued, ref=#Ref<0.3857772804.1803550724.35465>, fsm_pid=<0.204.0>
+2026-06-28 00:24:32.890 [info] <0.171.0>@bridge_manager:dispatch:{514,13} no idle conn, request queued: queue_len=5
+2026-06-28 00:24:33.602 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 121: slot=121, fired=0, active=1
+2026-06-28 00:24:34.482 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:34.607 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 122: slot=122, fired=0, active=1
+2026-06-28 00:24:35.615 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 123: slot=123, fired=0, active=1
+2026-06-28 00:24:36.521 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:36.630 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 124: slot=124, fired=0, active=1
+2026-06-28 00:24:37.635 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 125: slot=125, fired=0, active=1
+2026-06-28 00:24:38.531 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:38.638 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 126: slot=126, fired=0, active=1
+2026-06-28 00:24:39.642 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 127: slot=127, fired=0, active=1
+2026-06-28 00:24:40.567 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:40.644 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 128: slot=128, fired=0, active=1
+2026-06-28 00:24:41.649 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 129: slot=129, fired=0, active=1
+2026-06-28 00:24:42.579 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:42.657 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 130: slot=130, fired=0, active=1
+2026-06-28 00:24:43.658 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 131: slot=131, fired=0, active=1
+2026-06-28 00:24:44.617 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:44.664 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 132: slot=132, fired=0, active=1
+2026-06-28 00:24:45.674 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 133: slot=133, fired=0, active=1
+2026-06-28 00:24:46.627 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:46.689 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 134: slot=134, fired=0, active=1
+2026-06-28 00:24:47.693 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 135: slot=135, fired=0, active=1
+2026-06-28 00:24:48.664 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:48.695 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 136: slot=136, fired=0, active=1
+2026-06-28 00:24:49.705 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 137: slot=137, fired=0, active=1
+2026-06-28 00:24:50.680 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:50.712 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 138: slot=138, fired=0, active=1
+2026-06-28 00:24:51.715 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 139: slot=139, fired=0, active=1
+2026-06-28 00:24:52.715 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 140: slot=140, fired=0, active=1
+2026-06-28 00:24:52.715 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:53.729 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 141: slot=141, fired=0, active=1
+2026-06-28 00:24:54.719 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:54.734 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 142: slot=142, fired=0, active=1
+2026-06-28 00:24:55.740 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 143: slot=143, fired=0, active=1
+2026-06-28 00:24:56.742 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 144: slot=144, fired=0, active=1
+2026-06-28 00:24:56.757 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:24:57.744 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 145: slot=145, fired=0, active=1
+2026-06-28 00:24:58.749 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 146: slot=146, fired=0, active=1
+2026-06-28 00:24:58.765 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:24:59.758 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 147: slot=147, fired=0, active=1
+2026-06-28 00:25:00.768 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 148: slot=148, fired=0, active=1
+2026-06-28 00:25:00.814 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:01.769 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 149: slot=149, fired=0, active=1
+2026-06-28 00:25:02.776 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 150: slot=150, fired=0, active=1
+2026-06-28 00:25:02.821 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:25:03.778 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 151: slot=151, fired=0, active=1
+2026-06-28 00:25:04.784 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 152: slot=152, fired=0, active=1
+2026-06-28 00:25:04.864 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:05.786 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 153: slot=153, fired=0, active=1
+2026-06-28 00:25:06.792 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 154: slot=154, fired=0, active=1
+2026-06-28 00:25:06.869 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:25:07.800 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 155: slot=155, fired=0, active=1
+2026-06-28 00:25:08.802 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 156: slot=156, fired=0, active=1
+2026-06-28 00:25:08.909 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:09.803 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 157: slot=157, fired=0, active=1
+2026-06-28 00:25:10.808 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 158: slot=158, fired=0, active=1
+2026-06-28 00:25:10.916 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:25:11.812 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 159: slot=159, fired=0, active=1
+2026-06-28 00:25:12.819 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 160: slot=160, fired=0, active=1
+2026-06-28 00:25:12.959 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:13.824 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 161: slot=161, fired=0, active=1
+2026-06-28 00:25:14.832 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 162: slot=162, fired=0, active=1
+2026-06-28 00:25:14.971 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:25:15.838 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 163: slot=163, fired=0, active=1
+2026-06-28 00:25:16.847 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 164: slot=164, fired=0, active=1
+2026-06-28 00:25:17.017 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:17.854 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 165: slot=165, fired=0, active=1
+2026-06-28 00:25:18.859 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 166: slot=166, fired=0, active=1
+2026-06-28 00:25:19.030 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:25:19.869 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 167: slot=167, fired=0, active=1
+2026-06-28 00:25:20.872 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 168: slot=168, fired=0, active=1
+2026-06-28 00:25:21.072 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:21.878 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 169: slot=169, fired=0, active=1
+2026-06-28 00:25:22.887 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 170: slot=170, fired=0, active=1
+2026-06-28 00:25:23.073 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:25:23.891 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 171: slot=171, fired=0, active=1
+2026-06-28 00:25:24.894 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 172: slot=172, fired=0, active=1
+2026-06-28 00:25:25.112 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:25.898 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 173: slot=173, fired=0, active=1
+2026-06-28 00:25:26.900 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 174: slot=174, fired=0, active=1
+2026-06-28 00:25:27.116 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:25:27.906 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 175: slot=175, fired=0, active=1
+2026-06-28 00:25:28.922 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 176: slot=176, fired=0, active=1
+2026-06-28 00:25:29.153 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:29.934 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 177: slot=177, fired=0, active=1
+2026-06-28 00:25:30.951 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 178: slot=178, fired=0, active=1
+2026-06-28 00:25:31.167 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:25:31.965 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 179: slot=179, fired=0, active=1
+2026-06-28 00:25:32.980 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 180: slot=180, fired=1, active=1
+2026-06-28 00:25:32.980 [info] <0.120.0>@mnesia_store:do_snapshot:{203,22} snapshot taken, table=hermes_brains_state, entries=6
+2026-06-28 00:25:33.196 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:33.982 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 181: slot=181, fired=0, active=1
+2026-06-28 00:25:34.997 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 182: slot=182, fired=0, active=1
+2026-06-28 00:25:35.211 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:25:36.011 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 183: slot=183, fired=0, active=1
+2026-06-28 00:25:36.072 [info] <0.201.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:57966 closed by peer
+2026-06-28 00:25:36.072 [info] <0.197.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:57964 closed by peer
+2026-06-28 00:25:36.072 [info] <0.195.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:57963 closed by peer
+2026-06-28 00:25:36.072 [info] <0.199.0>@panel_server:connection_active_loop:{253,14} connection handler exiting: remote=127.0.0.1:57965 closed by peer
+2026-06-28 00:25:37.024 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 184: slot=184, fired=0, active=1
+2026-06-28 00:25:37.247 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:38.033 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 185: slot=185, fired=0, active=1
+2026-06-28 00:25:39.035 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 186: slot=186, fired=0, active=1
+2026-06-28 00:25:39.253 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:25:40.045 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 187: slot=187, fired=0, active=1
+2026-06-28 00:25:41.051 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 188: slot=188, fired=0, active=1
+2026-06-28 00:25:41.298 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:42.053 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 189: slot=189, fired=0, active=1
+2026-06-28 00:25:43.060 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 190: slot=190, fired=0, active=1
+2026-06-28 00:25:43.307 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:25:44.065 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 191: slot=191, fired=0, active=1
+2026-06-28 00:25:45.072 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 192: slot=192, fired=0, active=1
+2026-06-28 00:25:45.351 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:46.076 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 193: slot=193, fired=0, active=1
+2026-06-28 00:25:47.083 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 194: slot=194, fired=0, active=1
+2026-06-28 00:25:47.363 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:25:48.086 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 195: slot=195, fired=0, active=1
+2026-06-28 00:25:49.092 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 196: slot=196, fired=0, active=1
+2026-06-28 00:25:49.400 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:50.094 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 197: slot=197, fired=0, active=1
+2026-06-28 00:25:51.104 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 198: slot=198, fired=0, active=1
+2026-06-28 00:25:51.411 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:25:52.119 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 199: slot=199, fired=0, active=1
+2026-06-28 00:25:53.134 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 200: slot=200, fired=0, active=1
+2026-06-28 00:25:53.440 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:54.136 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 201: slot=201, fired=0, active=1
+2026-06-28 00:25:55.139 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 202: slot=202, fired=0, active=1
+2026-06-28 00:25:55.447 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:25:56.153 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 203: slot=203, fired=0, active=1
+2026-06-28 00:25:57.169 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 204: slot=204, fired=0, active=1
+2026-06-28 00:25:57.478 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:25:58.176 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 205: slot=205, fired=0, active=1
+2026-06-28 00:25:59.183 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 206: slot=206, fired=0, active=1
+2026-06-28 00:25:59.489 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:26:00.198 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 207: slot=207, fired=0, active=1
+2026-06-28 00:26:01.200 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 208: slot=208, fired=0, active=1
+2026-06-28 00:26:01.525 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:26:02.205 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 209: slot=209, fired=0, active=1
+2026-06-28 00:26:03.207 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 210: slot=210, fired=0, active=1
+2026-06-28 00:26:03.531 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:26:04.222 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 211: slot=211, fired=0, active=1
+2026-06-28 00:26:05.237 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 212: slot=212, fired=0, active=1
+2026-06-28 00:26:05.559 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:26:06.251 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 213: slot=213, fired=0, active=1
+2026-06-28 00:26:07.264 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 214: slot=214, fired=0, active=1
+2026-06-28 00:26:07.571 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:26:08.267 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 215: slot=215, fired=0, active=1
+2026-06-28 00:26:09.284 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 216: slot=216, fired=0, active=1
+2026-06-28 00:26:09.611 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:26:10.290 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 217: slot=217, fired=0, active=1
+2026-06-28 00:26:11.303 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 218: slot=218, fired=0, active=1
+2026-06-28 00:26:11.628 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:26:12.310 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 219: slot=219, fired=0, active=1
+2026-06-28 00:26:13.314 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 220: slot=220, fired=0, active=1
+2026-06-28 00:26:13.673 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:26:14.317 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 221: slot=221, fired=0, active=1
+2026-06-28 00:26:15.324 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 222: slot=222, fired=0, active=1
+2026-06-28 00:26:15.679 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:26:16.328 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 223: slot=223, fired=0, active=1
+2026-06-28 00:26:17.337 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 224: slot=224, fired=0, active=1
+2026-06-28 00:26:17.723 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:26:18.341 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 225: slot=225, fired=0, active=1
+2026-06-28 00:26:19.356 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 226: slot=226, fired=0, active=1
+2026-06-28 00:26:19.727 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:26:20.358 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 227: slot=227, fired=0, active=1
+2026-06-28 00:26:21.372 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 228: slot=228, fired=0, active=1
+2026-06-28 00:26:21.757 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:26:22.379 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 229: slot=229, fired=0, active=1
+2026-06-28 00:26:23.381 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 230: slot=230, fired=0, active=1
+2026-06-28 00:26:23.766 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4
+2026-06-28 00:26:24.395 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 231: slot=231, fired=0, active=1
+2026-06-28 00:26:25.409 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 232: slot=232, fired=0, active=1
+2026-06-28 00:26:25.792 [warning] <0.171.0>@bridge_manager:handle_info:{228,13} reconnect (full) failed: econnrefused, retry in 2000ms
+2026-06-28 00:26:26.421 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 233: slot=233, fired=0, active=1
+2026-06-28 00:26:27.426 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 234: slot=234, fired=0, active=1
+2026-06-28 00:26:27.797 [info] <0.171.0>@bridge_manager:handle_info:{219,5} reconnect (full): addr=127.0.0.1:61169 target_size=4

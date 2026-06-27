@@ -86,6 +86,12 @@ echo    LOG_DIR            = %LOG_DIR%
 echo    SYS_CONFIG         = %SYS_CONFIG%
 echo    PANEL_ADDR_FILE    = %PANEL_ADDR_FILE%
 echo    EION_TOOLS_ADDR    = %EION_TOOLS_ADDR_FILE%
+if "%HERMES_EXEC_VIA_PANEL%"=="1" (
+    echo    HERMES_EXEC_VIA_PANEL = 1 ^(Phase B: LLM/工具经 panel exec^)
+    set "EXEC_VIA_PANEL_ARG=-hermes_brains exec_via_panel true"
+) else (
+    set "EXEC_VIA_PANEL_ARG="
+)
 echo    SNAPSHOT_INT       = %SNAPSHOT_INTERVAL_MS%ms
 echo    working dir        = %WORK_DIR%
 echo    (Ctrl+C to halt / bin\stop.bat for graceful exit)
@@ -112,6 +118,7 @@ erl ^
     -config "%SYS_CONFIG%" ^
     -hermes_brains panel_addr_file \"%PANEL_ADDR_FILE%\" ^
     -hermes_brains eion_tools_addr_file \"%EION_TOOLS_ADDR_FILE%\" ^
+    %EXEC_VIA_PANEL_ARG% ^
     -hermes_brains mnesia_dir \"%MNESIA_DIR%\" ^
     -hermes_brains snapshot_interval_ms %SNAPSHOT_INTERVAL_MS% ^
     -eval "application:set_env(hermes_brains, snapshot_tables, [hermes_brains_state]), {ok, _} = application:ensure_all_started(hermes_brains), hermes_brains_app:serve()."

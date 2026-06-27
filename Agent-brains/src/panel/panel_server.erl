@@ -54,7 +54,7 @@
 
 -include("log.hrl").
 
--export([start_link/0, serve/0,
+-export([start_link/0, serve/0, exec_agent/2,
          %% 流式 push API (供 agent_fsm cast)
          push_chunk/2, push_tool_event/2, push_final/2, push_stream_err/2,
          unregister_stream/1]).
@@ -62,10 +62,26 @@
          terminate/2, code_change/3]).
 
 -define(STREAMS_TABLE, panel_streams).
+-define(EXEC_TIMEOUT_PAD, 5000).
+
+-record(exec_pending, {
+    from :: gen_server:from(),
+    conn_pid :: pid(),
+    acc = [] :: [binary()],
+    timer_ref :: reference()
+}).
+
+-record(wails_conn, {
+    pid :: pid(),
+    busy = false :: boolean()
+}).
 
 -record(state, {
     listen_socket :: gen_tcp:socket(),
-    port :: inet:port_number()
+    port :: inet:port_number(),
+    wails_conns = [] :: [#wails_conn{}],
+    exec_seq = 0 :: non_neg_integer(),
+    exec_pending = #{} :: #{non_neg_integer() => #exec_pending{}}
 }).
 
 %%====================================================================
@@ -99,6 +115,11 @@ push_stream_err(SessionId, ErrMsg) ->
 unregister_stream(SessionId) ->
     gen_server:cast(?MODULE, {unregister_stream, SessionId}).
 
+%% Phase B: bridge_manager 经 panel 连接让 Wails 进程内执行 hermes AgentRequest。
+%% Payload = pb_codec:encode_req/1 产物; 返回 {ok, [RespBin,...]} | {error, Reason}
+exec_agent(Payload, TimeoutMs) when is_binary(Payload), is_integer(TimeoutMs), TimeoutMs > 0 ->
+    gen_server:call(?MODULE, {exec_agent, Payload, TimeoutMs}, TimeoutMs + ?EXEC_TIMEOUT_PAD).
+
 %%====================================================================
 %% gen_server 回调
 %%====================================================================
@@ -130,6 +151,24 @@ init([]) ->
             {stop, Reason}
     end.
 
+handle_call({exec_agent, Payload, TimeoutMs}, From, State) ->
+    case pick_idle_wails_conn(State#state.wails_conns) of
+        {ok, ConnPid, Conns1} ->
+            Id = State#state.exec_seq + 1,
+            TRef = erlang:start_timer(TimeoutMs, self(), {exec_timeout, Id}),
+            Pending = #exec_pending{from = From, conn_pid = ConnPid,
+                                    timer_ref = TRef},
+            Frame = panel_pb_codec:pack_exec(Id, Payload),
+            ConnPid ! {push_stream, Frame},
+            State1 = State#state{
+                wails_conns = mark_wails_busy(Conns1, ConnPid, true),
+                exec_seq = Id,
+                exec_pending = maps:put(Id, Pending, State#state.exec_pending)
+            },
+            {noreply, State1};
+        none ->
+            {reply, {error, no_wails_conn}, State}
+    end;
 handle_call(_Req, _From, State) ->
     {reply, {error, unknown_request}, State}.
 
@@ -161,9 +200,37 @@ handle_cast({push_stream_err, SessionId, ErrMsg}, State) ->
 handle_cast({unregister_stream, SessionId}, State) ->
     ets:delete(?STREAMS_TABLE, SessionId),
     {noreply, State};
+handle_cast({register_wails_conn, ConnPid}, State) ->
+    Conns = State#state.wails_conns,
+    case lists:any(fun(#wails_conn{pid = P}) -> P =:= ConnPid end, Conns) of
+        true ->
+            {noreply, State};
+        false ->
+            ?log("wails conn registered: pid=~p total=~p", [ConnPid, length(Conns) + 1]),
+            {noreply, State#state{wails_conns = Conns ++ [#wails_conn{pid = ConnPid}]}}
+    end;
+handle_cast({unregister_wails_conn, ConnPid}, State) ->
+    Conns = lists:filter(fun(#wails_conn{pid = P}) -> P =:= ConnPid end,
+                         State#state.wails_conns),
+    {noreply, State#state{wails_conns = Conns}};
+handle_cast({exec_result, ConnPid, Id, AgentRespBin, Err, Terminal}, State) ->
+    {noreply, handle_exec_result(ConnPid, Id, AgentRespBin, Err, Terminal, State)};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
+handle_info({timeout, TRef, {exec_timeout, Id}}, State) ->
+    case maps:get(Id, State#state.exec_pending, undefined) of
+        #exec_pending{from = From, conn_pid = ConnPid, timer_ref = StoredTRef}
+          when StoredTRef =:= TRef ->
+            gen_server:reply(From, {error, timeout}),
+            Conns = mark_wails_busy(State#state.wails_conns, ConnPid, false),
+            {noreply, State#state{
+                wails_conns = Conns,
+                exec_pending = maps:remove(Id, State#state.exec_pending)
+            }};
+        _ ->
+            {noreply, State}
+    end;
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -234,6 +301,7 @@ accept_loop(Sock) ->
 
 connection_recv_loop(Sock, Remote) ->
     ok = inet:setopts(Sock, [{packet, 4}, {active, once}]),
+    gen_server:cast(?MODULE, {register_wails_conn, self()}),
     ?log("connection handler ready: remote=~s pid=~p", [Remote, self()]),
     connection_active_loop(Sock, Remote).
 
@@ -251,10 +319,12 @@ connection_active_loop(Sock, Remote) ->
             connection_active_loop(Sock, Remote);
         {tcp_closed, Sock} ->
             ?log("connection handler exiting: remote=~s closed by peer", [Remote]),
+            gen_server:cast(?MODULE, {unregister_wails_conn, self()}),
             cleanup_streams_for_self(),
             ok;
         {tcp_error, Sock, Reason} ->
             ?log_warning("connection handler exiting: remote=~s tcp_error=~p", [Remote, Reason]),
+            gen_server:cast(?MODULE, {unregister_wails_conn, self()}),
             cleanup_streams_for_self(),
             ok
     end.
@@ -273,6 +343,8 @@ handle_client_frame(_Sock, Remote, Bin) ->
                 end,
                 ConnPid ! {rpc_reply, Frame}
             end);
+        {exec_result, Id, AgentRespBin, Err, Terminal} ->
+            gen_server:cast(?MODULE, {exec_result, self(), Id, AgentRespBin, Err, Terminal});
         Other ->
             ?log_warning("invalid frame from remote=~s: ~p", [Remote, Other])
     end.
@@ -480,3 +552,59 @@ format_remote(Sock) ->
         {error, _} ->
             "unknown"
     end.
+
+%%====================================================================
+%% 内部: Phase B exec (Wails 连接池 + exec_result 聚合)
+%%====================================================================
+
+pick_idle_wails_conn(Conns) ->
+    pick_idle_wails_conn(Conns, []).
+
+pick_idle_wails_conn([], _Acc) ->
+    none;
+pick_idle_wails_conn([#wails_conn{pid = Pid, busy = false} = C | Rest], Acc) ->
+    case is_process_alive(Pid) of
+        true ->
+            {ok, Pid, lists:reverse(Acc) ++ [C | Rest]};
+        false ->
+            pick_idle_wails_conn(Rest, Acc)
+    end;
+pick_idle_wails_conn([C | Rest], Acc) ->
+    pick_idle_wails_conn(Rest, [C | Acc]).
+
+mark_wails_busy(Conns, ConnPid, Busy) ->
+    [case C#wails_conn.pid of
+         ConnPid -> C#wails_conn{busy = Busy};
+         _ -> C
+     end || C <- Conns].
+
+handle_exec_result(ConnPid, Id, AgentRespBin, Err, Terminal, State) ->
+    case maps:get(Id, State#state.exec_pending, undefined) of
+        #exec_pending{from = From, acc = Acc, timer_ref = TRef} = P
+          when P#exec_pending.conn_pid =:= ConnPid ->
+            case Err of
+                E when E =/= <<>> ->
+                    _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
+                    gen_server:reply(From, {error, Err}),
+                    finish_exec(ConnPid, Id, State);
+                _ ->
+                    Acc1 = Acc ++ [AgentRespBin],
+                    case Terminal of
+                        true ->
+                            _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
+                            gen_server:reply(From, {ok, Acc1}),
+                            finish_exec(ConnPid, Id, State);
+                        false ->
+                            State#state{exec_pending = maps:put(Id, P#exec_pending{acc = Acc1},
+                                                               State#state.exec_pending)}
+                    end
+            end;
+        _ ->
+            State
+    end.
+
+finish_exec(ConnPid, Id, State) ->
+    State#state{
+        wails_conns = mark_wails_busy(State#state.wails_conns, ConnPid, false),
+        exec_pending = maps:remove(Id, State#state.exec_pending)
+    }.
