@@ -84,14 +84,33 @@ func (s *HermesService) Send(sessionID, message string) (*SendResult, error) {
 
 // ---- 工具 ----
 
+// ToolDesc 工具描述 (与 panel.proto ListToolsResult 对齐)
+type ToolDesc struct {
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	ParametersJSON  string `json:"parameters_json"`
+}
+
 // ListTools 列出 Eion-tools 侧注册的工具描述 (经 Erlang 转发)。
-func (s *HermesService) ListTools() ([]string, error) {
+func (s *HermesService) ListTools() ([]ToolDesc, error) {
 	out, err := s.brain.Call("list_tools", nil)
 	if err != nil {
 		return nil, err
 	}
 	m, _ := out.(map[string]any)
-	tools, _ := m["tools"].([]string)
+	raw, _ := m["tools"].([]any)
+	tools := make([]ToolDesc, 0, len(raw))
+	for _, item := range raw {
+		tm, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		tools = append(tools, ToolDesc{
+			Name:           fmt.Sprint(tm["name"]),
+			Description:    fmt.Sprint(tm["description"]),
+			ParametersJSON: fmt.Sprint(tm["parameters_json"]),
+		})
+	}
 	return tools, nil
 }
 

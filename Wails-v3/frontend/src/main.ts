@@ -31,6 +31,95 @@ const sessions = new Map<string, Session>();
 let brainConnected = false;
 let statusTimer: number | null = null;
 let isSending = false;
+let currentStreamId: string | null = null;
+let streamingMsgEl: HTMLElement | null = null;
+let streamingText = "";
+
+// ---- Wails 流式事件 (panel_server → Bridge → EmitEvent) ----
+declare global {
+    interface Window {
+        wails?: {
+            Events?: {
+                On: (name: string, cb: (ev: { name: string; data: PanelStreamEvent }) => void) => () => void;
+            };
+        };
+    }
+}
+
+interface PanelStreamEvent {
+    stream_id: string;
+    kind: "chunk" | "tool_event" | "final" | "error" | "unknown";
+    payload: Record<string, unknown>;
+}
+
+function setupStreamListener(): void {
+    window.wails?.Events?.On("panel:stream", (ev) => {
+        handlePanelStream(ev.data);
+    });
+}
+setupStreamListener();
+
+function handlePanelStream(ev: PanelStreamEvent): void {
+    if (!ev || !currentStreamId || ev.stream_id !== currentStreamId) return;
+    console.log("[hermes] stream", ev.kind, ev.stream_id);
+    switch (ev.kind) {
+        case "chunk": {
+            const part = String(ev.payload.content ?? "");
+            if (part) {
+                streamingText += part;
+                ensureStreamingMsg();
+                if (streamingMsgEl) {
+                    streamingMsgEl.innerHTML = `<p>${escapeHtml(streamingText)}</p>`;
+                    scrollConvToBottom();
+                }
+            }
+            break;
+        }
+        case "final": {
+            removeThinking();
+            const content = String(ev.payload.content ?? streamingText);
+            if (content) appendAgentMsg(`<p>${escapeHtml(content)}</p>`);
+            resetStreamState();
+            break;
+        }
+        case "error": {
+            removeThinking();
+            appendAgentMsg(`<p style="color:var(--danger)">${escapeHtml(String(ev.payload.message ?? "stream error"))}</p>`);
+            resetStreamState();
+            break;
+        }
+        case "tool_event": {
+            const sess = currentSessionId ? sessions.get(currentSessionId) : undefined;
+            if (sess) {
+                sess.toolCalls += 1;
+                updateCanvasMeta(sess);
+            }
+            break;
+        }
+    }
+}
+
+function ensureStreamingMsg(): void {
+    removeThinking();
+    if (streamingMsgEl) return;
+    removeEmptyState();
+    streamingMsgEl = document.createElement("div");
+    streamingMsgEl.className = "msg msg-agent streaming-live";
+    streamingMsgEl.innerHTML = `
+        <div class="msg-role">
+            <div class="agent-avatar">☿</div>
+            <span>HERMES</span>
+        </div>
+        <div class="msg-body"><p></p></div>
+    `;
+    conv.appendChild(streamingMsgEl);
+}
+
+function resetStreamState(): void {
+    currentStreamId = null;
+    streamingMsgEl = null;
+    streamingText = "";
+}
 
 // ---- DOM ----
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -158,8 +247,11 @@ async function doSend(): Promise<void> {
     appendThinking();
 
     try {
-        await HermesService.Send(currentSessionId, text);
-        console.log("[hermes] send triggered, polling brain_status...");
+        const result = await HermesService.Send(currentSessionId, text);
+        currentStreamId = result?.stream_id ?? null;
+        streamingText = "";
+        streamingMsgEl = null;
+        console.log("[hermes] send triggered stream_id=", currentStreamId);
     } catch (e) {
         removeThinking();
         toast("Send 失败: " + e);
@@ -235,13 +327,12 @@ function updateBrainStatusUI(st: Record<string, unknown>): void {
         if (state === "thinking" || state === "acting") {
             if (!hasThinking()) appendThinking();
         } else if (state === "idle") {
-            if (hist > sess.lastHistoryLen) {
+            if (hist > sess.lastHistoryLen && !streamingMsgEl && !currentStreamId) {
                 removeThinking();
                 appendAgentMsg(
-                    `Brain 已完成此轮 ReAct 循环 (loop=${loop}/${max}, history=${hist})。<br>` +
-                    `<span style="color:var(--ink-3);font-size:12px">Final answer 通过 Erlang history 可查 (待后续 get_history RPC 接入前端展示)。</span>`
+                    `<p>Brain 已完成此轮 ReAct 循环 (loop=${loop}/${max}, history=${hist})。</p>`
                 );
-            } else {
+            } else if (state === "idle" && !currentStreamId) {
                 removeThinking();
             }
             sess.lastHistoryLen = hist;

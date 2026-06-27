@@ -4,7 +4,7 @@
 //
 //	Wails/Go (本进程)  ──TCP/UDS 连接池──▶  Erlang ERTS (Agent-brains, 独立进程)
 //	                                            │
-//	                                  TCP+JSON  │ RPC (panel_server)
+//	                                  TCP+Protobuf │ RPC (panel_server)
 //	                                            ▼
 //	                                      agent_fsm (ReAct 编排)
 //	                                            │

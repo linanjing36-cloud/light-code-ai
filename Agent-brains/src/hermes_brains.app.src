@@ -14,10 +14,9 @@
              pb_codec, state_store, cache, util, mnesia_store, timing_wheel, hermes,
              panel, panel_server, panel_pb_codec, case_store]},
   {env, [
-      %% Go 侧 Eion-tools server 可执行文件路径
-      %% 由 bridge_manager 在 init 时 spawn (erlang:open_port + 4 字节大端长度前缀帧)
-      %% Wails 打包时由 release 脚本注入绝对路径, 开发期默认 "eion-tools-server" (在 PATH 中)
-      {eion_tools_bin, "eion-tools-server"},
+      %% Eion-tools 地址发现 (TCP 连接池, 见 bridge_manager):
+      %%   eion_tools_addr_file > eion_tools_addr > 默认 127.0.0.1:7891
+      {eion_tools_addr_file, "eion-tools.addr"},
       %% LLM provider 凭证 (由 bridge_manager 注入, 不进入 FSM 状态)
       {api_base, <<"https://api.deepseek.com">>},
       {api_key, <<>>},

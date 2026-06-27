@@ -341,10 +341,9 @@ handle_method(<<"send">>, ArgsMap) ->
             {error, ErrMsg}
     end;
 
-%% ---- list_tools: 占位 ----
+%% ---- list_tools: 返回与 Eion-tools 对齐的默认工具列表 ----
 handle_method(<<"list_tools">>, _ArgsMap) ->
-    %% TODO: 待 Eion-tools 接入后从 bridge_manager 取注册的工具描述
-    {ok, #{tools => []}};
+    {ok, #{tools => default_tool_descs()}};
 
 %% ---- approve: 工具调用授权 (占位) ----
 handle_method(<<"approve">>, _ArgsMap) ->
@@ -370,6 +369,17 @@ handle_method(<<"stop">>, _ArgsMap) ->
 handle_method(Method, _ArgsMap) ->
     ErrMsg = erlang:iolist_to_binary(io_lib:format("unknown_method: ~s", [Method])),
     {error, ErrMsg}.
+
+default_tool_descs() ->
+    [#{name => <<"get_weather">>,
+       description => util:u("获取指定城市的当前天气。仅支持中国主要城市。"),
+       parameters_json => util:u(
+           "{\"type\":\"object\","
+           "\"properties\":{"
+           "\"city\":{\"type\":\"string\",\"description\":\"城市名，例如 北京/上海/深圳\"}"
+           "},"
+           "\"required\":[\"city\"]"
+           "}")}].
 
 %%====================================================================
 %% 内部: id 生成

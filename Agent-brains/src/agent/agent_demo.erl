@@ -10,7 +10,7 @@
 %%   → 响应回链 → ReAct 循环 → 工具调用 → 最终答案 的端到端验证。
 %%
 %% 前置条件:
-%%   1. /tmp/eion-tools-server 已构建 (cd Eion-tools && go build -o /tmp/eion-tools-server ./cmd/server)
+%%   1. Eion-tools server 已启动 (scrtps/start-tools.bat), 地址写入 bin/run/eion-tools.addr
 %%   2. ./api-key.json 存在 (本仓库 .gitignore 已忽略, 仅本地调试用)
 %%   3. DeepSeek API 可达
 %%
@@ -39,12 +39,11 @@ run(Query) when is_binary(Query) ->
     ok = application:load(hermes_brains),
     %% 2. 注入凭证: api_key 来自 api-key.json (本地调试, .gitignore 已忽略)
     ok = load_credentials(),
-    %% 3. 指定 Eion-tools server 可执行文件 (绝对路径, 不依赖 PATH)
-    application:set_env(hermes_brains, eion_tools_bin, "/tmp/eion-tools-server"),
-    %% 4. 启动 hermes_brains 应用 (启动顶层监督者 + state_store + bridge_manager + agent_sup)
+    ok = configure_eion_addr(),
     ok = ensure_started(),
     %% 5. 打印环境概览
     print_env(),
+    ok = wait_bridge_pool(30000),
     %% 6. 启动一个 Agent_FSM: 带 get_weather 工具, 用户 query 作为第一条消息
     {ok, FsmPid} = start_fsm(Query),
     io:format("~n=== Agent_FSM 已启动, PID=~p, 等待 ReAct 循环结束 ===~n", [FsmPid]),
@@ -111,11 +110,49 @@ jsx_decode_safe(Bin) ->
 
 %% 打印当前 application env (用于调试)
 print_env() ->
-    ServerBin = application:get_env(hermes_brains, eion_tools_bin, "eion-tools-server"),
+    AddrFile = application:get_env(hermes_brains, eion_tools_addr_file, <<>>),
     ApiBase = application:get_env(hermes_brains, api_base, <<>>),
     Model = application:get_env(hermes_brains, default_model, <<>>),
-    io:format("[demo] env: eion_tools_bin=~s, api_base=~s, model=~s~n",
-              [ServerBin, ApiBase, Model]).
+    io:format("[demo] env: eion_tools_addr_file=~p, api_base=~s, model=~s~n",
+              [AddrFile, ApiBase, Model]).
+
+configure_eion_addr() ->
+    AddrFile = resolve_eion_tools_addr_file(),
+    application:set_env(hermes_brains, eion_tools_addr_file, AddrFile),
+    io:format("[demo] eion_tools_addr_file=~s~n", [AddrFile]),
+    ok.
+
+resolve_eion_tools_addr_file() ->
+    case application:get_env(hermes_brains, eion_tools_addr_file) of
+        {ok, F} when is_list(F), F =/= "" -> F;
+        _ ->
+            case os:getenv("EION_TOOLS_ADDR_FILE") of
+                false -> "../bin/run/eion-tools.addr";
+                "" -> "../bin/run/eion-tools.addr";
+                F -> F
+            end
+    end.
+
+wait_bridge_pool(TimeoutMs) ->
+    Deadline = erlang:system_time(millisecond) + TimeoutMs,
+    wait_bridge_pool_loop(Deadline).
+
+wait_bridge_pool_loop(Deadline) ->
+    Info = bridge_manager:pool_info(),
+    case maps:get(connected, Info, 0) of
+        N when N > 0 ->
+            io:format("[demo] bridge pool ready: ~p~n", [Info]),
+            ok;
+        _ ->
+            Now = erlang:system_time(millisecond),
+            if Now >= Deadline ->
+                   io:format("[demo] bridge pool timeout: ~p~n", [Info]),
+                   {error, pool_timeout};
+               true ->
+                   timer:sleep(500),
+                   wait_bridge_pool_loop(Deadline)
+            end
+    end.
 
 %% 启动一个 FSM, 携带 get_weather 工具 + 用户 query 作为初始历史
 start_fsm(Query) ->

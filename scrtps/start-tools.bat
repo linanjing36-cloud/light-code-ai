@@ -21,7 +21,7 @@ set "EION_EXE=%EION_BIN_DIR%\eion-tools-server.exe"
 set "RUN_DIR=%ROOT_DIR%\bin\run"
 
 if not exist "%EION_EXE%" (
-    echo ERROR: Eion-tools server not found, please run: make agent
+    echo ERROR: Eion-tools server not found, please run: make.ps1 tools
     echo    expected: %EION_EXE%
     exit /b 1
 )

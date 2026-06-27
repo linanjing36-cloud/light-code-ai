@@ -221,7 +221,7 @@ func (b *Bridge) connWorker(ctx context.Context, conn net.Conn, reader *bufio.Re
 				continue
 			}
 			if stream := frame.GetStream(); stream != nil {
-				log.Printf("[brain] worker stream push stream_id=%s (logged)", stream.GetStreamId())
+				emitPanelStream(stream)
 				continue
 			}
 		}
@@ -331,4 +331,17 @@ func defaultPanelAddrFile() string {
 		}
 	}
 	return filepath.Join(wd, "..", "bin", "run", "panel.addr")
+}
+
+func emitPanelStream(stream *panelpb.PanelStream) {
+	app := application.Get()
+	if app == nil {
+		return
+	}
+	w := app.Window.Current()
+	if w == nil {
+		return
+	}
+	ev := decodePanelStreamEvent(stream)
+	w.EmitEvent("panel:stream", ev)
 }
