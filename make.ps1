@@ -6,6 +6,8 @@ make.ps1 - Hermes Agent 大脑构建与运行 (Windows / PowerShell 版, Makefil
   .\make.ps1 bin      准备 bin\ 目录骨架 (创建子目录 + 拷贝 .bat 脚本, 不编译产物)
   .\make.ps1 env      检查并安装本地 SDK (Erlang 29 / Go 1.26 / Node.js / rebar3 / wails3) 到 bin\env\
   .\make.ps1 agent    编译 Agent-brains (Erlang/OTP), 产物安装到 bin\erl_bin\
+  .\make.ps1 tools    编译 Eion-tools (Go/Eino), 产物安装到 bin\eion_bin\
+  .\make.ps1 wails_v3 编译 Wails-v3 (GUI), 产物安装到 bin\wails_v3_bin\
   .\make.ps1 run      启动 Agent 大脑 (前台, 优化参数, Ctrl+C 退出)
   .\make.ps1 stop     优雅停止 Agent 大脑 (rpc init:stop 触发 app terminate)
   .\make.ps1 clean    清理编译产物与 bin\erl_bin\
@@ -293,13 +295,14 @@ function Invoke-Env {
     Write-Host "[make] ==> 已生成激活脚本 (后续 make target 会自动加载 activate.ps1):"
     Write-Host "    PowerShell:  . .\bin\env\activate.ps1"
     Write-Host "    cmd:         call bin\env\activate.bat"
-    Write-Host "[make] ==> 单独跑 wails 构建: 先 . .\bin\env\activate.ps1, 再 cd Wails-v3; wails3 build"
+    Write-Host "[make] ==> 单独跑 wails 构建: .\make.ps1 wails_v3  (需先 .\make.ps1 env 安装 wails3)"
 }
 
 # 准备 bin\ 目录骨架 (创建子目录 + 拷贝 scrtps\ 下 .bat 脚本到 bin\)
 # 不编译任何产物, 只搭骨架. 编译产物用:
 #   .\make.ps1 agent              -> bin\erl_bin\        (Erlang/OTP)
-#   cd Wails-v3; wails3 build     -> bin\wails_v3_bin\  (Wails v3)
+#   .\make.ps1 tools              -> bin\eion_bin\       (Eion-tools)
+#   .\make.ps1 wails_v3           -> bin\wails_v3_bin\  (Wails v3)
 function Invoke-Bin {
     Write-Host "[make] ==> 准备 bin\ 目录结构..."
     New-Item -ItemType Directory -Force -Path $BinDir   | Out-Null
@@ -327,8 +330,9 @@ function Invoke-Bin {
     }
 
     Write-Host "[make] ==> 完成. 编译产物:"
-    Write-Host "    .\make.ps1 agent              # Erlang -> bin\erl_bin\"
-    Write-Host "    cd Wails-v3; wails3 build     # Wails  -> bin\wails_v3_bin\"
+    Write-Host "    .\make.ps1 agent              # Erlang     -> bin\erl_bin\"
+    Write-Host "    .\make.ps1 tools              # Eion-tools -> bin\eion_bin\"
+    Write-Host "    .\make.ps1 wails_v3           # Wails v3   -> bin\wails_v3_bin\"
     Write-Host "[make] ==> 启动 (三进程独立启动, 按顺序):"
     Write-Host "    .\bin\start-tools.bat         # 1. Eion-tools server (写 eion-tools.addr)"
     Write-Host "    .\bin\start-agent.bat         # 2. Erlang brain (写 panel.addr, 连 Eion-tools)"
@@ -365,12 +369,21 @@ function Invoke-Agent {
     Copy-Item -Path (Join-Path $AgentDir "config\sys.config") `
               -Destination (Join-Path $ErlBin "config\sys.config") -Force
 
-    # 编译 Eion-tools (Go/Eino 无状态执行 SDK) -> bin\eion_bin\eion-tools-server.exe
-    # 新架构: Eion-tools 作为独立 TCP server 进程运行, listen 127.0.0.1:0 (ephemeral),
-    # 把实际地址写入 bin/run/eion-tools.addr 供 Agent-brains (bridge_manager) 发现。
-    # bridge_manager 建立 TCP 连接池 (默认 4 连接), 4字节大端长度前缀 + protobuf 帧通信。
-    # 缺失则 agent_fsm 的 LLM/工具调用全失败。
+    Write-Host "[make] ==> 完成. 已安装 OTP apps + config:"
+    Get-ChildItem -Path $ErlBin | ForEach-Object { Write-Host "    [erl_bin] $($_.Name)" }
+    Write-Host "[make] ==> 另需: .\make.ps1 tools  (Eion-tools -> bin\eion_bin\)"
+    Write-Host "[make] ==> 启动: .\make.ps1 run  (开发模式, `$env:MODE='prod'; .\make.ps1 run 是发布模式)"
+    Write-Host "[make] ==> 停止: .\make.ps1 stop"
+}
+
+# 编译 Eion-tools (Go/Eino 无状态执行 SDK) -> bin\eion_bin\eion-tools-server.exe
+# Eion-tools 作为独立 TCP server 进程运行, listen 127.0.0.1:0 (ephemeral),
+# 把实际地址写入 bin/run/eion-tools.addr 供 Agent-brains (bridge_manager) 发现。
+function Invoke-Tools {
     Write-Host "[make] ==> 编译 Eion-tools -> $EionBin ..."
+    if (-not (Test-CommandExists "go")) {
+        throw "go 未找到, 请先执行: .\make.ps1 env"
+    }
     New-Item -ItemType Directory -Force -Path $EionBin | Out-Null
     $eionToolsDir = Join-Path $RootDir "Eion-tools"
     $eionExe = Join-Path $EionBin "eion-tools-server.exe"
@@ -381,11 +394,54 @@ function Invoke-Agent {
     }
     finally { Pop-Location }
 
-    Write-Host "[make] ==> 完成. 已安装 OTP apps + config + Eion-tools server:"
-    Get-ChildItem -Path $ErlBin | ForEach-Object { Write-Host "    [erl_bin] $($_.Name)" }
+    Write-Host "[make] ==> 完成. 已安装 Eion-tools server:"
     Write-Host "    [eion_bin] eion-tools-server.exe"
-    Write-Host "[make] ==> 启动: .\make.ps1 run  (开发模式, `$env:MODE='prod'; .\make.ps1 run 是发布模式)"
-    Write-Host "[make] ==> 停止: .\make.ps1 stop"
+    Write-Host "[make] ==> 启动: .\bin\start-tools.bat"
+}
+
+# 编译 Wails-v3 (Hermes GUI) -> bin\wails_v3_bin\hermes.exe
+# Taskfile.yml 中 BIN_DIR=../bin/wails_v3_bin, APP_NAME=hermes
+function Invoke-WailsV3 {
+    Write-Host "[make] ==> 编译 Wails-v3 -> $WailsBin ..."
+    if (-not (Test-CommandExists "wails3")) {
+        throw "wails3 未找到, 请先执行: .\make.ps1 env"
+    }
+    New-Item -ItemType Directory -Force -Path $WailsBin | Out-Null
+    $wailsDir = Join-Path $RootDir "Wails-v3"
+    $buildTaskfile = Join-Path $wailsDir "build\Taskfile.yml"
+    if (-not (Test-Path $buildTaskfile)) {
+        Write-Host "[make] ==> 首次构建, 生成 Wails build 资产到 Wails-v3\build\ ..."
+        Push-Location $wailsDir
+        try {
+            $prevEAP = $ErrorActionPreference
+            $ErrorActionPreference = "Continue"
+            try {
+                & wails3 generate build-assets -dir ./build -name hermes -binaryname hermes 2>&1 | Out-Host
+                if ($LASTEXITCODE -ne 0) { throw "wails3 generate build-assets 失败 (exit $LASTEXITCODE)" }
+            }
+            finally { $ErrorActionPreference = $prevEAP }
+        }
+        finally { Pop-Location }
+    }
+    Push-Location $wailsDir
+    try {
+        $prevEAP = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+        try {
+            & wails3 build 2>&1 | Out-Host
+            if ($LASTEXITCODE -ne 0) { throw "wails3 build 失败 (exit $LASTEXITCODE)" }
+        }
+        finally { $ErrorActionPreference = $prevEAP }
+    }
+    finally { Pop-Location }
+
+    $wailsExe = Join-Path $WailsBin "hermes.exe"
+    if (-not (Test-Path $wailsExe)) {
+        throw "未找到编译产物: $wailsExe"
+    }
+    Write-Host "[make] ==> 完成. 已安装 Wails GUI:"
+    Write-Host "    [wails_v3_bin] hermes.exe"
+    Write-Host "[make] ==> 启动: .\bin\start-wails.bat  (需先 start-tools + start-agent)"
 }
 
 # 启动 Agent 大脑 (前台运行, 优化参数, Ctrl+C 退出)
@@ -435,6 +491,8 @@ function Show-Help {
     Write-Host "  bin      准备 bin\ 目录骨架 (创建子目录 + 拷贝 .bat 脚本, 不编译产物)"
     Write-Host "  env      检查并安装本地 SDK (Erlang 29 / Go 1.26 / Node.js / rebar3 / wails3) 到 bin\env\"
     Write-Host "  agent    编译 Agent-brains (Erlang/OTP), 产物安装到 bin\erl_bin\"
+    Write-Host "  tools    编译 Eion-tools (Go/Eino), 产物安装到 bin\eion_bin\"
+    Write-Host "  wails_v3 编译 Wails-v3 (GUI), 产物安装到 bin\wails_v3_bin\"
     Write-Host "  run      启动 Agent 大脑 (前台, 优化参数, Ctrl+C 退出)"
     Write-Host "  stop     优雅停止 Agent 大脑 (rpc init:stop 触发 app terminate)"
     Write-Host "  clean    清理编译产物与 bin\erl_bin\"
@@ -455,12 +513,14 @@ if ((Test-Path $activatePs1) -and $Target -ne "env") {
 switch ($Target) {
     "bin"    { Invoke-Bin }
     "env"    { Invoke-Env }
-    "agent"  { Invoke-Agent }
-    "run"    { Invoke-Run }
+    "agent"    { Invoke-Agent }
+    "tools"    { Invoke-Tools }
+    "wails_v3" { Invoke-WailsV3 }
+    "run"      { Invoke-Run }
     "stop"   { Invoke-Stop }
     "clean"  { Invoke-Clean }
     "test"   { Invoke-Test }
     "help"   { Show-Help }
     ""       { Show-Help }
-    default  { Write-Host "未知目标: $Target (可用: bin / env / agent / run / stop / clean / test / help)"; exit 1 }
+    default  { Write-Host "未知目标: $Target (可用: bin / env / agent / tools / wails_v3 / run / stop / clean / test / help)"; exit 1 }
 }
