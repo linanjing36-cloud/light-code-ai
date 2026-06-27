@@ -11,7 +11,7 @@ make.ps1 - Hermes Agent 大脑构建与运行 (Windows / PowerShell 版, Makefil
   .\make.ps1 run      启动 Agent 大脑 (前台, 优化参数, Ctrl+C 退出)
   .\make.ps1 stop     优雅停止 Agent 大脑 (rpc init:stop 触发 app terminate)
   .\make.ps1 clean    清理编译产物与 bin\erl_bin\
-  .\make.ps1 test      跑 Eion-tools go test + Agent-brains eunit + panel capability e2e
+  .\make.ps1 test      跑 Eion-tools go test + Agent-brains eunit + panel capability/full e2e
   .\make.ps1 help      显示帮助
 
 模式切换 (run 时):
@@ -653,8 +653,15 @@ function Invoke-Stop {
     & $stopBat
 }
 
-# Eion-tools go test + Agent-brains eunit + panel capability e2e
-function Invoke-PanelCapabilityE2E {
+# Eion-tools go test + Agent-brains eunit + panel e2e
+function Invoke-PanelGoE2E {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Label,
+        [Parameter(Mandatory = $true)]
+        [string]$CommandPath
+    )
+
     Apply-MemoryEnv
 
     $wailsDir = Join-Path $RootDir "Wails-v3"
@@ -667,10 +674,10 @@ function Invoke-PanelCapabilityE2E {
 
     if (Test-AgentHealthy -PanelAddrFile $PanelAddrFile) {
         $panelAddr = (Get-Content $PanelAddrFile -Raw).Trim()
-        Write-Host "[make] ==> panel capability e2e (复用当前 Agent-brains @ $panelAddr)..."
+        Write-Host "[make] ==> $Label (复用当前 Agent-brains @ $panelAddr)..."
     } else {
         if (Test-ErlProcessRunning) {
-            Write-Host "[make] ==> 检测到残留 erl，先清理后再做 panel capability e2e..."
+            Write-Host "[make] ==> 检测到残留 erl，先清理后再做 $Label..."
             Invoke-StopAll -Force
             Start-Sleep -Seconds 2
         }
@@ -682,7 +689,7 @@ function Invoke-PanelCapabilityE2E {
             throw "未找到 $StartAgentBat"
         }
 
-        Write-Host "[make] ==> 启动临时 Agent-brains (HERMES_EXEC_VIA_PANEL=1) ..."
+        Write-Host "[make] ==> 启动临时 Agent-brains (HERMES_EXEC_VIA_PANEL=1) 用于 $Label ..."
         Remove-Item $PanelAddrFile -ErrorAction SilentlyContinue
         $savedExecViaPanel = $env:HERMES_EXEC_VIA_PANEL
         try {
@@ -711,8 +718,8 @@ function Invoke-PanelCapabilityE2E {
         try {
             $env:HERMES_PANEL_E2E_QUIET_RUNTIME_LOGS = "1"
             $env:HERMES_EION_QUIET_LOGS = "1"
-            & go run ./cmd/panel_capability_e2e
-            if ($LASTEXITCODE -ne 0) { throw "panel_capability_e2e 失败 (exit $LASTEXITCODE)" }
+            & go run $CommandPath
+            if ($LASTEXITCODE -ne 0) { throw "$Label 失败 (exit $LASTEXITCODE)" }
         }
         finally {
             if ($null -eq $savedQuietStdLog) {
@@ -743,6 +750,14 @@ function Invoke-PanelCapabilityE2E {
     }
 }
 
+function Invoke-PanelCapabilityE2E {
+    Invoke-PanelGoE2E -Label "panel capability e2e" -CommandPath "./cmd/panel_capability_e2e"
+}
+
+function Invoke-PanelFullE2E {
+    Invoke-PanelGoE2E -Label "panel full e2e" -CommandPath "./cmd/panel_full_e2e"
+}
+
 function Invoke-Test {
     Apply-MemoryEnv
 
@@ -764,6 +779,7 @@ function Invoke-Test {
     finally { Pop-Location }
 
     Invoke-PanelCapabilityE2E
+    Invoke-PanelFullE2E
 }
 
 # 清理编译产物与 bin\erl_bin\
@@ -1069,7 +1085,7 @@ function Show-Help {
     Write-Host "  stop-all -Force  强制停止 (等同 stop-all.bat -f)"
     Write-Host "  status   查看进程与端口文件状态"
     Write-Host "  clean    清理编译产物与 bin\erl_bin\"
-    Write-Host "  test     跑 Eion-tools go test + Agent-brains eunit + panel capability e2e"
+    Write-Host "  test     跑 Eion-tools go test + Agent-brains eunit + panel capability/full e2e"
     Write-Host "  help     显示此帮助"
     Write-Host ""
     Write-Host "模式切换 (run 时):"
