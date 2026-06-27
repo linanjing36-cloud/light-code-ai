@@ -361,12 +361,12 @@ history_entry_from_pb(E) ->
 tool_desc_to_pb(T) ->
     Base = #{name => maps:get(name, T, <<>>),
              description => maps:get(description, T, <<>>)},
-    maybe_put_schema_value(parameters, maps:get(parameters_json, T, <<>>), Base).
+    maybe_put_tool_parameters_pb(parameters_pb, maps:get(parameters_json, T, <<>>), Base).
 
 tool_desc_from_pb(T) ->
     Base = #{name => maps:get(name, T, <<>>),
              description => maps:get(description, T, <<>>)},
-    maybe_put_schema_json(parameters_json, maps:get(parameters, T, undefined), Base).
+    maybe_put_tool_parameters_json(parameters_json, maps:get(parameters_pb, T, undefined), Base).
 
 tool_call_to_pb(TC) ->
     Fun0 = #{name => ensure_binary(maps:get(name, TC, <<>>))},
@@ -399,22 +399,46 @@ maybe_put_json_binary(Key, JsonValue, Map) ->
         JsonBin -> Map#{Key => JsonBin}
     end.
 
-maybe_put_schema_value(_Key, <<>>, Map) ->
+maybe_put_tool_parameters_json(_Key, undefined, Map) ->
     Map;
-maybe_put_schema_value(_Key, undefined, Map) ->
-    Map;
-maybe_put_schema_value(Key, JsonBin, Map) ->
-    case schema_value_from_json_binary(JsonBin) of
+maybe_put_tool_parameters_json(Key, ToolParametersPb, Map) ->
+    case tool_parameters_from_pb_binary(ToolParametersPb) of
         undefined -> Map;
-        SchemaValue -> Map#{Key => SchemaValue}
+        ToolParameters ->
+            case tool_parameters_to_binary_json(ToolParameters) of
+                undefined -> Map;
+                JsonBin -> Map#{Key => JsonBin}
+            end
     end.
 
-maybe_put_schema_json(_Key, undefined, Map) ->
+maybe_put_tool_parameters_pb(_Key, <<>>, Map) ->
     Map;
-maybe_put_schema_json(Key, SchemaValue, Map) ->
-    case schema_value_to_binary_json(SchemaValue) of
+maybe_put_tool_parameters_pb(_Key, undefined, Map) ->
+    Map;
+maybe_put_tool_parameters_pb(Key, JsonBin, Map) ->
+    case tool_parameters_from_json_binary(JsonBin) of
         undefined -> Map;
-        JsonBin -> Map#{Key => JsonBin}
+        ToolParameters ->
+            case tool_parameters_to_pb_binary(ToolParameters) of
+                undefined -> Map;
+                PbBin -> Map#{Key => PbBin}
+            end
+    end.
+
+tool_parameters_to_pb_binary(undefined) ->
+    undefined;
+tool_parameters_to_pb_binary(ToolParameters) ->
+    ?PANEL_PB:encode_msg(ToolParameters, 'ToolParameters').
+
+tool_parameters_from_pb_binary(<<>>) ->
+    undefined;
+tool_parameters_from_pb_binary(undefined) ->
+    undefined;
+tool_parameters_from_pb_binary(Bin) ->
+    try ?PANEL_PB:decode_msg(Bin, 'ToolParameters') of
+        Decoded -> Decoded
+    catch
+        _:_ -> undefined
     end.
 
 json_value_from_json_binary(JsonBin) ->
@@ -451,56 +475,64 @@ json_value_to_binary_json(undefined) ->
 json_value_to_binary_json(JsonValue) ->
     json:encode(json_value_to_term(JsonValue)).
 
-schema_value_from_json_binary(JsonBin) ->
+tool_parameters_from_json_binary(JsonBin) ->
     try
-        schema_value_from_term(json:decode(ensure_binary(JsonBin)))
+        tool_parameters_from_term(json:decode(ensure_binary(JsonBin)))
     catch
         _:_ -> undefined
     end.
 
-schema_value_from_term(null) ->
-    #{kind => 'NULL'};
-schema_value_from_term(V) when is_binary(V) ->
-    #{kind => 'STRING', string_value => V};
-schema_value_from_term(V) when is_boolean(V) ->
-    #{kind => 'BOOL', bool_value => V};
-schema_value_from_term(V) when is_integer(V) ->
-    #{kind => 'NUMBER', number_value => float(V)};
-schema_value_from_term(V) when is_float(V) ->
-    #{kind => 'NUMBER', number_value => V};
-schema_value_from_term(V) when is_map(V) ->
-    Fields = [#{key => ensure_binary(K), value => schema_value_from_term(Val)}
-              || {K, Val} <- maps:to_list(V)],
-    #{kind => 'OBJECT', object_fields => Fields};
-schema_value_from_term(V) when is_list(V) ->
-    case is_string_list(V) of
-        true ->
-            #{kind => 'STRING', string_value => ensure_binary(V)};
-        false ->
-            #{kind => 'ARRAY', array_items => [schema_value_from_term(Item) || Item <- V]}
-    end.
+tool_parameters_from_term(Term) when is_map(Term) ->
+    Type = ensure_binary(maps:get(<<"type">>, Term, <<"object">>)),
+    PropertiesMap = maps:get(<<"properties">>, Term, #{}),
+    RequiredNames = maps:get(<<"required">>, Term, []),
+    RequiredSet = maps:from_list([{ensure_binary(Name), true} || Name <- RequiredNames]),
+    Properties = [tool_parameter_from_term(Name, Spec, RequiredSet)
+                  || {Name, Spec} <- maps:to_list(PropertiesMap)],
+    #{type => Type, properties => Properties};
+tool_parameters_from_term(_) ->
+    undefined.
 
-schema_value_to_binary_json(undefined) ->
+tool_parameter_from_term(Name, Spec, RequiredSet) when is_map(Spec) ->
+    #{name => ensure_binary(Name),
+      type => ensure_binary(maps:get(<<"type">>, Spec, <<>>)),
+      description => ensure_binary(maps:get(<<"description">>, Spec, <<>>)),
+      required => maps:is_key(ensure_binary(Name), RequiredSet)};
+tool_parameter_from_term(Name, _Spec, RequiredSet) ->
+    #{name => ensure_binary(Name),
+      type => <<>>,
+      description => <<>>,
+      required => maps:is_key(ensure_binary(Name), RequiredSet)}.
+
+tool_parameters_to_binary_json(undefined) ->
     undefined;
-schema_value_to_binary_json(SchemaValue) ->
-    json:encode(schema_value_to_term(SchemaValue)).
+tool_parameters_to_binary_json(ToolParameters) ->
+    json:encode(tool_parameters_to_term(ToolParameters)).
 
-schema_value_to_term(#{kind := 'NULL'}) ->
-    null;
-schema_value_to_term(#{kind := 'STRING'} = V) ->
-    maps:get(string_value, V, <<>>);
-schema_value_to_term(#{kind := 'NUMBER'} = V) ->
-    normalize_number_term(maps:get(number_value, V, 0));
-schema_value_to_term(#{kind := 'BOOL'} = V) ->
-    maps:get(bool_value, V, false);
-schema_value_to_term(#{kind := 'OBJECT'} = V) ->
-    maps:from_list([{maps:get(key, Field, <<>>),
-                     schema_value_to_term(maps:get(value, Field, #{kind => 'NULL'}))}
-                    || Field <- maps:get(object_fields, V, [])]);
-schema_value_to_term(#{kind := 'ARRAY'} = V) ->
-    [schema_value_to_term(Item) || Item <- maps:get(array_items, V, [])];
-schema_value_to_term(_) ->
-    null.
+tool_parameters_to_term(#{type := Type} = Params) ->
+    Properties = maps:get(properties, Params, []),
+    {PropsMap, RequiredList} =
+        lists:foldl(fun parameter_to_term/2, {#{}, []}, Properties),
+    Base = #{<<"type">> => Type, <<"properties">> => PropsMap},
+    case RequiredList of
+        [] -> Base;
+        _ -> Base#{<<"required">> => lists:reverse(RequiredList)}
+    end;
+tool_parameters_to_term(_) ->
+    #{<<"type">> => <<"object">>, <<"properties">> => #{}}.
+
+parameter_to_term(Param, {PropsMap, RequiredAcc}) ->
+    Name = ensure_binary(maps:get(name, Param, <<>>)),
+    PropSpec = #{
+        <<"type">> => ensure_binary(maps:get(type, Param, <<>>)),
+        <<"description">> => ensure_binary(maps:get(description, Param, <<>>))
+    },
+    RequiredAcc1 =
+        case maps:get(required, Param, false) of
+            true -> [Name | RequiredAcc];
+            false -> RequiredAcc
+        end,
+    {PropsMap#{Name => PropSpec}, RequiredAcc1}.
 
 json_value_to_term(#{string_value := V}) ->
     V;

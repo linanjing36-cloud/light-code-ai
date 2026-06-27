@@ -108,6 +108,18 @@
         value                   => 'SchemaValue'()  % = 2, optional
        }.
 
+-type 'ToolParameter'() ::
+      #{name                    => unicode:chardata(), % = 1, optional
+        type                    => unicode:chardata(), % = 2, optional
+        description             => unicode:chardata(), % = 3, optional
+        required                => boolean() | 0 | 1 % = 4, optional
+       }.
+
+-type 'ToolParameters'() ::
+      #{type                    => unicode:chardata(), % = 1, optional
+        properties              => ['ToolParameter'()] % = 2, repeated
+       }.
+
 -type 'SchemaValue'() ::
       #{kind                    => 'NULL' | 'STRING' | 'NUMBER' | 'BOOL' | 'OBJECT' | 'ARRAY' | integer(), % = 1, optional, enum SchemaValue.Kind
         string_value            => unicode:chardata(), % = 2, optional
@@ -209,7 +221,7 @@
 -type 'ToolDesc'() ::
       #{name                    => unicode:chardata(), % = 1, optional
         description             => unicode:chardata(), % = 2, optional
-        parameters              => 'SchemaValue'()  % = 3, optional
+        parameters_pb           => iodata()         % = 3, optional
        }.
 
 -type 'ApproveResult'() ::
@@ -242,9 +254,9 @@
       #{ok                      => boolean() | 0 | 1 % = 1, optional
        }.
 
--export_type(['PanelFrame'/0, 'PanelExec'/0, 'PanelExecResult'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'LlmChunk'/0, 'JsonField'/0, 'SchemaField'/0, 'SchemaValue'/0, 'JsonObject'/0, 'JsonArray'/0, 'JsonValue'/0, 'ToolFunction'/0, 'ToolCall'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
--type '$msg_name'() :: 'PanelFrame' | 'PanelExec' | 'PanelExecResult' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'LlmChunk' | 'JsonField' | 'SchemaField' | 'SchemaValue' | 'JsonObject' | 'JsonArray' | 'JsonValue' | 'ToolFunction' | 'ToolCall' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
--type '$msg'() :: 'PanelFrame'() | 'PanelExec'() | 'PanelExecResult'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'LlmChunk'() | 'JsonField'() | 'SchemaField'() | 'SchemaValue'() | 'JsonObject'() | 'JsonArray'() | 'JsonValue'() | 'ToolFunction'() | 'ToolCall'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
+-export_type(['PanelFrame'/0, 'PanelExec'/0, 'PanelExecResult'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'LlmChunk'/0, 'JsonField'/0, 'SchemaField'/0, 'ToolParameter'/0, 'ToolParameters'/0, 'SchemaValue'/0, 'JsonObject'/0, 'JsonArray'/0, 'JsonValue'/0, 'ToolFunction'/0, 'ToolCall'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
+-type '$msg_name'() :: 'PanelFrame' | 'PanelExec' | 'PanelExecResult' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'LlmChunk' | 'JsonField' | 'SchemaField' | 'ToolParameter' | 'ToolParameters' | 'SchemaValue' | 'JsonObject' | 'JsonArray' | 'JsonValue' | 'ToolFunction' | 'ToolCall' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
+-type '$msg'() :: 'PanelFrame'() | 'PanelExec'() | 'PanelExecResult'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'LlmChunk'() | 'JsonField'() | 'SchemaField'() | 'ToolParameter'() | 'ToolParameters'() | 'SchemaValue'() | 'JsonObject'() | 'JsonArray'() | 'JsonValue'() | 'ToolFunction'() | 'ToolCall'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
 -export_type(['$msg_name'/0, '$msg'/0]).
 
 -if(?OTP_RELEASE >= 24).
@@ -273,6 +285,8 @@ encode_msg(Msg, MsgName, Opts) ->
         'LlmChunk' -> encode_msg_LlmChunk(id(Msg, TrUserData), TrUserData);
         'JsonField' -> encode_msg_JsonField(id(Msg, TrUserData), TrUserData);
         'SchemaField' -> encode_msg_SchemaField(id(Msg, TrUserData), TrUserData);
+        'ToolParameter' -> encode_msg_ToolParameter(id(Msg, TrUserData), TrUserData);
+        'ToolParameters' -> encode_msg_ToolParameters(id(Msg, TrUserData), TrUserData);
         'SchemaValue' -> encode_msg_SchemaValue(id(Msg, TrUserData), TrUserData);
         'JsonObject' -> encode_msg_JsonObject(id(Msg, TrUserData), TrUserData);
         'JsonArray' -> encode_msg_JsonArray(id(Msg, TrUserData), TrUserData);
@@ -542,6 +556,78 @@ encode_msg_SchemaField(#{} = M, Bin, TrUserData) ->
                 if TrF2 =:= undefined -> B1;
                    true -> e_mfield_SchemaField_value(TrF2, <<B1/binary, 18>>, TrUserData)
                 end
+            end;
+        _ -> B1
+    end.
+
+encode_msg_ToolParameter(Msg, TrUserData) -> encode_msg_ToolParameter(Msg, <<>>, TrUserData).
+
+
+encode_msg_ToolParameter(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{name := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{type := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     case is_empty_string(TrF2) of
+                         true -> B1;
+                         false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    B3 = case M of
+             #{description := F3} ->
+                 begin
+                     TrF3 = id(F3, TrUserData),
+                     case is_empty_string(TrF3) of
+                         true -> B2;
+                         false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                     end
+                 end;
+             _ -> B2
+         end,
+    case M of
+        #{required := F4} ->
+            begin
+                TrF4 = id(F4, TrUserData),
+                if TrF4 =:= false -> B3;
+                   true -> e_type_bool(TrF4, <<B3/binary, 32>>, TrUserData)
+                end
+            end;
+        _ -> B3
+    end.
+
+encode_msg_ToolParameters(Msg, TrUserData) -> encode_msg_ToolParameters(Msg, <<>>, TrUserData).
+
+
+encode_msg_ToolParameters(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{type := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    case M of
+        #{properties := F2} ->
+            TrF2 = id(F2, TrUserData),
+            if TrF2 == [] -> B1;
+               true -> e_field_ToolParameters_properties(TrF2, B1, TrUserData)
             end;
         _ -> B1
     end.
@@ -1063,11 +1149,12 @@ encode_msg_ToolDesc(#{} = M, Bin, TrUserData) ->
              _ -> B1
          end,
     case M of
-        #{parameters := F3} ->
+        #{parameters_pb := F3} ->
             begin
                 TrF3 = id(F3, TrUserData),
-                if TrF3 =:= undefined -> B2;
-                   true -> e_mfield_ToolDesc_parameters(TrF3, <<B2/binary, 26>>, TrUserData)
+                case iolist_size(TrF3) of
+                    0 -> B2;
+                    _ -> e_type_bytes(TrF3, <<B2/binary, 26>>, TrUserData)
                 end
             end;
         _ -> B2
@@ -1278,6 +1365,17 @@ e_mfield_SchemaField_value(Msg, Bin, TrUserData) ->
     Bin2 = e_varint(byte_size(SubBin), Bin),
     <<Bin2/binary, SubBin/binary>>.
 
+e_mfield_ToolParameters_properties(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_ToolParameter(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_ToolParameters_properties([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 18>>,
+    Bin3 = e_mfield_ToolParameters_properties(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_ToolParameters_properties(Rest, Bin3, TrUserData);
+e_field_ToolParameters_properties([], Bin, _TrUserData) -> Bin.
+
 e_mfield_SchemaValue_object_fields(Msg, Bin, TrUserData) ->
     SubBin = encode_msg_SchemaField(Msg, <<>>, TrUserData),
     Bin2 = e_varint(byte_size(SubBin), Bin),
@@ -1362,11 +1460,6 @@ e_field_ListToolsResult_tools([Elem | Rest], Bin, TrUserData) ->
     Bin3 = e_mfield_ListToolsResult_tools(id(Elem, TrUserData), Bin2, TrUserData),
     e_field_ListToolsResult_tools(Rest, Bin3, TrUserData);
 e_field_ListToolsResult_tools([], Bin, _TrUserData) -> Bin.
-
-e_mfield_ToolDesc_parameters(Msg, Bin, TrUserData) ->
-    SubBin = encode_msg_SchemaValue(Msg, <<>>, TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
 
 e_mfield_HistoryEntry_tool_calls(Msg, Bin, TrUserData) ->
     SubBin = encode_msg_ToolCall(Msg, <<>>, TrUserData),
@@ -1536,6 +1629,8 @@ decode_msg_2_doit('PanelStream', Bin, TrUserData) -> id(decode_msg_PanelStream(B
 decode_msg_2_doit('LlmChunk', Bin, TrUserData) -> id(decode_msg_LlmChunk(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('JsonField', Bin, TrUserData) -> id(decode_msg_JsonField(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('SchemaField', Bin, TrUserData) -> id(decode_msg_SchemaField(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ToolParameter', Bin, TrUserData) -> id(decode_msg_ToolParameter(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ToolParameters', Bin, TrUserData) -> id(decode_msg_ToolParameters(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('SchemaValue', Bin, TrUserData) -> id(decode_msg_SchemaValue(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('JsonObject', Bin, TrUserData) -> id(decode_msg_JsonObject(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('JsonArray', Bin, TrUserData) -> id(decode_msg_JsonArray(Bin, TrUserData), TrUserData);
@@ -2245,6 +2340,130 @@ skip_group_SchemaField(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
 skip_32_SchemaField(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_SchemaField(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
 
 skip_64_SchemaField(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_SchemaField(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_ToolParameter(Bin, TrUserData) -> dfp_read_field_def_ToolParameter(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(false, TrUserData), TrUserData).
+
+dfp_read_field_def_ToolParameter(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_ToolParameter_name(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_ToolParameter(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_ToolParameter_type(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_ToolParameter(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_ToolParameter_description(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_ToolParameter(<<32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_ToolParameter_required(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_ToolParameter(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, _) -> #{name => F@_1, type => F@_2, description => F@_3, required => F@_4};
+dfp_read_field_def_ToolParameter(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dg_read_field_def_ToolParameter(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+dg_read_field_def_ToolParameter(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 32 - 7 -> dg_read_field_def_ToolParameter(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dg_read_field_def_ToolParameter(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_ToolParameter_name(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        18 -> d_field_ToolParameter_type(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        26 -> d_field_ToolParameter_description(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        32 -> d_field_ToolParameter_required(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ToolParameter(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                1 -> skip_64_ToolParameter(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                2 -> skip_length_delimited_ToolParameter(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                3 -> skip_group_ToolParameter(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                5 -> skip_32_ToolParameter(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData)
+            end
+    end;
+dg_read_field_def_ToolParameter(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, _) -> #{name => F@_1, type => F@_2, description => F@_3, required => F@_4}.
+
+d_field_ToolParameter_name(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_ToolParameter_name(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_ToolParameter_name(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ToolParameter(RestF, 0, 0, F, NewFValue, F@_2, F@_3, F@_4, TrUserData).
+
+d_field_ToolParameter_type(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_ToolParameter_type(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_ToolParameter_type(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ToolParameter(RestF, 0, 0, F, F@_1, NewFValue, F@_3, F@_4, TrUserData).
+
+d_field_ToolParameter_description(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_ToolParameter_description(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_ToolParameter_description(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ToolParameter(RestF, 0, 0, F, F@_1, F@_2, NewFValue, F@_4, TrUserData).
+
+d_field_ToolParameter_required(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_ToolParameter_required(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_ToolParameter_required(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_ToolParameter(RestF, 0, 0, F, F@_1, F@_2, F@_3, NewFValue, TrUserData).
+
+skip_varint_ToolParameter(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> skip_varint_ToolParameter(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_varint_ToolParameter(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_ToolParameter(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_length_delimited_ToolParameter(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> skip_length_delimited_ToolParameter(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_length_delimited_ToolParameter(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ToolParameter(Rest2, 0, 0, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_group_ToolParameter(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ToolParameter(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_32_ToolParameter(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_ToolParameter(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_64_ToolParameter(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_ToolParameter(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+decode_msg_ToolParameters(Bin, TrUserData) -> dfp_read_field_def_ToolParameters(Bin, 0, 0, 0, id(<<>>, TrUserData), id([], TrUserData), TrUserData).
+
+dfp_read_field_def_ToolParameters(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_ToolParameters_type(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_ToolParameters(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_ToolParameters_properties(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_ToolParameters(<<>>, 0, 0, _, F@_1, R1, TrUserData) ->
+    S1 = #{type => F@_1},
+    if R1 == '$undef' -> S1;
+       true -> S1#{properties => lists_reverse(R1, TrUserData)}
+    end;
+dfp_read_field_def_ToolParameters(Other, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dg_read_field_def_ToolParameters(Other, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+dg_read_field_def_ToolParameters(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_ToolParameters(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+dg_read_field_def_ToolParameters(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_ToolParameters_type(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        18 -> d_field_ToolParameters_properties(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ToolParameters(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                1 -> skip_64_ToolParameters(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_ToolParameters(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                3 -> skip_group_ToolParameters(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                5 -> skip_32_ToolParameters(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData)
+            end
+    end;
+dg_read_field_def_ToolParameters(<<>>, 0, 0, _, F@_1, R1, TrUserData) ->
+    S1 = #{type => F@_1},
+    if R1 == '$undef' -> S1;
+       true -> S1#{properties => lists_reverse(R1, TrUserData)}
+    end.
+
+d_field_ToolParameters_type(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_ToolParameters_type(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_ToolParameters_type(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ToolParameters(RestF, 0, 0, F, NewFValue, F@_2, TrUserData).
+
+d_field_ToolParameters_properties(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_ToolParameters_properties(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_ToolParameters_properties(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_ToolParameter(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_ToolParameters(RestF, 0, 0, F, F@_1, cons(NewFValue, Prev, TrUserData), TrUserData).
+
+skip_varint_ToolParameters(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_ToolParameters(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+skip_varint_ToolParameters(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ToolParameters(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_ToolParameters(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_ToolParameters(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+skip_length_delimited_ToolParameters(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ToolParameters(Rest2, 0, 0, F, F@_1, F@_2, TrUserData).
+
+skip_group_ToolParameters(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ToolParameters(Rest, 0, Z2, FNum, F@_1, F@_2, TrUserData).
+
+skip_32_ToolParameters(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ToolParameters(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_64_ToolParameters(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ToolParameters(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
 
 decode_msg_SchemaValue(Bin, TrUserData) -> dfp_read_field_def_SchemaValue(Bin, 0, 0, 0, id('NULL', TrUserData), id(<<>>, TrUserData), id(0.0, TrUserData), id(false, TrUserData), id([], TrUserData), id([], TrUserData), TrUserData).
 
@@ -3359,16 +3578,12 @@ skip_32_ListToolsResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d
 
 skip_64_ListToolsResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_ListToolsResult(Rest, Z1, Z2, F, F@_1, TrUserData).
 
-decode_msg_ToolDesc(Bin, TrUserData) -> dfp_read_field_def_ToolDesc(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id('$undef', TrUserData), TrUserData).
+decode_msg_ToolDesc(Bin, TrUserData) -> dfp_read_field_def_ToolDesc(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
 
 dfp_read_field_def_ToolDesc(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_ToolDesc_name(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
 dfp_read_field_def_ToolDesc(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_ToolDesc_description(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_ToolDesc(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_ToolDesc_parameters(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_ToolDesc(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) ->
-    S1 = #{name => F@_1, description => F@_2},
-    if F@_3 == '$undef' -> S1;
-       true -> S1#{parameters => F@_3}
-    end;
+dfp_read_field_def_ToolDesc(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_ToolDesc_parameters_pb(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_ToolDesc(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{name => F@_1, description => F@_2, parameters_pb => F@_3};
 dfp_read_field_def_ToolDesc(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_ToolDesc(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
 
 dg_read_field_def_ToolDesc(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_ToolDesc(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
@@ -3377,7 +3592,7 @@ dg_read_field_def_ToolDesc(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_
     case Key of
         10 -> d_field_ToolDesc_name(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
         18 -> d_field_ToolDesc_description(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-        26 -> d_field_ToolDesc_parameters(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        26 -> d_field_ToolDesc_parameters_pb(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
         _ ->
             case Key band 7 of
                 0 -> skip_varint_ToolDesc(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
@@ -3387,11 +3602,7 @@ dg_read_field_def_ToolDesc(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_
                 5 -> skip_32_ToolDesc(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData)
             end
     end;
-dg_read_field_def_ToolDesc(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) ->
-    S1 = #{name => F@_1, description => F@_2},
-    if F@_3 == '$undef' -> S1;
-       true -> S1#{parameters => F@_3}
-    end.
+dg_read_field_def_ToolDesc(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{name => F@_1, description => F@_2, parameters_pb => F@_3}.
 
 d_field_ToolDesc_name(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_ToolDesc_name(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
 d_field_ToolDesc_name(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, TrUserData) ->
@@ -3403,19 +3614,10 @@ d_field_ToolDesc_description(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
     dfp_read_field_def_ToolDesc(RestF, 0, 0, F, F@_1, NewFValue, F@_3, TrUserData).
 
-d_field_ToolDesc_parameters(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_ToolDesc_parameters(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
-d_field_ToolDesc_parameters(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_SchemaValue(Bs, TrUserData), TrUserData), Rest2} end,
-    dfp_read_field_def_ToolDesc(RestF,
-                                0,
-                                0,
-                                F,
-                                F@_1,
-                                F@_2,
-                                if Prev == '$undef' -> NewFValue;
-                                   true -> merge_msg_SchemaValue(Prev, NewFValue, TrUserData)
-                                end,
-                                TrUserData).
+d_field_ToolDesc_parameters_pb(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_ToolDesc_parameters_pb(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_ToolDesc_parameters_pb(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ToolDesc(RestF, 0, 0, F, F@_1, F@_2, NewFValue, TrUserData).
 
 skip_varint_ToolDesc(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_ToolDesc(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
 skip_varint_ToolDesc(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_ToolDesc(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
@@ -3836,6 +4038,8 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'LlmChunk' -> merge_msg_LlmChunk(Prev, New, TrUserData);
         'JsonField' -> merge_msg_JsonField(Prev, New, TrUserData);
         'SchemaField' -> merge_msg_SchemaField(Prev, New, TrUserData);
+        'ToolParameter' -> merge_msg_ToolParameter(Prev, New, TrUserData);
+        'ToolParameters' -> merge_msg_ToolParameters(Prev, New, TrUserData);
         'SchemaValue' -> merge_msg_SchemaValue(Prev, New, TrUserData);
         'JsonObject' -> merge_msg_JsonObject(Prev, New, TrUserData);
         'JsonArray' -> merge_msg_JsonArray(Prev, New, TrUserData);
@@ -4023,6 +4227,45 @@ merge_msg_SchemaField(PMsg, NMsg, TrUserData) ->
         {#{value := PFvalue}, #{value := NFvalue}} -> S2#{value => merge_msg_SchemaValue(PFvalue, NFvalue, TrUserData)};
         {_, #{value := NFvalue}} -> S2#{value => NFvalue};
         {#{value := PFvalue}, _} -> S2#{value => PFvalue};
+        {_, _} -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ToolParameter/3}).
+merge_msg_ToolParameter(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{name := NFname}} -> S1#{name => NFname};
+             {#{name := PFname}, _} -> S1#{name => PFname};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{type := NFtype}} -> S2#{type => NFtype};
+             {#{type := PFtype}, _} -> S2#{type => PFtype};
+             _ -> S2
+         end,
+    S4 = case {PMsg, NMsg} of
+             {_, #{description := NFdescription}} -> S3#{description => NFdescription};
+             {#{description := PFdescription}, _} -> S3#{description => PFdescription};
+             _ -> S3
+         end,
+    case {PMsg, NMsg} of
+        {_, #{required := NFrequired}} -> S4#{required => NFrequired};
+        {#{required := PFrequired}, _} -> S4#{required => PFrequired};
+        _ -> S4
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ToolParameters/3}).
+merge_msg_ToolParameters(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{type := NFtype}} -> S1#{type => NFtype};
+             {#{type := PFtype}, _} -> S1#{type => PFtype};
+             _ -> S1
+         end,
+    case {PMsg, NMsg} of
+        {#{properties := PFproperties}, #{properties := NFproperties}} -> S2#{properties => 'erlang_++'(PFproperties, NFproperties, TrUserData)};
+        {_, #{properties := NFproperties}} -> S2#{properties => NFproperties};
+        {#{properties := PFproperties}, _} -> S2#{properties => PFproperties};
         {_, _} -> S2
     end.
 
@@ -4315,7 +4558,7 @@ merge_msg_ListToolsResult(PMsg, NMsg, TrUserData) ->
     end.
 
 -compile({nowarn_unused_function,merge_msg_ToolDesc/3}).
-merge_msg_ToolDesc(PMsg, NMsg, TrUserData) ->
+merge_msg_ToolDesc(PMsg, NMsg, _) ->
     S1 = #{},
     S2 = case {PMsg, NMsg} of
              {_, #{name := NFname}} -> S1#{name => NFname};
@@ -4328,10 +4571,9 @@ merge_msg_ToolDesc(PMsg, NMsg, TrUserData) ->
              _ -> S2
          end,
     case {PMsg, NMsg} of
-        {#{parameters := PFparameters}, #{parameters := NFparameters}} -> S3#{parameters => merge_msg_SchemaValue(PFparameters, NFparameters, TrUserData)};
-        {_, #{parameters := NFparameters}} -> S3#{parameters => NFparameters};
-        {#{parameters := PFparameters}, _} -> S3#{parameters => PFparameters};
-        {_, _} -> S3
+        {_, #{parameters_pb := NFparameters_pb}} -> S3#{parameters_pb => NFparameters_pb};
+        {#{parameters_pb := PFparameters_pb}, _} -> S3#{parameters_pb => PFparameters_pb};
+        _ -> S3
     end.
 
 -compile({nowarn_unused_function,merge_msg_ApproveResult/3}).
@@ -4435,6 +4677,8 @@ verify_msg(Msg, MsgName, Opts) ->
         'LlmChunk' -> v_msg_LlmChunk(Msg, [MsgName], TrUserData);
         'JsonField' -> v_msg_JsonField(Msg, [MsgName], TrUserData);
         'SchemaField' -> v_msg_SchemaField(Msg, [MsgName], TrUserData);
+        'ToolParameter' -> v_msg_ToolParameter(Msg, [MsgName], TrUserData);
+        'ToolParameters' -> v_msg_ToolParameters(Msg, [MsgName], TrUserData);
         'SchemaValue' -> v_msg_SchemaValue(Msg, [MsgName], TrUserData);
         'JsonObject' -> v_msg_JsonObject(Msg, [MsgName], TrUserData);
         'JsonArray' -> v_msg_JsonArray(Msg, [MsgName], TrUserData);
@@ -4756,6 +5000,65 @@ v_msg_SchemaField(#{} = M, Path, TrUserData) ->
     ok;
 v_msg_SchemaField(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'SchemaField'}, M, Path);
 v_msg_SchemaField(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'SchemaField'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_ToolParameter/3}).
+-dialyzer({nowarn_function,v_submsg_ToolParameter/3}).
+v_submsg_ToolParameter(Msg, Path, TrUserData) -> v_msg_ToolParameter(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_ToolParameter/3}).
+-dialyzer({nowarn_function,v_msg_ToolParameter/3}).
+v_msg_ToolParameter(#{} = M, Path, TrUserData) ->
+    case M of
+        #{name := F1} -> v_type_string(F1, [name | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{type := F2} -> v_type_string(F2, [type | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{description := F3} -> v_type_string(F3, [description | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{required := F4} -> v_type_bool(F4, [required | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (required) -> ok;
+                      (description) -> ok;
+                      (type) -> ok;
+                      (name) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ToolParameter(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ToolParameter'}, M, Path);
+v_msg_ToolParameter(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ToolParameter'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_ToolParameters/3}).
+-dialyzer({nowarn_function,v_msg_ToolParameters/3}).
+v_msg_ToolParameters(#{} = M, Path, TrUserData) ->
+    case M of
+        #{type := F1} -> v_type_string(F1, [type | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{properties := F2} ->
+            if is_list(F2) ->
+                   _ = [v_submsg_ToolParameter(Elem, [properties | Path], TrUserData) || Elem <- F2],
+                   ok;
+               true -> mk_type_error({invalid_list_of, {msg, 'ToolParameter'}}, F2, [properties | Path])
+            end;
+        _ -> ok
+    end,
+    lists:foreach(fun (properties) -> ok;
+                      (type) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ToolParameters(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ToolParameters'}, M, Path);
+v_msg_ToolParameters(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ToolParameters'}, X, Path).
 
 -compile({nowarn_unused_function,v_submsg_SchemaValue/3}).
 -dialyzer({nowarn_function,v_submsg_SchemaValue/3}).
@@ -5249,10 +5552,10 @@ v_msg_ToolDesc(#{} = M, Path, TrUserData) ->
         _ -> ok
     end,
     case M of
-        #{parameters := F3} -> v_submsg_SchemaValue(F3, [parameters | Path], TrUserData);
+        #{parameters_pb := F3} -> v_type_bytes(F3, [parameters_pb | Path], TrUserData);
         _ -> ok
     end,
-    lists:foreach(fun (parameters) -> ok;
+    lists:foreach(fun (parameters_pb) -> ok;
                       (description) -> ok;
                       (name) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
@@ -5526,6 +5829,12 @@ get_msg_defs() ->
      {{msg, 'LlmChunk'}, [#{name => content, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => reasoning_content, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}]},
      {{msg, 'JsonField'}, [#{name => key, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => value, fnum => 2, rnum => 3, type => {msg, 'JsonValue'}, occurrence => optional, opts => []}]},
      {{msg, 'SchemaField'}, [#{name => key, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => value, fnum => 2, rnum => 3, type => {msg, 'SchemaValue'}, occurrence => optional, opts => []}]},
+     {{msg, 'ToolParameter'},
+      [#{name => name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => type, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+       #{name => description, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+       #{name => required, fnum => 4, rnum => 5, type => bool, occurrence => optional, opts => []}]},
+     {{msg, 'ToolParameters'}, [#{name => type, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => properties, fnum => 2, rnum => 3, type => {msg, 'ToolParameter'}, occurrence => repeated, opts => []}]},
      {{msg, 'SchemaValue'},
       [#{name => kind, fnum => 1, rnum => 2, type => {enum, 'SchemaValue.Kind'}, occurrence => optional, opts => []},
        #{name => string_value, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
@@ -5579,7 +5888,7 @@ get_msg_defs() ->
      {{msg, 'ToolDesc'},
       [#{name => name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
        #{name => description, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
-       #{name => parameters, fnum => 3, rnum => 4, type => {msg, 'SchemaValue'}, occurrence => optional, opts => []}]},
+       #{name => parameters_pb, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'ApproveResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}]},
      {{msg, 'BrainStatusResult'},
       [#{name => state, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
@@ -5606,6 +5915,8 @@ get_msg_names() ->
      'LlmChunk',
      'JsonField',
      'SchemaField',
+     'ToolParameter',
+     'ToolParameters',
      'SchemaValue',
      'JsonObject',
      'JsonArray',
@@ -5646,6 +5957,8 @@ get_msg_or_group_names() ->
      'LlmChunk',
      'JsonField',
      'SchemaField',
+     'ToolParameter',
+     'ToolParameters',
      'SchemaValue',
      'JsonObject',
      'JsonArray',
@@ -5724,6 +6037,12 @@ find_msg_def('PanelStream') ->
 find_msg_def('LlmChunk') -> [#{name => content, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => reasoning_content, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}];
 find_msg_def('JsonField') -> [#{name => key, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => value, fnum => 2, rnum => 3, type => {msg, 'JsonValue'}, occurrence => optional, opts => []}];
 find_msg_def('SchemaField') -> [#{name => key, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => value, fnum => 2, rnum => 3, type => {msg, 'SchemaValue'}, occurrence => optional, opts => []}];
+find_msg_def('ToolParameter') ->
+    [#{name => name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => type, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+     #{name => description, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+     #{name => required, fnum => 4, rnum => 5, type => bool, occurrence => optional, opts => []}];
+find_msg_def('ToolParameters') -> [#{name => type, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => properties, fnum => 2, rnum => 3, type => {msg, 'ToolParameter'}, occurrence => repeated, opts => []}];
 find_msg_def('SchemaValue') ->
     [#{name => kind, fnum => 1, rnum => 2, type => {enum, 'SchemaValue.Kind'}, occurrence => optional, opts => []},
      #{name => string_value, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
@@ -5777,7 +6096,7 @@ find_msg_def('ListToolsResult') -> [#{name => tools, fnum => 1, rnum => 2, type 
 find_msg_def('ToolDesc') ->
     [#{name => name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
      #{name => description, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
-     #{name => parameters, fnum => 3, rnum => 4, type => {msg, 'SchemaValue'}, occurrence => optional, opts => []}];
+     #{name => parameters_pb, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('ApproveResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}];
 find_msg_def('BrainStatusResult') ->
     [#{name => state, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
@@ -5873,6 +6192,8 @@ fqbin_to_msg_name(<<"panel.PanelStream">>) -> 'PanelStream';
 fqbin_to_msg_name(<<"panel.LlmChunk">>) -> 'LlmChunk';
 fqbin_to_msg_name(<<"panel.JsonField">>) -> 'JsonField';
 fqbin_to_msg_name(<<"panel.SchemaField">>) -> 'SchemaField';
+fqbin_to_msg_name(<<"panel.ToolParameter">>) -> 'ToolParameter';
+fqbin_to_msg_name(<<"panel.ToolParameters">>) -> 'ToolParameters';
 fqbin_to_msg_name(<<"panel.SchemaValue">>) -> 'SchemaValue';
 fqbin_to_msg_name(<<"panel.JsonObject">>) -> 'JsonObject';
 fqbin_to_msg_name(<<"panel.JsonArray">>) -> 'JsonArray';
@@ -5910,6 +6231,8 @@ msg_name_to_fqbin('PanelStream') -> <<"panel.PanelStream">>;
 msg_name_to_fqbin('LlmChunk') -> <<"panel.LlmChunk">>;
 msg_name_to_fqbin('JsonField') -> <<"panel.JsonField">>;
 msg_name_to_fqbin('SchemaField') -> <<"panel.SchemaField">>;
+msg_name_to_fqbin('ToolParameter') -> <<"panel.ToolParameter">>;
+msg_name_to_fqbin('ToolParameters') -> <<"panel.ToolParameters">>;
 msg_name_to_fqbin('SchemaValue') -> <<"panel.SchemaValue">>;
 msg_name_to_fqbin('JsonObject') -> <<"panel.JsonObject">>;
 msg_name_to_fqbin('JsonArray') -> <<"panel.JsonArray">>;
@@ -6007,7 +6330,9 @@ get_msg_containment("panel") ->
      'ToolCall',
      'ToolDesc',
      'ToolEvent',
-     'ToolFunction'];
+     'ToolFunction',
+     'ToolParameter',
+     'ToolParameters'];
 get_msg_containment(P) -> error({gpb_error, {badproto, P}}).
 
 
@@ -6027,40 +6352,42 @@ get_enum_containment("panel") -> ['SchemaValue.Kind'];
 get_enum_containment(P) -> error({gpb_error, {badproto, P}}).
 
 
+get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameter">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonField">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.HistoryEntry">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelFrame">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.JsonObject">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SchemaField">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.LlmChunk">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.FinalAnswer">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SendResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelResponse">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ApproveArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.JsonValue">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelExecResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StreamError">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StopResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelExec">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ApproveResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ToolCall">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelResponse">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.SendArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelStream">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolDesc">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.JsonField">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StreamError">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelExecResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ApproveArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.FinalAnswer">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.HistoryEntry">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameters">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.PanelRequest">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.JsonArray">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ListToolsResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.SchemaField">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.SendResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelFrame">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.SchemaValue">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.LlmChunk">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolFunction">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelExec">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StopResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelStream">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SendArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ListToolsResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonArray">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ToolEvent">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolDesc">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolFunction">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SchemaValue">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 
 

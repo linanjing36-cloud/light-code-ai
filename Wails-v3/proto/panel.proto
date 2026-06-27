@@ -77,26 +77,16 @@ message JsonField {
   JsonValue value = 2;
 }
 
-message SchemaField {
-  string key = 1;
-  SchemaValue value = 2;
+message ToolParameter {
+  string name = 1;
+  string type = 2;
+  string description = 3;
+  bool required = 4;
 }
 
-message SchemaValue {
-  enum Kind {
-    NULL = 0;
-    STRING = 1;
-    NUMBER = 2;
-    BOOL = 3;
-    OBJECT = 4;
-    ARRAY = 5;
-  }
-  Kind kind = 1;
-  string string_value = 2;
-  double number_value = 3;
-  bool bool_value = 4;
-  repeated SchemaField object_fields = 5;
-  repeated SchemaValue array_items = 6;
+message ToolParameters {
+  string type = 1;
+  repeated ToolParameter properties = 2;
 }
 
 message JsonObject {
@@ -175,7 +165,7 @@ message ListToolsResult {
 message ToolDesc {
   string name = 1;
   string description = 2;
-  SchemaValue parameters = 3;
+  bytes parameters_pb = 3;
 }
 
 message ApproveResult { bool ok = 1; }

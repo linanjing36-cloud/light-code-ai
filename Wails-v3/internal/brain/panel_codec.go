@@ -158,7 +158,7 @@ func decodePanelResult(method string, bin []byte) (any, error) {
 			tools = append(tools, ToolDesc{
 				Name:        t.GetName(),
 				Description: t.GetDescription(),
-				Parameters:  pbSchemaValueToAny(t.GetParameters()),
+				Parameters:  decodeToolParametersPB(t.GetParametersPb()),
 			})
 		}
 		return tools, nil
@@ -341,35 +341,42 @@ func defaultString(v, fallback string) string {
 	return v
 }
 
-func pbSchemaValueToAny(v *panelpb.SchemaValue) any {
+func pbToolParametersToAny(v *panelpb.ToolParameters) any {
 	if v == nil {
 		return nil
 	}
-	switch v.GetKind() {
-	case panelpb.SchemaValue_NULL:
-		return nil
-	case panelpb.SchemaValue_STRING:
-		return v.GetStringValue()
-	case panelpb.SchemaValue_NUMBER:
-		if math.Trunc(v.GetNumberValue()) == v.GetNumberValue() {
-			return int64(v.GetNumberValue())
+	props := map[string]any{}
+	required := make([]any, 0, len(v.GetProperties()))
+	for _, p := range v.GetProperties() {
+		prop := map[string]any{}
+		if typ := p.GetType(); typ != "" {
+			prop["type"] = typ
 		}
-		return v.GetNumberValue()
-	case panelpb.SchemaValue_BOOL:
-		return v.GetBoolValue()
-	case panelpb.SchemaValue_OBJECT:
-		obj := map[string]any{}
-		for _, field := range v.GetObjectFields() {
-			obj[field.GetKey()] = pbSchemaValueToAny(field.GetValue())
+		if desc := p.GetDescription(); desc != "" {
+			prop["description"] = desc
 		}
-		return obj
-	case panelpb.SchemaValue_ARRAY:
-		items := make([]any, 0, len(v.GetArrayItems()))
-		for _, item := range v.GetArrayItems() {
-			items = append(items, pbSchemaValueToAny(item))
+		props[p.GetName()] = prop
+		if p.GetRequired() {
+			required = append(required, p.GetName())
 		}
-		return items
-	default:
+	}
+	out := map[string]any{
+		"type":       defaultString(v.GetType(), "object"),
+		"properties": props,
+	}
+	if len(required) > 0 {
+		out["required"] = required
+	}
+	return out
+}
+
+func decodeToolParametersPB(bin []byte) any {
+	if len(bin) == 0 {
 		return nil
 	}
+	var msg panelpb.ToolParameters
+	if err := proto.Unmarshal(bin, &msg); err != nil {
+		return nil
+	}
+	return pbToolParametersToAny(&msg)
 }
