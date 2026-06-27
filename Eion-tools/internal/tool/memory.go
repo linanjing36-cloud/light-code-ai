@@ -8,7 +8,7 @@ import (
 	"github.com/light-code-ai/eion-tools/internal/memory"
 )
 
-// RegisterMemoryTools 注册 memory_store / memory_search / memory_import 工具。
+// RegisterMemoryTools 注册 memory_store / memory_search / memory_import / memory_purge_session 工具。
 func RegisterMemoryTools(w *Eino_Tool_Wrapper, svc memory.Backend) {
 	name, desc, params, storeH := MemoryStoreHandler(svc)
 	w.Register(name, desc, params, storeH)
@@ -16,6 +16,8 @@ func RegisterMemoryTools(w *Eino_Tool_Wrapper, svc memory.Backend) {
 	w.Register(name, desc, params, searchH)
 	name, desc, params, importH := MemoryImportHandler(svc)
 	w.Register(name, desc, params, importH)
+	name, desc, params, purgeH := MemoryPurgeSessionHandler(svc)
+	w.Register(name, desc, params, purgeH)
 }
 
 // MemoryStoreHandler 将文本片段写入向量库。
@@ -114,6 +116,27 @@ func MemoryImportHandler(svc memory.Backend) (name, description, parametersJSON 
 				"doc_ids":    ids,
 				"session_id": args.SessionID,
 			})
+			return string(out), nil
+		}
+}
+
+// MemoryPurgeSessionHandler 删除向量库中某会话的全部记忆 (面板 delete_session 内部调用)。
+func MemoryPurgeSessionHandler(svc memory.Backend) (name, description, parametersJSON string, h HandlerFunc) {
+	return "memory_purge_session",
+		"删除指定 session_id 在向量库中的全部长期记忆文档。",
+		`{"type":"object","properties":{"session_id":{"type":"string","description":"要清除的会话 ID"}},"required":["session_id"]}`,
+		func(ctx context.Context, argumentsJSON string) (string, error) {
+			var args struct {
+				SessionID string `json:"session_id"`
+			}
+			if err := json.Unmarshal([]byte(argumentsJSON), &args); err != nil {
+				return "", fmt.Errorf("parse arguments: %w", err)
+			}
+			n, err := svc.DeleteSession(ctx, args.SessionID)
+			if err != nil {
+				return "", err
+			}
+			out, _ := json.Marshal(map[string]any{"deleted": n, "session_id": args.SessionID})
 			return string(out), nil
 		}
 }

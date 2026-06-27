@@ -60,6 +60,11 @@ func encodePanelArgs(method string, args map[string]any) ([]byte, error) {
 			SessionId: stringArg(args, "session_id"),
 		}
 		return proto.Marshal(msg)
+	case "delete_session":
+		msg := &panelpb.DeleteSessionArgs{
+			SessionId: stringArg(args, "session_id"),
+		}
+		return proto.Marshal(msg)
 	case "list_tools", "stop":
 		return nil, nil
 	default:
@@ -96,7 +101,7 @@ func decodePanelResult(method string, bin []byte) (any, error) {
 		if err := proto.Unmarshal(bin, &msg); err != nil {
 			return nil, err
 		}
-		tools := make([]map[string]any, 0, len(msg.GetTools()))
+		tools := make([]any, 0, len(msg.GetTools()))
 		for _, t := range msg.GetTools() {
 			tools = append(tools, map[string]any{
 				"name":            t.GetName(),
@@ -127,7 +132,7 @@ func decodePanelResult(method string, bin []byte) (any, error) {
 		if err := proto.Unmarshal(bin, &msg); err != nil {
 			return nil, err
 		}
-		msgs := make([]map[string]any, 0, len(msg.GetMessages()))
+		msgs := make([]any, 0, len(msg.GetMessages()))
 		for _, e := range msg.GetMessages() {
 			msgs = append(msgs, map[string]any{
 				"role":            e.GetRole(),
@@ -137,6 +142,12 @@ func decodePanelResult(method string, bin []byte) (any, error) {
 			})
 		}
 		return map[string]any{"messages": msgs}, nil
+	case "delete_session":
+		var msg panelpb.DeleteSessionResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		return map[string]any{"ok": msg.GetOk()}, nil
 	case "stop":
 		var msg panelpb.StopResult
 		if err := proto.Unmarshal(bin, &msg); err != nil {

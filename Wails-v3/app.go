@@ -92,6 +92,19 @@ func (s *HermesService) Send(sessionID, message string) (*SendResult, error) {
 	return &SendResult{StreamID: id}, nil
 }
 
+// DeleteSession 删除会话: 终止 agent_fsm, 清理 state_store / 摘要 / 向量记忆。
+func (s *HermesService) DeleteSession(sessionID string) (bool, error) {
+	out, err := s.brain.Call("delete_session", map[string]any{
+		"session_id": sessionID,
+	})
+	if err != nil {
+		return false, err
+	}
+	m, _ := out.(map[string]any)
+	ok, _ := m["ok"].(bool)
+	return ok, nil
+}
+
 // ---- 工具 ----
 
 // ToolDesc 工具描述 (与 panel.proto ListToolsResult 对齐)

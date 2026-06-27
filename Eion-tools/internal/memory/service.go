@@ -199,6 +199,45 @@ func (s *Service) Search(ctx context.Context, query, sessionID string, topK int)
 	return hits, nil
 }
 
+// DeleteSession 删除向量库中指定 session_id 的全部记忆文档。
+func (s *Service) DeleteSession(ctx context.Context, sessionID string) (int, error) {
+	if sessionID == "" {
+		return 0, fmt.Errorf("session_id required")
+	}
+	q := fmt.Sprintf("@session_id:{%s}", escapeTag(sessionID))
+	var deleted int
+	offset := 0
+	const page = 500
+	for {
+		res, err := s.client.FTSearchWithArgs(ctx, s.cfg.IndexName, q, &redis.FTSearchOptions{
+			Limit:       page,
+			LimitOffset: offset,
+		}).Result()
+		if err != nil {
+			return deleted, err
+		}
+		if len(res.Docs) == 0 {
+			break
+		}
+		keys := make([]string, 0, len(res.Docs))
+		for _, doc := range res.Docs {
+			keys = append(keys, doc.ID)
+		}
+		if len(keys) > 0 {
+			n, err := s.client.Del(ctx, keys...).Result()
+			if err != nil {
+				return deleted, err
+			}
+			deleted += int(n)
+		}
+		if len(res.Docs) < page {
+			break
+		}
+		offset += page
+	}
+	return deleted, nil
+}
+
 // escapeTag 转义 RediSearch TAG 查询值中的标点（如 session_id 里的 `-`）。
 func escapeTag(s string) string {
 	special := ",.<>{}[]\"':;!@#$%^&*()-+=~|\\|"

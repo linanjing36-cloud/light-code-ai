@@ -220,6 +220,8 @@ encode_args(<<"brain_status">>, #{session_id := SessId}) ->
     ?PANEL_PB:encode_msg(#{session_id => SessId}, 'BrainStatusArgs');
 encode_args(<<"get_history">>, #{session_id := SessId}) ->
     ?PANEL_PB:encode_msg(#{session_id => SessId}, 'GetHistoryArgs');
+encode_args(<<"delete_session">>, #{session_id := SessId}) ->
+    ?PANEL_PB:encode_msg(#{session_id => SessId}, 'DeleteSessionArgs');
 encode_args(_NoArgsMethod, _ArgsMap) ->
     %% list_tools / stop 无参数, args_bytes 为空
     <<>>.
@@ -243,6 +245,9 @@ decode_args(<<"brain_status">>, Bin) ->
     #{session_id => maps:get(session_id, M, <<>>)};
 decode_args(<<"get_history">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'GetHistoryArgs'),
+    #{session_id => maps:get(session_id, M, <<>>)};
+decode_args(<<"delete_session">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'DeleteSessionArgs'),
     #{session_id => maps:get(session_id, M, <<>>)};
 decode_args(_NoArgsMethod, _Bin) ->
     #{}.
@@ -271,6 +276,8 @@ encode_result(<<"get_history">>, #{messages := Msgs}) ->
     ?PANEL_PB:encode_msg(#{messages => PbMsgs}, 'GetHistoryResult');
 encode_result(<<"stop">>, #{ok := Ok}) ->
     ?PANEL_PB:encode_msg(#{ok => Ok}, 'StopResult');
+encode_result(<<"delete_session">>, #{ok := Ok}) ->
+    ?PANEL_PB:encode_msg(#{ok => Ok}, 'DeleteSessionResult');
 encode_result(_Method, _ResultMap) ->
     <<>>.
 
@@ -301,6 +308,9 @@ decode_result(<<"get_history">>, Bin) ->
     #{messages => [history_entry_from_pb(E) || E <- maps:get(messages, M, [])]};
 decode_result(<<"stop">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'StopResult'),
+    #{ok => maps:get(ok, M, false)};
+decode_result(<<"delete_session">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'DeleteSessionResult'),
     #{ok => maps:get(ok, M, false)};
 decode_result(_Method, _Bin) ->
     #{}.

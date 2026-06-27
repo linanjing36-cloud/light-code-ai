@@ -128,6 +128,10 @@
       #{session_id              => unicode:chardata() % = 1, optional
        }.
 
+-type 'DeleteSessionArgs'() ::
+      #{session_id              => unicode:chardata() % = 1, optional
+       }.
+
 -type 'StartSessionResult'() ::
       #{session_id              => unicode:chardata() % = 1, optional
        }.
@@ -172,9 +176,13 @@
       #{ok                      => boolean() | 0 | 1 % = 1, optional
        }.
 
--export_type(['PanelFrame'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'LlmChunk'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0]).
--type '$msg_name'() :: 'PanelFrame' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'LlmChunk' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult'.
--type '$msg'() :: 'PanelFrame'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'LlmChunk'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'().
+-type 'DeleteSessionResult'() ::
+      #{ok                      => boolean() | 0 | 1 % = 1, optional
+       }.
+
+-export_type(['PanelFrame'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'LlmChunk'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
+-type '$msg_name'() :: 'PanelFrame' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'LlmChunk' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
+-type '$msg'() :: 'PanelFrame'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'LlmChunk'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
 -export_type(['$msg_name'/0, '$msg'/0]).
 
 -if(?OTP_RELEASE >= 24).
@@ -207,6 +215,7 @@ encode_msg(Msg, MsgName, Opts) ->
         'ApproveArgs' -> encode_msg_ApproveArgs(id(Msg, TrUserData), TrUserData);
         'BrainStatusArgs' -> encode_msg_BrainStatusArgs(id(Msg, TrUserData), TrUserData);
         'GetHistoryArgs' -> encode_msg_GetHistoryArgs(id(Msg, TrUserData), TrUserData);
+        'DeleteSessionArgs' -> encode_msg_DeleteSessionArgs(id(Msg, TrUserData), TrUserData);
         'StartSessionResult' -> encode_msg_StartSessionResult(id(Msg, TrUserData), TrUserData);
         'SendResult' -> encode_msg_SendResult(id(Msg, TrUserData), TrUserData);
         'ListToolsResult' -> encode_msg_ListToolsResult(id(Msg, TrUserData), TrUserData);
@@ -215,7 +224,8 @@ encode_msg(Msg, MsgName, Opts) ->
         'BrainStatusResult' -> encode_msg_BrainStatusResult(id(Msg, TrUserData), TrUserData);
         'HistoryEntry' -> encode_msg_HistoryEntry(id(Msg, TrUserData), TrUserData);
         'GetHistoryResult' -> encode_msg_GetHistoryResult(id(Msg, TrUserData), TrUserData);
-        'StopResult' -> encode_msg_StopResult(id(Msg, TrUserData), TrUserData)
+        'StopResult' -> encode_msg_StopResult(id(Msg, TrUserData), TrUserData);
+        'DeleteSessionResult' -> encode_msg_DeleteSessionResult(id(Msg, TrUserData), TrUserData)
     end.
 
 
@@ -603,6 +613,22 @@ encode_msg_GetHistoryArgs(#{} = M, Bin, TrUserData) ->
         _ -> Bin
     end.
 
+encode_msg_DeleteSessionArgs(Msg, TrUserData) -> encode_msg_DeleteSessionArgs(Msg, <<>>, TrUserData).
+
+
+encode_msg_DeleteSessionArgs(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{session_id := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                case is_empty_string(TrF1) of
+                    true -> Bin;
+                    false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
 encode_msg_StartSessionResult(Msg, TrUserData) -> encode_msg_StartSessionResult(Msg, <<>>, TrUserData).
 
 
@@ -824,6 +850,21 @@ encode_msg_StopResult(#{} = M, Bin, TrUserData) ->
         _ -> Bin
     end.
 
+encode_msg_DeleteSessionResult(Msg, TrUserData) -> encode_msg_DeleteSessionResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_DeleteSessionResult(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{ok := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                if TrF1 =:= false -> Bin;
+                   true -> e_type_bool(TrF1, <<Bin/binary, 8>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
 e_mfield_PanelFrame_request(Msg, Bin, TrUserData) ->
     SubBin = encode_msg_PanelRequest(Msg, <<>>, TrUserData),
     Bin2 = e_varint(byte_size(SubBin), Bin),
@@ -1023,6 +1064,7 @@ decode_msg_2_doit('SendArgs', Bin, TrUserData) -> id(decode_msg_SendArgs(Bin, Tr
 decode_msg_2_doit('ApproveArgs', Bin, TrUserData) -> id(decode_msg_ApproveArgs(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('BrainStatusArgs', Bin, TrUserData) -> id(decode_msg_BrainStatusArgs(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('GetHistoryArgs', Bin, TrUserData) -> id(decode_msg_GetHistoryArgs(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('DeleteSessionArgs', Bin, TrUserData) -> id(decode_msg_DeleteSessionArgs(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('StartSessionResult', Bin, TrUserData) -> id(decode_msg_StartSessionResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('SendResult', Bin, TrUserData) -> id(decode_msg_SendResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ListToolsResult', Bin, TrUserData) -> id(decode_msg_ListToolsResult(Bin, TrUserData), TrUserData);
@@ -1031,7 +1073,8 @@ decode_msg_2_doit('ApproveResult', Bin, TrUserData) -> id(decode_msg_ApproveResu
 decode_msg_2_doit('BrainStatusResult', Bin, TrUserData) -> id(decode_msg_BrainStatusResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('HistoryEntry', Bin, TrUserData) -> id(decode_msg_HistoryEntry(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('GetHistoryResult', Bin, TrUserData) -> id(decode_msg_GetHistoryResult(Bin, TrUserData), TrUserData);
-decode_msg_2_doit('StopResult', Bin, TrUserData) -> id(decode_msg_StopResult(Bin, TrUserData), TrUserData).
+decode_msg_2_doit('StopResult', Bin, TrUserData) -> id(decode_msg_StopResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('DeleteSessionResult', Bin, TrUserData) -> id(decode_msg_DeleteSessionResult(Bin, TrUserData), TrUserData).
 
 
 
@@ -1878,6 +1921,50 @@ skip_32_GetHistoryArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> df
 
 skip_64_GetHistoryArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_GetHistoryArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
 
+decode_msg_DeleteSessionArgs(Bin, TrUserData) -> dfp_read_field_def_DeleteSessionArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_DeleteSessionArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_DeleteSessionArgs_session_id(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_DeleteSessionArgs(<<>>, 0, 0, _, F@_1, _) -> #{session_id => F@_1};
+dfp_read_field_def_DeleteSessionArgs(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_DeleteSessionArgs(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_DeleteSessionArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_DeleteSessionArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_DeleteSessionArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_DeleteSessionArgs_session_id(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_DeleteSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_DeleteSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_DeleteSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_DeleteSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_DeleteSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_DeleteSessionArgs(<<>>, 0, 0, _, F@_1, _) -> #{session_id => F@_1}.
+
+d_field_DeleteSessionArgs_session_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_DeleteSessionArgs_session_id(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_DeleteSessionArgs_session_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_DeleteSessionArgs(RestF, 0, 0, F, NewFValue, TrUserData).
+
+skip_varint_DeleteSessionArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_DeleteSessionArgs(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_DeleteSessionArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteSessionArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_DeleteSessionArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_DeleteSessionArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_DeleteSessionArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_DeleteSessionArgs(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_DeleteSessionArgs(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_DeleteSessionArgs(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_DeleteSessionArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteSessionArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_DeleteSessionArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteSessionArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
 decode_msg_StartSessionResult(Bin, TrUserData) -> dfp_read_field_def_StartSessionResult(Bin, 0, 0, 0, id(<<>>, TrUserData), TrUserData).
 
 dfp_read_field_def_StartSessionResult(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_StartSessionResult_session_id(Rest, Z1, Z2, F, F@_1, TrUserData);
@@ -2346,6 +2433,50 @@ skip_32_StopResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_re
 
 skip_64_StopResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_StopResult(Rest, Z1, Z2, F, F@_1, TrUserData).
 
+decode_msg_DeleteSessionResult(Bin, TrUserData) -> dfp_read_field_def_DeleteSessionResult(Bin, 0, 0, 0, id(false, TrUserData), TrUserData).
+
+dfp_read_field_def_DeleteSessionResult(<<8, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_DeleteSessionResult_ok(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_DeleteSessionResult(<<>>, 0, 0, _, F@_1, _) -> #{ok => F@_1};
+dfp_read_field_def_DeleteSessionResult(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_DeleteSessionResult(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_DeleteSessionResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_DeleteSessionResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_DeleteSessionResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_DeleteSessionResult_ok(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_DeleteSessionResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_DeleteSessionResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_DeleteSessionResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_DeleteSessionResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_DeleteSessionResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_DeleteSessionResult(<<>>, 0, 0, _, F@_1, _) -> #{ok => F@_1}.
+
+d_field_DeleteSessionResult_ok(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_DeleteSessionResult_ok(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_DeleteSessionResult_ok(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_DeleteSessionResult(RestF, 0, 0, F, NewFValue, TrUserData).
+
+skip_varint_DeleteSessionResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_DeleteSessionResult(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_DeleteSessionResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteSessionResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_DeleteSessionResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_DeleteSessionResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_DeleteSessionResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_DeleteSessionResult(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_DeleteSessionResult(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_DeleteSessionResult(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_DeleteSessionResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteSessionResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_DeleteSessionResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteSessionResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
 read_group(Bin, FieldNum) ->
     {NumBytes, EndTagLen} = read_gr_b(Bin, 0, 0, 0, 0, FieldNum),
     <<Group:NumBytes/binary, _:EndTagLen/binary, Rest/binary>> = Bin,
@@ -2422,6 +2553,7 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'ApproveArgs' -> merge_msg_ApproveArgs(Prev, New, TrUserData);
         'BrainStatusArgs' -> merge_msg_BrainStatusArgs(Prev, New, TrUserData);
         'GetHistoryArgs' -> merge_msg_GetHistoryArgs(Prev, New, TrUserData);
+        'DeleteSessionArgs' -> merge_msg_DeleteSessionArgs(Prev, New, TrUserData);
         'StartSessionResult' -> merge_msg_StartSessionResult(Prev, New, TrUserData);
         'SendResult' -> merge_msg_SendResult(Prev, New, TrUserData);
         'ListToolsResult' -> merge_msg_ListToolsResult(Prev, New, TrUserData);
@@ -2430,7 +2562,8 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'BrainStatusResult' -> merge_msg_BrainStatusResult(Prev, New, TrUserData);
         'HistoryEntry' -> merge_msg_HistoryEntry(Prev, New, TrUserData);
         'GetHistoryResult' -> merge_msg_GetHistoryResult(Prev, New, TrUserData);
-        'StopResult' -> merge_msg_StopResult(Prev, New, TrUserData)
+        'StopResult' -> merge_msg_StopResult(Prev, New, TrUserData);
+        'DeleteSessionResult' -> merge_msg_DeleteSessionResult(Prev, New, TrUserData)
     end.
 
 -compile({nowarn_unused_function,merge_msg_PanelFrame/3}).
@@ -2659,6 +2792,15 @@ merge_msg_GetHistoryArgs(PMsg, NMsg, _) ->
         _ -> S1
     end.
 
+-compile({nowarn_unused_function,merge_msg_DeleteSessionArgs/3}).
+merge_msg_DeleteSessionArgs(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {_, #{session_id := NFsession_id}} -> S1#{session_id => NFsession_id};
+        {#{session_id := PFsession_id}, _} -> S1#{session_id => PFsession_id};
+        _ -> S1
+    end.
+
 -compile({nowarn_unused_function,merge_msg_StartSessionResult/3}).
 merge_msg_StartSessionResult(PMsg, NMsg, _) ->
     S1 = #{},
@@ -2782,6 +2924,15 @@ merge_msg_StopResult(PMsg, NMsg, _) ->
         _ -> S1
     end.
 
+-compile({nowarn_unused_function,merge_msg_DeleteSessionResult/3}).
+merge_msg_DeleteSessionResult(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {_, #{ok := NFok}} -> S1#{ok => NFok};
+        {#{ok := PFok}, _} -> S1#{ok => PFok};
+        _ -> S1
+    end.
+
 
 verify_msg(Msg, MsgName) when is_atom(MsgName) -> verify_msg(Msg, MsgName, []).
 
@@ -2801,6 +2952,7 @@ verify_msg(Msg, MsgName, Opts) ->
         'ApproveArgs' -> v_msg_ApproveArgs(Msg, [MsgName], TrUserData);
         'BrainStatusArgs' -> v_msg_BrainStatusArgs(Msg, [MsgName], TrUserData);
         'GetHistoryArgs' -> v_msg_GetHistoryArgs(Msg, [MsgName], TrUserData);
+        'DeleteSessionArgs' -> v_msg_DeleteSessionArgs(Msg, [MsgName], TrUserData);
         'StartSessionResult' -> v_msg_StartSessionResult(Msg, [MsgName], TrUserData);
         'SendResult' -> v_msg_SendResult(Msg, [MsgName], TrUserData);
         'ListToolsResult' -> v_msg_ListToolsResult(Msg, [MsgName], TrUserData);
@@ -2810,6 +2962,7 @@ verify_msg(Msg, MsgName, Opts) ->
         'HistoryEntry' -> v_msg_HistoryEntry(Msg, [MsgName], TrUserData);
         'GetHistoryResult' -> v_msg_GetHistoryResult(Msg, [MsgName], TrUserData);
         'StopResult' -> v_msg_StopResult(Msg, [MsgName], TrUserData);
+        'DeleteSessionResult' -> v_msg_DeleteSessionResult(Msg, [MsgName], TrUserData);
         _ -> mk_type_error(not_a_known_message, Msg, [])
     end.
 
@@ -3184,6 +3337,21 @@ v_msg_GetHistoryArgs(#{} = M, Path, TrUserData) ->
 v_msg_GetHistoryArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'GetHistoryArgs'}, M, Path);
 v_msg_GetHistoryArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'GetHistoryArgs'}, X, Path).
 
+-compile({nowarn_unused_function,v_msg_DeleteSessionArgs/3}).
+-dialyzer({nowarn_function,v_msg_DeleteSessionArgs/3}).
+v_msg_DeleteSessionArgs(#{} = M, Path, TrUserData) ->
+    case M of
+        #{session_id := F1} -> v_type_string(F1, [session_id | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (session_id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_DeleteSessionArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'DeleteSessionArgs'}, M, Path);
+v_msg_DeleteSessionArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'DeleteSessionArgs'}, X, Path).
+
 -compile({nowarn_unused_function,v_msg_StartSessionResult/3}).
 -dialyzer({nowarn_function,v_msg_StartSessionResult/3}).
 v_msg_StartSessionResult(#{} = M, Path, TrUserData) ->
@@ -3377,6 +3545,21 @@ v_msg_StopResult(#{} = M, Path, TrUserData) ->
 v_msg_StopResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'StopResult'}, M, Path);
 v_msg_StopResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'StopResult'}, X, Path).
 
+-compile({nowarn_unused_function,v_msg_DeleteSessionResult/3}).
+-dialyzer({nowarn_function,v_msg_DeleteSessionResult/3}).
+v_msg_DeleteSessionResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{ok := F1} -> v_type_bool(F1, [ok | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (ok) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_DeleteSessionResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'DeleteSessionResult'}, M, Path);
+v_msg_DeleteSessionResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'DeleteSessionResult'}, X, Path).
+
 -compile({nowarn_unused_function,v_type_int32/3}).
 -dialyzer({nowarn_function,v_type_int32/3}).
 v_type_int32(N, _Path, _TrUserData) when is_integer(N), -2147483648 =< N, N =< 2147483647 -> ok;
@@ -3498,6 +3681,7 @@ get_msg_defs() ->
      {{msg, 'ApproveArgs'}, [#{name => req_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => allow, fnum => 2, rnum => 3, type => bool, occurrence => optional, opts => []}]},
      {{msg, 'BrainStatusArgs'}, [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
      {{msg, 'GetHistoryArgs'}, [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'DeleteSessionArgs'}, [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
      {{msg, 'StartSessionResult'}, [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
      {{msg, 'SendResult'}, [#{name => stream_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
      {{msg, 'ListToolsResult'}, [#{name => tools, fnum => 1, rnum => 2, type => {msg, 'ToolDesc'}, occurrence => repeated, opts => []}]},
@@ -3517,7 +3701,8 @@ get_msg_defs() ->
        #{name => tool_calls_json, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
        #{name => tool_call_id, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []}]},
      {{msg, 'GetHistoryResult'}, [#{name => messages, fnum => 1, rnum => 2, type => {msg, 'HistoryEntry'}, occurrence => repeated, opts => []}]},
-     {{msg, 'StopResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}]}].
+     {{msg, 'StopResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}]},
+     {{msg, 'DeleteSessionResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}]}].
 
 
 get_msg_names() ->
@@ -3534,6 +3719,7 @@ get_msg_names() ->
      'ApproveArgs',
      'BrainStatusArgs',
      'GetHistoryArgs',
+     'DeleteSessionArgs',
      'StartSessionResult',
      'SendResult',
      'ListToolsResult',
@@ -3542,7 +3728,8 @@ get_msg_names() ->
      'BrainStatusResult',
      'HistoryEntry',
      'GetHistoryResult',
-     'StopResult'].
+     'StopResult',
+     'DeleteSessionResult'].
 
 
 get_group_names() -> [].
@@ -3562,6 +3749,7 @@ get_msg_or_group_names() ->
      'ApproveArgs',
      'BrainStatusArgs',
      'GetHistoryArgs',
+     'DeleteSessionArgs',
      'StartSessionResult',
      'SendResult',
      'ListToolsResult',
@@ -3570,7 +3758,8 @@ get_msg_or_group_names() ->
      'BrainStatusResult',
      'HistoryEntry',
      'GetHistoryResult',
-     'StopResult'].
+     'StopResult',
+     'DeleteSessionResult'].
 
 
 get_enum_names() -> [].
@@ -3633,6 +3822,7 @@ find_msg_def('SendArgs') -> [#{name => session_id, fnum => 1, rnum => 2, type =>
 find_msg_def('ApproveArgs') -> [#{name => req_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => allow, fnum => 2, rnum => 3, type => bool, occurrence => optional, opts => []}];
 find_msg_def('BrainStatusArgs') -> [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];
 find_msg_def('GetHistoryArgs') -> [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];
+find_msg_def('DeleteSessionArgs') -> [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];
 find_msg_def('StartSessionResult') -> [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];
 find_msg_def('SendResult') -> [#{name => stream_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];
 find_msg_def('ListToolsResult') -> [#{name => tools, fnum => 1, rnum => 2, type => {msg, 'ToolDesc'}, occurrence => repeated, opts => []}];
@@ -3653,6 +3843,7 @@ find_msg_def('HistoryEntry') ->
      #{name => tool_call_id, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []}];
 find_msg_def('GetHistoryResult') -> [#{name => messages, fnum => 1, rnum => 2, type => {msg, 'HistoryEntry'}, occurrence => repeated, opts => []}];
 find_msg_def('StopResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}];
+find_msg_def('DeleteSessionResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}];
 find_msg_def(_) -> error.
 
 
@@ -3724,6 +3915,7 @@ fqbin_to_msg_name(<<"panel.SendArgs">>) -> 'SendArgs';
 fqbin_to_msg_name(<<"panel.ApproveArgs">>) -> 'ApproveArgs';
 fqbin_to_msg_name(<<"panel.BrainStatusArgs">>) -> 'BrainStatusArgs';
 fqbin_to_msg_name(<<"panel.GetHistoryArgs">>) -> 'GetHistoryArgs';
+fqbin_to_msg_name(<<"panel.DeleteSessionArgs">>) -> 'DeleteSessionArgs';
 fqbin_to_msg_name(<<"panel.StartSessionResult">>) -> 'StartSessionResult';
 fqbin_to_msg_name(<<"panel.SendResult">>) -> 'SendResult';
 fqbin_to_msg_name(<<"panel.ListToolsResult">>) -> 'ListToolsResult';
@@ -3733,6 +3925,7 @@ fqbin_to_msg_name(<<"panel.BrainStatusResult">>) -> 'BrainStatusResult';
 fqbin_to_msg_name(<<"panel.HistoryEntry">>) -> 'HistoryEntry';
 fqbin_to_msg_name(<<"panel.GetHistoryResult">>) -> 'GetHistoryResult';
 fqbin_to_msg_name(<<"panel.StopResult">>) -> 'StopResult';
+fqbin_to_msg_name(<<"panel.DeleteSessionResult">>) -> 'DeleteSessionResult';
 fqbin_to_msg_name(E) -> error({gpb_error, {badmsg, E}}).
 
 
@@ -3749,6 +3942,7 @@ msg_name_to_fqbin('SendArgs') -> <<"panel.SendArgs">>;
 msg_name_to_fqbin('ApproveArgs') -> <<"panel.ApproveArgs">>;
 msg_name_to_fqbin('BrainStatusArgs') -> <<"panel.BrainStatusArgs">>;
 msg_name_to_fqbin('GetHistoryArgs') -> <<"panel.GetHistoryArgs">>;
+msg_name_to_fqbin('DeleteSessionArgs') -> <<"panel.DeleteSessionArgs">>;
 msg_name_to_fqbin('StartSessionResult') -> <<"panel.StartSessionResult">>;
 msg_name_to_fqbin('SendResult') -> <<"panel.SendResult">>;
 msg_name_to_fqbin('ListToolsResult') -> <<"panel.ListToolsResult">>;
@@ -3758,6 +3952,7 @@ msg_name_to_fqbin('BrainStatusResult') -> <<"panel.BrainStatusResult">>;
 msg_name_to_fqbin('HistoryEntry') -> <<"panel.HistoryEntry">>;
 msg_name_to_fqbin('GetHistoryResult') -> <<"panel.GetHistoryResult">>;
 msg_name_to_fqbin('StopResult') -> <<"panel.StopResult">>;
+msg_name_to_fqbin('DeleteSessionResult') -> <<"panel.DeleteSessionResult">>;
 msg_name_to_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 
 
@@ -3801,6 +3996,8 @@ get_msg_containment("panel") ->
      'ApproveResult',
      'BrainStatusArgs',
      'BrainStatusResult',
+     'DeleteSessionArgs',
+     'DeleteSessionResult',
      'FinalAnswer',
      'GetHistoryArgs',
      'GetHistoryResult',
@@ -3851,6 +4048,7 @@ get_proto_by_msg_name_as_fqbin(<<"panel.SendArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ApproveArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.SendResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ListToolsResult">>) -> "panel";
@@ -3860,6 +4058,7 @@ get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.HistoryEntry">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.StopResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 
 

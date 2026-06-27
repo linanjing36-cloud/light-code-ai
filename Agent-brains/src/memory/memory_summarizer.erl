@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 %% Step 4.1b: 会话轮次结束后异步 LLM 摘要 -> Mnesia session_summaries
--export([start_link/0, schedule/1, schedule_if_long/1, get_recent/2]).
+-export([start_link/0, schedule/1, schedule_if_long/1, get_recent/2, purge_session/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
@@ -40,6 +40,12 @@ get_recent(SessionId, Limit)
   when is_binary(SessionId), is_integer(Limit), Limit > 0 ->
     gen_server:call(?SERVER, {get_recent, SessionId, Limit}, infinity).
 
+%% 删除会话时: 取消进行中的摘要任务, 清除 Mnesia 中该 session 的全部摘要
+-spec purge_session(binary()) -> ok.
+purge_session(SessionId) when is_binary(SessionId) ->
+    gen_server:cast(?SERVER, {purge_session, SessionId}),
+    ok.
+
 init([]) ->
     case create_table() of
         ok ->
@@ -70,6 +76,13 @@ handle_cast({schedule_if_long, SessionId}, State) ->
         _ ->
             {noreply, State}
     end;
+
+handle_cast({purge_session, SessionId}, State) ->
+    Pending1 = maps:filter(fun(_Ref, {Sess, _Cnt}) -> Sess =/= SessionId end,
+                           State#state.pending),
+    _ = do_delete_session_summaries(SessionId),
+    ?log("memory_summarizer purged session=~s", [SessionId]),
+    {noreply, State#state{pending = Pending1}};
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
@@ -242,6 +255,21 @@ maybe_evict_session(SessionId) ->
     end) of
         {atomic, ok} -> ok;
         _ -> ok
+    end.
+
+do_delete_session_summaries(SessionId) ->
+    case mnesia:transaction(fun() ->
+        Rows = mnesia:match_object(?TABLE, {?TABLE, '_', SessionId, '_', '_', '_'}, read),
+        lists:foreach(fun({?TABLE, Id, _, _, _, _}) ->
+            mnesia:delete(?TABLE, Id, write)
+        end, Rows),
+        ok
+    end) of
+        {atomic, ok} -> ok;
+        {aborted, Reason} ->
+            ?log_warning("memory_summarizer delete summaries failed session=~s: ~p",
+                         [SessionId, Reason]),
+            ok
     end.
 
 has_pending_session(#state{pending = Pending}, SessionId) ->

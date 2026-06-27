@@ -17,7 +17,8 @@
 -export([start_link/0,
          put_snapshot/2, get_snapshot/1,
          append_history/2, get_history/1,
-         register_session/2, lookup_session/1, unregister_session/1]).
+         register_session/2, lookup_session/1, unregister_session/1,
+         delete_session/1]).
 %% gen_server 回调
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
@@ -79,6 +80,10 @@ lookup_session_once(SessionId) ->
 unregister_session(SessionId) ->
     gen_server:call(?MODULE, {unregister_session, SessionId}).
 
+%% 删除会话全部 ETS 状态 (history / snapshot / session_pid)
+delete_session(SessionId) ->
+    gen_server:call(?MODULE, {delete_session, SessionId}).
+
 %%%===================================================================
 %%% gen_server 回调
 %%%===================================================================
@@ -127,6 +132,11 @@ handle_call({register_session, SessionId, Pid}, _From, State) ->
     {reply, ok, State};
 handle_call({unregister_session, SessionId}, _From, State) ->
     ets:delete(?TABLE, {session_pid, SessionId}),
+    {reply, ok, State};
+handle_call({delete_session, SessionId}, _From, State) ->
+    ets:delete(?TABLE, {session_pid, SessionId}),
+    ets:delete(?TABLE, {history, SessionId}),
+    ets:delete(?TABLE, {snapshot, SessionId}),
     {reply, ok, State}.
 
 handle_cast(_Msg, State) ->

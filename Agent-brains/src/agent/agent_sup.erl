@@ -1,7 +1,7 @@
 -module(agent_sup).
 -behaviour(supervisor).
 
--export([start_link/0, start_agent/1, init/1]).
+-export([start_link/0, start_agent/1, stop_agent/1, init/1]).
 
 %% simple_one_for_one 监督者: 动态拉起 Agent_FSM 进程。
 %% 每个 Agent 会话 (一次 ReAct 任务) 对应一个独立的 gen_statem 进程,
@@ -33,3 +33,12 @@ init([]) ->
 -spec start_agent([{atom(), term()}]) -> {ok, pid()} | {error, term()}.
 start_agent(Args) ->
     supervisor:start_child(?MODULE, [Args]).
+
+%% 终止指定 Agent FSM (simple_one_for_one 用 Pid 标识子进程)。
+-spec stop_agent(pid()) -> ok | {error, term()}.
+stop_agent(Pid) when is_pid(Pid) ->
+    case supervisor:terminate_child(?MODULE, Pid) of
+        ok -> ok;
+        {error, not_found} -> ok;
+        {error, Reason} -> {error, Reason}
+    end.

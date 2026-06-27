@@ -27,7 +27,7 @@ message PanelFrame {
 // 一次性请求。
 message PanelRequest {
   uint64 id = 1;          // 请求 ID (用于 response 路由匹配, stream 不复用此 id)
-  string method = 2;      // start_session / send / list_tools / approve / brain_status / get_history / stop
+  string method = 2;      // start_session / send / list_tools / approve / brain_status / get_history / delete_session / stop
   bytes args_bytes = 3;   // 方法对应 Args message 的 Protobuf 编码
 }
 
@@ -91,6 +91,7 @@ message SendArgs { string session_id = 1; string message = 2; }
 message ApproveArgs { string req_id = 1; bool allow = 2; }
 message BrainStatusArgs { string session_id = 1; }
 message GetHistoryArgs { string session_id = 1; }
+message DeleteSessionArgs { string session_id = 1; }
 
 // ---- 方法结果 ----
 message StartSessionResult { string session_id = 1; }
@@ -126,3 +127,4 @@ message GetHistoryResult {
 }
 
 message StopResult { bool ok = 1; }
+message DeleteSessionResult { bool ok = 1; }

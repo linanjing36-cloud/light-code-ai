@@ -42,6 +42,15 @@ export function BrainStatus(sessionID) {
 }
 
 /**
+ * DeleteSession 删除会话: 终止 agent_fsm, 清理 state_store / 摘要 / 向量记忆。
+ * @param {string} sessionID
+ * @returns {$CancellablePromise<boolean>}
+ */
+export function DeleteSession(sessionID) {
+    return $Call.ByID(845118776, sessionID);
+}
+
+/**
  * GetHistory 拉取指定会话的短期记忆 (state_store)。
  * @param {string} sessionID
  * @returns {$CancellablePromise<$models.HistoryEntry[]>}
@@ -63,8 +72,8 @@ export function ListTools() {
 }
 
 /**
- * Send 向指定会话发送用户消息, 触发 ReAct 循环。
- * 当前是同步等待 final answer 返回 (后续可改 stream)。
+ * Send 向指定会话发送用户消息, 触发 ReAct 循环 (异步)。
+ * 立即返回 stream_id; chunk/final 经 panel:stream 事件推送, 前端监听后刷新 history。
  * @param {string} sessionID
  * @param {string} message
  * @returns {$CancellablePromise<$models.SendResult | null>}

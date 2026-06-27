@@ -12,12 +12,16 @@ default_tool_descs() ->
 fetch_tool_descs() ->
     try bridge_manager:list_tools(?LIST_TOOLS_TIMEOUT) of
         {ok, Tools} when is_list(Tools), Tools =/= [] ->
-            [normalize_desc(T) || T <- Tools];
+            [normalize_desc(T) || T <- Tools, not is_internal_tool(T)];
         _ ->
             default_tool_descs()
     catch _:_ ->
         default_tool_descs()
     end.
+
+is_internal_tool(T) when is_map(T) ->
+    maps:get(name, T, <<>>) =:= <<"memory_purge_session">>;
+is_internal_tool(_) -> false.
 
 normalize_desc(T) when is_map(T) ->
     #{name => maps:get(name, T, <<>>),

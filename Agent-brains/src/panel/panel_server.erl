@@ -49,6 +49,7 @@
 %%   get_history     [{session_id}]                  -> {ok, #{messages => [...]}}
 %%   approve         [{req_id, allow}]               -> {ok, #{ok => true}}
 %%   brain_status    [{session_id}]                 -> {ok, #{state, loop_count, ...}}
+%%   delete_session  [{session_id}]                 -> {ok, #{ok => true}}
 %%   stop            []                              -> 触发 init:stop() 优雅退出
 
 -include("log.hrl").
@@ -258,7 +259,7 @@ connection_active_loop(Sock, Remote) ->
             ok
     end.
 
-handle_client_frame(Sock, Remote, Bin) ->
+handle_client_frame(_Sock, Remote, Bin) ->
     case panel_pb_codec:unpack_frame(Bin) of
         {request, Id, Method, ArgsMap} ->
             ?log("request received: remote=~s id=~p method=~s", [Remote, Id, Method]),
@@ -385,6 +386,23 @@ handle_method(<<"brain_status">>, ArgsMap) ->
             {ok, #{state => <<"not_found">>}}
     end;
 
+%% ---- delete_session: 终止 FSM + 清理 state_store / 摘要 / 向量记忆 ----
+handle_method(<<"delete_session">>, ArgsMap) ->
+    SessionId = maps:get(session_id, ArgsMap),
+    ok = panel_server:unregister_stream(SessionId),
+    ok = memory_summarizer:purge_session(SessionId),
+    purge_vector_memory(SessionId),
+    case state_store:lookup_session(SessionId) of
+        {ok, Pid} ->
+            _ = agent_sup:stop_agent(Pid),
+            ok;
+        not_found ->
+            ok
+    end,
+    ok = state_store:delete_session(SessionId),
+    ?log("session deleted: id=~p", [SessionId]),
+    {ok, #{ok => true}};
+
 %% ---- stop: 优雅退出整个 erl 节点 ----
 handle_method(<<"stop">>, _ArgsMap) ->
     spawn(fun() -> timer:sleep(100), init:stop() end),
@@ -408,6 +426,34 @@ generate_stream_id() ->
     Ts = integer_to_binary(erlang:system_time(millisecond)),
     Rand = integer_to_binary(rand:uniform(999999)),
     <<"stream-", Ts/binary, "-", Rand/binary>>.
+
+%% 经 Eion-tools memory_purge_session 工具清除 Redis/向量库中该 session 的记忆 (best-effort)
+purge_vector_memory(SessionId) ->
+    ReqId = iolist_to_binary(["purge-", integer_to_list(erlang:unique_integer([positive]))]),
+    SessBin = ensure_session_id_binary(SessionId),
+    ArgsJson = iolist_to_binary(
+        ["{\"session_id\":\"", json_escape_binary(SessBin), "\"}"]),
+    Tool = #{id => ReqId, name => <<"memory_purge_session">>, arguments => ArgsJson},
+    case bridge_manager:call_tool_sync(Tool, 15000) of
+        {ok, _Resp} ->
+            ok;
+        {error, Reason} ->
+            ?log_warning("purge_vector_memory session=~p failed: ~p", [SessionId, Reason]),
+            ok
+    end.
+
+ensure_session_id_binary(S) when is_binary(S) -> S;
+ensure_session_id_binary(S) when is_list(S) -> list_to_binary(S);
+ensure_session_id_binary(S) when is_atom(S) -> atom_to_binary(S, utf8);
+ensure_session_id_binary(S) -> iolist_to_binary(io_lib:format("~p", [S])).
+
+json_escape_binary(Bin) when is_binary(Bin) ->
+    lists:flatten([json_escape_char(C) || <<C>> <= Bin]).
+
+json_escape_char($") -> "\\\"";
+json_escape_char($\\) -> "\\\\";
+json_escape_char(C) when C >= 32, C =< 126 -> [C];
+json_escape_char(C) -> "\\u" ++ io_lib:format("~4..0B", [C]).
 
 %%====================================================================
 %% 内部: 端口文件 (地址发现)

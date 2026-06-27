@@ -188,6 +188,16 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 }
 .session.active .session-title{color:var(--ink)}
 .session-meta{display:flex;align-items:center;gap:8px}
+.session-row{display:flex;align-items:flex-start;gap:6px}
+.session-body{flex:1;min-width:0}
+.session-del{
+  flex-shrink:0;width:22px;height:22px;margin-top:2px;
+  border:none;border-radius:6px;background:transparent;
+  color:var(--ink-4);cursor:pointer;font-size:14px;line-height:1;
+  opacity:0;transition:.15s;
+}
+.session:hover .session-del,.session.active .session-del{opacity:1}
+.session-del:hover{background:rgba(239,68,68,.15);color:var(--danger)}
 .session-time{font-family:var(--mono);font-size:10px;color:var(--ink-4)}
 .session-model{font-family:var(--mono);font-size:9px;color:var(--ink-4);opacity:.85}
 .status-pill{

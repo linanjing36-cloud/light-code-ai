@@ -116,6 +116,27 @@ func (d *DevBackend) Search(ctx context.Context, query, sessionID string, topK i
 	return hits, nil
 }
 
+// DeleteSession 删除内存向量库中指定 session 的全部文档。
+func (d *DevBackend) DeleteSession(ctx context.Context, sessionID string) (int, error) {
+	if sessionID == "" {
+		return 0, fmt.Errorf("session_id required")
+	}
+	_ = ctx
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	var kept []devDoc
+	deleted := 0
+	for _, doc := range d.docs {
+		if doc.sessionID == sessionID {
+			deleted++
+		} else {
+			kept = append(kept, doc)
+		}
+	}
+	d.docs = kept
+	return deleted, nil
+}
+
 func cosineSim(a, b []float64) float64 {
 	if len(a) == 0 || len(a) != len(b) {
 		return 0

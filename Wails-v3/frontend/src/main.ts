@@ -9,6 +9,7 @@
 //   HermesService.StopBrain()            → 优雅停止 Erlang 大脑
 //
 // 流式 chunk/final 由 panel:stream 事件驱动; 终态后 get_history 同步对话区。
+// BrainStatus 轮询仅在「有待处理任务」时启动 (发送中 / 流式中 / thinking|acting)。
 
 import { HermesService } from "../bindings/hermes";
 import { SessionStartRequest } from "../bindings/hermes/models.js";
@@ -104,12 +105,14 @@ function handlePanelStream(ev: PanelStreamEvent): void {
             removeThinking();
             resetStreamState();
             void refreshHistoryFromBrain();
+            syncStatusPolling();
             break;
         }
         case "error": {
             removeThinking();
             appendAgentMsg(`<p style="color:var(--danger)">${escapeHtml(String(ev.payload.message ?? "stream error"))}</p>`);
             resetStreamState();
+            syncStatusPolling();
             break;
         }
         case "tool_event": {
@@ -322,7 +325,8 @@ async function createNewSession(): Promise<void> {
         renderSessionList();
         renderConversation(sess);
         enableComposer();
-        startStatusPolling();
+        void pollBrainStatus();
+        syncStatusPolling();
         updateModelBadge(cfg.model);
         console.log("[hermes] session started:", sess.id, "model=", cfg.model);
     } catch (e) {
@@ -375,6 +379,7 @@ async function doSend(): Promise<void> {
     } finally {
         isSending = false;
         btnSend.disabled = false;
+        syncStatusPolling();
         prompt.focus();
     }
 }
@@ -395,12 +400,26 @@ function autoGrow(): void {
 }
 
 // ============================================================
-// Brain 状态轮询
+// Brain 状态轮询 (按需: 有发送/流式/FSM 活跃任务时才 tick)
 // ============================================================
-function startStatusPolling(): void {
-    stopStatusPolling();
-    statusTimer = window.setInterval(pollBrainStatus, 1000);
-    pollBrainStatus();
+
+function shouldPollBrainStatus(): boolean {
+    if (!currentSessionId || !brainConnected) return false;
+    if (isSending || currentStreamId) return true;
+    const sess = sessions.get(currentSessionId);
+    return sess?.lastState === "thinking" || sess?.lastState === "acting";
+}
+
+/** 根据当前是否有待观察任务, 启动或停止轮询 */
+function syncStatusPolling(): void {
+    if (shouldPollBrainStatus()) {
+        if (statusTimer === null) {
+            statusTimer = window.setInterval(pollBrainStatus, 1000);
+            void pollBrainStatus();
+        }
+    } else {
+        stopStatusPolling();
+    }
 }
 
 function stopStatusPolling(): void {
@@ -417,6 +436,8 @@ async function pollBrainStatus(): Promise<void> {
         updateBrainStatusUI(st as Record<string, unknown>);
     } catch (e) {
         console.warn("[hermes] brain_status error:", e);
+    } finally {
+        syncStatusPolling();
     }
 }
 
@@ -476,16 +497,64 @@ function renderSessionList(): void {
         div.className = "session" + (sess.id === currentSessionId ? " active" : "");
         div.dataset.id = sess.id;
         div.innerHTML = `
-            <div class="session-title">${escapeHtml(sess.title)}</div>
-            <div class="session-meta">
-                <span class="session-time">${formatTime(sess.createdAt)}</span>
-                <span class="session-model">${escapeHtml(sess.model)}</span>
-                <span class="status-pill ${pillClass(sess.lastState)}">${sess.lastState}</span>
+            <div class="session-row">
+                <div class="session-body">
+                    <div class="session-title">${escapeHtml(sess.title)}</div>
+                    <div class="session-meta">
+                        <span class="session-time">${formatTime(sess.createdAt)}</span>
+                        <span class="session-model">${escapeHtml(sess.model)}</span>
+                        <span class="status-pill ${pillClass(sess.lastState)}">${sess.lastState}</span>
+                    </div>
+                </div>
+                <button type="button" class="session-del" title="删除会话" aria-label="删除会话">×</button>
             </div>
         `;
-        div.addEventListener("click", () => switchSession(sess.id));
+        div.querySelector(".session-body")!.addEventListener("click", () => switchSession(sess.id));
+        div.querySelector(".session-del")!.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            void deleteSession(sess.id);
+        });
         sessionList.appendChild(div);
     }
+}
+
+async function deleteSession(id: string): Promise<void> {
+    if (!brainConnected) {
+        toast("Brain 未连接");
+        return;
+    }
+    const sess = sessions.get(id);
+    const label = sess?.title ?? id;
+    if (!confirm(`删除会话「${label}」？\n将终止 Agent 并清除对话与记忆。`)) return;
+
+    try {
+        await HermesService.DeleteSession(id);
+    } catch (e) {
+        toast("删除失败: " + e);
+        return;
+    }
+
+    sessions.delete(id);
+    if (currentSessionId === id) {
+        resetStreamState();
+        isSending = false;
+        stopStatusPolling();
+        currentSessionId = null;
+        const remaining = [...sessions.values()];
+        if (remaining.length > 0) {
+            switchSession(remaining[0].id);
+        } else {
+            conv.innerHTML = `<div class="empty-state"><div class="glyph">☿</div><div>开始与 Hermes 对话</div></div>`;
+            canvasTitle.textContent = "Hermes Agent";
+            canvasMeta.innerHTML = "";
+            ctxFsmState.textContent = "—";
+            ctxLoop.textContent = "—";
+            ctxHistory.textContent = "0";
+            disableComposer();
+        }
+    }
+    renderSessionList();
+    toast("会话已删除");
 }
 
 function pillClass(state: BrainState): string {
@@ -507,7 +576,8 @@ function switchSession(id: string): void {
         void refreshHistoryFromBrain(sess);
     }
     renderSessionList();
-    startStatusPolling();
+    void pollBrainStatus();
+    syncStatusPolling();
 }
 
 async function refreshHistoryFromBrain(sess?: Session): Promise<void> {
