@@ -1,7 +1,6 @@
 package brain
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 
@@ -159,7 +158,7 @@ func decodePanelResult(method string, bin []byte) (any, error) {
 			tools = append(tools, ToolDesc{
 				Name:        t.GetName(),
 				Description: t.GetDescription(),
-				Parameters:  parseJSONToAny(t.GetParametersJson()),
+				Parameters:  pbSchemaValueToAny(t.GetParameters()),
 			})
 		}
 		return tools, nil
@@ -342,13 +341,35 @@ func defaultString(v, fallback string) string {
 	return v
 }
 
-func parseJSONToAny(raw string) any {
-	if raw == "" {
+func pbSchemaValueToAny(v *panelpb.SchemaValue) any {
+	if v == nil {
 		return nil
 	}
-	var out any
-	if err := json.Unmarshal([]byte(raw), &out); err != nil {
-		return raw
+	switch v.GetKind() {
+	case panelpb.SchemaValue_NULL:
+		return nil
+	case panelpb.SchemaValue_STRING:
+		return v.GetStringValue()
+	case panelpb.SchemaValue_NUMBER:
+		if math.Trunc(v.GetNumberValue()) == v.GetNumberValue() {
+			return int64(v.GetNumberValue())
+		}
+		return v.GetNumberValue()
+	case panelpb.SchemaValue_BOOL:
+		return v.GetBoolValue()
+	case panelpb.SchemaValue_OBJECT:
+		obj := map[string]any{}
+		for _, field := range v.GetObjectFields() {
+			obj[field.GetKey()] = pbSchemaValueToAny(field.GetValue())
+		}
+		return obj
+	case panelpb.SchemaValue_ARRAY:
+		items := make([]any, 0, len(v.GetArrayItems()))
+		for _, item := range v.GetArrayItems() {
+			items = append(items, pbSchemaValueToAny(item))
+		}
+		return items
+	default:
+		return nil
 	}
-	return out
 }

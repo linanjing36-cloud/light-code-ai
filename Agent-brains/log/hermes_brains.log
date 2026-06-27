@@ -47359,3 +47359,53 @@
 2026-06-28 02:04:08.434 [info] <0.186.0>@panel_server:connection_active_loop:{321,14} connection handler exiting: remote=127.0.0.1:65436 closed by peer
 2026-06-28 02:04:08.434 [info] <0.184.0>@panel_server:connection_active_loop:{321,14} connection handler exiting: remote=127.0.0.1:65435 closed by peer
 2026-06-28 02:04:08.434 [info] <0.182.0>@panel_server:connection_active_loop:{321,14} connection handler exiting: remote=127.0.0.1:65434 closed by peer
+2026-06-28 02:08:40.110 [info] <0.117.0>@credentials:load_optional:{19,22} credentials loaded from ../api-key.json (key prefix sk-377c4...)
+2026-06-28 02:08:40.114 [info] <0.119.0>@timing_wheel:init:{110,6} timing_wheel started, tick_ms=1000, wheel_size=1024
+2026-06-28 02:08:40.134 [info] <0.120.0>@mnesia_store:do_init_store:{164,14} mnesia schema already exists at E:/light-code-ai-1/scrtps/../Agent-brains/config/mnesia
+2026-06-28 02:08:40.248 [info] <0.120.0>@mnesia_store:do_init_store:{186,14} mnesia snapshot table already exists
+2026-06-28 02:08:40.248 [info] <0.120.0>@mnesia_store:init:{98,22} mnesia_store started, snapshot_tables=[hermes_brains_state], interval_ms=60000
+2026-06-28 02:08:40.250 [error] <0.120.0>@mnesia_store:do_restore:{241,14} restore: mnesia read failed, table=hermes_brains_state, reason={no_exists,ets_snapshot}
+2026-06-28 02:08:40.250 [warning] <0.165.0>@state_store:init:{155,13} state_store: restore hermes_brains_state failed: {mnesia_read_failed,{no_exists,ets_snapshot}}, starting fresh
+2026-06-28 02:08:40.251 [info] <0.173.0>@bridge_manager:init:{119,13} bridge_manager init: exec_via_panel=true, skip Eion TCP pool
+2026-06-28 02:08:40.253 [info] <0.175.0>@case_store:create_table:{137,14} case_store table already exists: failure_cases
+2026-06-28 02:08:40.253 [info] <0.175.0>@case_store:init:{92,14} case_store started, table=failure_cases, max_cases=200
+2026-06-28 02:08:40.253 [info] <0.177.0>@memory_summarizer:init:{52,14} memory_summarizer started, table=session_summaries
+2026-06-28 02:08:40.255 [info] <0.179.0>@panel_server:init:{143,24} panel addr file written: E:/light-code-ai-1/scrtps/../bin/run/panel.addr (127.0.0.1:50570)
+2026-06-28 02:08:41.123 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 0: slot=0, fired=0, active=1
+2026-06-28 02:08:42.135 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 1: slot=1, fired=0, active=1
+2026-06-28 02:08:43.143 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 2: slot=2, fired=0, active=1
+2026-06-28 02:08:44.150 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 3: slot=3, fired=0, active=1
+2026-06-28 02:08:45.158 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 4: slot=4, fired=0, active=1
+2026-06-28 02:08:46.165 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 5: slot=5, fired=0, active=1
+2026-06-28 02:08:47.172 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 6: slot=6, fired=0, active=1
+2026-06-28 02:08:48.178 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 7: slot=7, fired=0, active=1
+2026-06-28 02:08:49.184 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 8: slot=8, fired=0, active=1
+2026-06-28 02:08:50.198 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 9: slot=9, fired=0, active=1
+2026-06-28 02:08:50.828 [info] <0.180.0>@panel_server:accept_loop:{274,14} connection accepted: remote=127.0.0.1:50586
+2026-06-28 02:08:50.828 [info] <0.182.0>@panel_server:connection_recv_loop:{305,6} connection handler ready: remote=127.0.0.1:50586 pid=<0.182.0>
+2026-06-28 02:08:50.828 [info] <0.179.0>@panel_server:handle_cast:{209,14} wails conn registered: pid=<0.182.0> total=1
+2026-06-28 02:08:50.828 [info] <0.181.0>@panel_server:accept_loop:{274,14} connection accepted: remote=127.0.0.1:50587
+2026-06-28 02:08:50.828 [info] <0.184.0>@panel_server:connection_recv_loop:{305,6} connection handler ready: remote=127.0.0.1:50587 pid=<0.184.0>
+2026-06-28 02:08:50.828 [info] <0.183.0>@panel_server:accept_loop:{274,14} connection accepted: remote=127.0.0.1:50588
+2026-06-28 02:08:50.828 [info] <0.179.0>@panel_server:handle_cast:{209,14} wails conn registered: pid=<0.184.0> total=2
+2026-06-28 02:08:50.828 [info] <0.186.0>@panel_server:connection_recv_loop:{305,6} connection handler ready: remote=127.0.0.1:50588 pid=<0.186.0>
+2026-06-28 02:08:50.828 [info] <0.185.0>@panel_server:accept_loop:{274,14} connection accepted: remote=127.0.0.1:50589
+2026-06-28 02:08:50.828 [info] <0.179.0>@panel_server:handle_cast:{209,14} wails conn registered: pid=<0.186.0> total=3
+2026-06-28 02:08:50.828 [info] <0.188.0>@panel_server:connection_recv_loop:{305,6} connection handler ready: remote=127.0.0.1:50589 pid=<0.188.0>
+2026-06-28 02:08:50.828 [info] <0.179.0>@panel_server:handle_cast:{209,14} wails conn registered: pid=<0.188.0> total=4
+2026-06-28 02:08:50.836 [info] <0.184.0>@panel_server:handle_client_frame:{335,14} request received: remote=127.0.0.1:50587 id=1 method=list_tools
+2026-06-28 02:08:50.856 [info] <0.184.0>@panel_server:connection_active_loop:{321,14} connection handler exiting: remote=127.0.0.1:50587 closed by peer
+2026-06-28 02:08:50.856 [info] <0.182.0>@panel_server:connection_active_loop:{321,14} connection handler exiting: remote=127.0.0.1:50586 closed by peer
+2026-06-28 02:08:50.856 [info] <0.186.0>@panel_server:connection_active_loop:{321,14} connection handler exiting: remote=127.0.0.1:50588 closed by peer
+2026-06-28 02:08:50.856 [info] <0.188.0>@panel_server:connection_active_loop:{321,14} connection handler exiting: remote=127.0.0.1:50589 closed by peer
+2026-06-28 02:08:51.205 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 10: slot=10, fired=0, active=1
+2026-06-28 02:08:52.207 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 11: slot=11, fired=0, active=1
+2026-06-28 02:08:53.215 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 12: slot=12, fired=0, active=1
+2026-06-28 02:08:54.221 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 13: slot=13, fired=0, active=1
+2026-06-28 02:08:55.229 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 14: slot=14, fired=0, active=1
+2026-06-28 02:08:56.231 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 15: slot=15, fired=0, active=1
+2026-06-28 02:08:57.233 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 16: slot=16, fired=0, active=1
+2026-06-28 02:08:58.242 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 17: slot=17, fired=0, active=1
+2026-06-28 02:08:59.252 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 18: slot=18, fired=0, active=1
+2026-06-28 02:09:00.261 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 19: slot=19, fired=0, active=1
+2026-06-28 02:09:01.270 [info] <0.119.0>@timing_wheel:handle_info:{172,6} tick 20: slot=20, fired=0, active=1

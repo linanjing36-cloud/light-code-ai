@@ -359,14 +359,14 @@ history_entry_from_pb(E) ->
     end.
 
 tool_desc_to_pb(T) ->
-    #{name => maps:get(name, T, <<>>),
-      description => maps:get(description, T, <<>>),
-      parameters_json => maps:get(parameters_json, T, <<>>)}.
+    Base = #{name => maps:get(name, T, <<>>),
+             description => maps:get(description, T, <<>>)},
+    maybe_put_schema_value(parameters, maps:get(parameters_json, T, <<>>), Base).
 
 tool_desc_from_pb(T) ->
-    #{name => maps:get(name, T, <<>>),
-      description => maps:get(description, T, <<>>),
-      parameters_json => maps:get(parameters_json, T, <<>>)}.
+    Base = #{name => maps:get(name, T, <<>>),
+             description => maps:get(description, T, <<>>)},
+    maybe_put_schema_json(parameters_json, maps:get(parameters, T, undefined), Base).
 
 tool_call_to_pb(TC) ->
     Fun0 = #{name => ensure_binary(maps:get(name, TC, <<>>))},
@@ -395,6 +395,24 @@ maybe_put_json_binary(_Key, undefined, Map) ->
     Map;
 maybe_put_json_binary(Key, JsonValue, Map) ->
     case json_value_to_binary_json(JsonValue) of
+        undefined -> Map;
+        JsonBin -> Map#{Key => JsonBin}
+    end.
+
+maybe_put_schema_value(_Key, <<>>, Map) ->
+    Map;
+maybe_put_schema_value(_Key, undefined, Map) ->
+    Map;
+maybe_put_schema_value(Key, JsonBin, Map) ->
+    case schema_value_from_json_binary(JsonBin) of
+        undefined -> Map;
+        SchemaValue -> Map#{Key => SchemaValue}
+    end.
+
+maybe_put_schema_json(_Key, undefined, Map) ->
+    Map;
+maybe_put_schema_json(Key, SchemaValue, Map) ->
+    case schema_value_to_binary_json(SchemaValue) of
         undefined -> Map;
         JsonBin -> Map#{Key => JsonBin}
     end.
@@ -433,13 +451,61 @@ json_value_to_binary_json(undefined) ->
 json_value_to_binary_json(JsonValue) ->
     json:encode(json_value_to_term(JsonValue)).
 
+schema_value_from_json_binary(JsonBin) ->
+    try
+        schema_value_from_term(json:decode(ensure_binary(JsonBin)))
+    catch
+        _:_ -> undefined
+    end.
+
+schema_value_from_term(null) ->
+    #{kind => 'NULL'};
+schema_value_from_term(V) when is_binary(V) ->
+    #{kind => 'STRING', string_value => V};
+schema_value_from_term(V) when is_boolean(V) ->
+    #{kind => 'BOOL', bool_value => V};
+schema_value_from_term(V) when is_integer(V) ->
+    #{kind => 'NUMBER', number_value => float(V)};
+schema_value_from_term(V) when is_float(V) ->
+    #{kind => 'NUMBER', number_value => V};
+schema_value_from_term(V) when is_map(V) ->
+    Fields = [#{key => ensure_binary(K), value => schema_value_from_term(Val)}
+              || {K, Val} <- maps:to_list(V)],
+    #{kind => 'OBJECT', object_fields => Fields};
+schema_value_from_term(V) when is_list(V) ->
+    case is_string_list(V) of
+        true ->
+            #{kind => 'STRING', string_value => ensure_binary(V)};
+        false ->
+            #{kind => 'ARRAY', array_items => [schema_value_from_term(Item) || Item <- V]}
+    end.
+
+schema_value_to_binary_json(undefined) ->
+    undefined;
+schema_value_to_binary_json(SchemaValue) ->
+    json:encode(schema_value_to_term(SchemaValue)).
+
+schema_value_to_term(#{kind := 'NULL'}) ->
+    null;
+schema_value_to_term(#{kind := 'STRING'} = V) ->
+    maps:get(string_value, V, <<>>);
+schema_value_to_term(#{kind := 'NUMBER'} = V) ->
+    normalize_number_term(maps:get(number_value, V, 0));
+schema_value_to_term(#{kind := 'BOOL'} = V) ->
+    maps:get(bool_value, V, false);
+schema_value_to_term(#{kind := 'OBJECT'} = V) ->
+    maps:from_list([{maps:get(key, Field, <<>>),
+                     schema_value_to_term(maps:get(value, Field, #{kind => 'NULL'}))}
+                    || Field <- maps:get(object_fields, V, [])]);
+schema_value_to_term(#{kind := 'ARRAY'} = V) ->
+    [schema_value_to_term(Item) || Item <- maps:get(array_items, V, [])];
+schema_value_to_term(_) ->
+    null.
+
 json_value_to_term(#{string_value := V}) ->
     V;
 json_value_to_term(#{number_value := V}) when is_float(V) ->
-    case trunc(V) of
-        I when I =:= V -> I;
-        _ -> V
-    end;
+    normalize_number_term(V);
 json_value_to_term(#{number_value := V}) ->
     V;
 json_value_to_term(#{bool_value := V}) ->
@@ -460,6 +526,14 @@ is_string_list([H | T]) when is_integer(H), H >= 0, H =< 255 ->
     is_string_list(T);
 is_string_list(_) ->
     false.
+
+normalize_number_term(V) when is_float(V) ->
+    case trunc(V) of
+        I when I =:= V -> I;
+        _ -> V
+    end;
+normalize_number_term(V) ->
+    V.
 
 ensure_binary(V) when is_binary(V) -> V;
 ensure_binary(V) when is_list(V) -> list_to_binary(V);
