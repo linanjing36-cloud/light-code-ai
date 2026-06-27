@@ -143,9 +143,11 @@ function ensureStreamingMsg(): void {
 }
 
 function resetStreamState(): void {
+    const sid = currentSessionId;
     currentStreamId = null;
     streamingMsgEl = null;
     streamingText = "";
+    if (sid) updateSessionInList(sid);
 }
 
 // ---- DOM ----
@@ -297,6 +299,24 @@ async function createNewSession(): Promise<void> {
     }
     const cfg = getConfigFromUI();
     saveConfig(cfg);
+
+    const pendingId = `__pending__${Date.now()}`;
+    const placeholder: Session = {
+        id: pendingId,
+        title: "...",
+        model: cfg.model,
+        createdAt: Date.now(),
+        lastState: "thinking",
+        msgCount: 0,
+        toolCalls: 0,
+        lastHistoryLen: 0,
+    };
+    sessions.set(pendingId, placeholder);
+    currentSessionId = pendingId;
+    renderSessionList({ animateId: pendingId });
+    renderConversation(placeholder);
+    disableComposer();
+
     try {
         btnNewSession.disabled = true;
         const req = new SessionStartRequest({
@@ -308,8 +328,12 @@ async function createNewSession(): Promise<void> {
         const info = await HermesService.StartSession(req);
         if (!info?.session_id) {
             toast("StartSession 返回空 session_id");
+            sessions.delete(pendingId);
+            currentSessionId = null;
+            renderSessionList();
             return;
         }
+        sessions.delete(pendingId);
         const sess: Session = {
             id: info.session_id,
             title: `聊天 ${sessions.size + 1}`,
@@ -322,7 +346,7 @@ async function createNewSession(): Promise<void> {
         };
         sessions.set(sess.id, sess);
         currentSessionId = sess.id;
-        renderSessionList();
+        renderSessionList({ animateId: sess.id });
         renderConversation(sess);
         enableComposer();
         void pollBrainStatus();
@@ -331,6 +355,17 @@ async function createNewSession(): Promise<void> {
         console.log("[hermes] session started:", sess.id, "model=", cfg.model);
     } catch (e) {
         toast("StartSession 失败: " + e);
+        sessions.delete(pendingId);
+        currentSessionId = null;
+        const remaining = [...sessions.values()];
+        if (remaining.length > 0) {
+            switchSession(remaining[remaining.length - 1].id);
+        } else {
+            conv.innerHTML = `<div class="empty-state"><div class="glyph">☿</div><div>开始与 Hermes 对话</div></div>`;
+            canvasTitle.textContent = "Hermes Agent";
+            canvasMeta.innerHTML = "";
+        }
+        renderSessionList();
     } finally {
         btnNewSession.disabled = false;
     }
@@ -360,12 +395,13 @@ async function doSend(): Promise<void> {
         if (sess.msgCount === 1 && sess.title.startsWith("聊天 ")) {
             sess.title = text.length > 24 ? text.slice(0, 24) + "…" : text;
             canvasTitle.textContent = sess.title;
-            renderSessionList();
+            updateSessionInList(sess.id);
         }
         updateCanvasMeta(sess);
     }
 
     appendThinking();
+    updateSessionInList(currentSessionId);
 
     try {
         const result = await HermesService.Send(currentSessionId, text);
@@ -379,6 +415,7 @@ async function doSend(): Promise<void> {
     } finally {
         isSending = false;
         btnSend.disabled = false;
+        if (currentSessionId) updateSessionInList(currentSessionId);
         syncStatusPolling();
         prompt.focus();
     }
@@ -455,8 +492,11 @@ function updateBrainStatusUI(st: Record<string, unknown>): void {
 
     const sess = sessions.get(currentSessionId!);
     if (sess) {
+        const prevState = sess.lastState;
         sess.lastState = state as BrainState;
-        renderSessionList();
+        if (prevState !== sess.lastState) {
+            updateSessionInList(sess.id);
+        }
 
         // ReAct 循环状态机:
         //   thinking → acting → (回 thinking) → idle
@@ -487,38 +527,117 @@ function stateClass(state: string): string {
 }
 
 // ============================================================
-// 渲染: session list
+// 渲染: session list (增量更新, 避免轮询时整表重绘闪烁)
 // ============================================================
-function renderSessionList(): void {
-    if (sessionCount) sessionCount.textContent = String(sessions.size);
-    sessionList.innerHTML = "";
-    for (const sess of sessions.values()) {
-        const div = document.createElement("div");
-        div.className = "session" + (sess.id === currentSessionId ? " active" : "");
-        div.dataset.id = sess.id;
-        div.innerHTML = `
-            <div class="session-row">
-                <div class="session-body">
-                    <div class="session-title">${escapeHtml(sess.title)}</div>
-                    <div class="session-meta">
-                        <span class="session-time">${formatTime(sess.createdAt)}</span>
-                        <span class="session-model">${escapeHtml(sess.model)}</span>
-                        <span class="status-pill ${pillClass(sess.lastState)}">${sess.lastState}</span>
-                    </div>
+
+function sessionStatusLabel(sess: Session): string | null {
+    const isCurrent = sess.id === currentSessionId;
+    if (isCurrent && (isSending || currentStreamId)) return "...";
+    if (sess.lastState === "thinking" || sess.lastState === "acting") return "...";
+    if (sess.lastState === "error") return "error";
+    return null;
+}
+
+function sessionStatusClass(sess: Session): string {
+    const label = sessionStatusLabel(sess);
+    if (label === "...") return "st-wait";
+    if (label === "error") return "st-error";
+    return "st-idle";
+}
+
+function createSessionElement(sess: Session, animate: boolean): HTMLElement {
+    const div = document.createElement("div");
+    div.className = "session" + (sess.id === currentSessionId ? " active" : "") + (animate ? " session-new" : "");
+    div.dataset.id = sess.id;
+    const statusLabel = sessionStatusLabel(sess);
+    const statusHtml = statusLabel
+        ? `<span class="status-pill ${sessionStatusClass(sess)}">${statusLabel}</span>`
+        : "";
+    div.innerHTML = `
+        <div class="session-row">
+            <div class="session-body">
+                <div class="session-title">${escapeHtml(sess.title)}</div>
+                <div class="session-meta">
+                    <span class="session-time">${formatTime(sess.createdAt)}</span>
+                    <span class="session-model">${escapeHtml(sess.model)}</span>
+                    ${statusHtml}
                 </div>
-                <button type="button" class="session-del" title="删除会话" aria-label="删除会话">×</button>
             </div>
-        `;
-        div.querySelector(".session-body")!.addEventListener("click", () => switchSession(sess.id));
-        div.querySelector(".session-del")!.addEventListener("click", (ev) => {
-            ev.stopPropagation();
-            void deleteSession(sess.id);
-        });
-        sessionList.appendChild(div);
+            <button type="button" class="session-del" title="删除会话" aria-label="删除会话">×</button>
+        </div>
+    `;
+    bindSessionElement(div, sess.id);
+    if (animate) {
+        div.addEventListener("animationend", () => div.classList.remove("session-new"), { once: true });
+    }
+    return div;
+}
+
+function bindSessionElement(div: HTMLElement, id: string): void {
+    div.querySelector(".session-body")!.addEventListener("click", () => switchSession(id));
+    div.querySelector(".session-del")!.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        void deleteSession(id);
+    });
+}
+
+function updateSessionElement(el: HTMLElement, sess: Session): void {
+    el.classList.toggle("active", sess.id === currentSessionId);
+    const titleEl = el.querySelector(".session-title") as HTMLElement | null;
+    if (titleEl && titleEl.textContent !== sess.title) {
+        titleEl.textContent = sess.title;
+    }
+    const modelEl = el.querySelector(".session-model") as HTMLElement | null;
+    if (modelEl && modelEl.textContent !== sess.model) {
+        modelEl.textContent = sess.model;
+    }
+    const metaEl = el.querySelector(".session-meta") as HTMLElement | null;
+    if (!metaEl) return;
+    let pillEl = metaEl.querySelector(".status-pill") as HTMLElement | null;
+    const label = sessionStatusLabel(sess);
+    if (!label) {
+        pillEl?.remove();
+        return;
+    }
+    if (!pillEl) {
+        pillEl = document.createElement("span");
+        metaEl.appendChild(pillEl);
+    }
+    pillEl.className = `status-pill ${sessionStatusClass(sess)}`;
+    if (pillEl.textContent !== label) {
+        pillEl.textContent = label;
+    }
+}
+
+function updateSessionInList(id: string): void {
+    const sess = sessions.get(id);
+    if (!sess) return;
+    const el = sessionList.querySelector(`[data-id="${CSS.escape(id)}"]`) as HTMLElement | null;
+    if (el) updateSessionElement(el, sess);
+}
+
+function renderSessionList(opts?: { animateId?: string }): void {
+    if (sessionCount) sessionCount.textContent = String(sessions.size);
+
+    const alive = new Set<string>();
+    for (const sess of sessions.values()) {
+        alive.add(sess.id);
+        let el = sessionList.querySelector(`[data-id="${CSS.escape(sess.id)}"]`) as HTMLElement | null;
+        if (!el) {
+            el = createSessionElement(sess, opts?.animateId === sess.id);
+            sessionList.appendChild(el);
+        } else {
+            updateSessionElement(el, sess);
+        }
+    }
+    for (const child of [...sessionList.children]) {
+        const id = (child as HTMLElement).dataset.id;
+        if (id && !alive.has(id)) child.remove();
     }
 }
 
 async function deleteSession(id: string): Promise<void> {
+    if (id.startsWith("__pending__")) return;
     if (!brainConnected) {
         toast("Brain 未连接");
         return;
@@ -557,17 +676,8 @@ async function deleteSession(id: string): Promise<void> {
     toast("会话已删除");
 }
 
-function pillClass(state: BrainState): string {
-    switch (state) {
-        case "thinking": return "st-running";
-        case "acting": return "st-running";
-        case "idle": return "st-idle";
-        case "error": return "st-error";
-        default: return "st-idle";
-    }
-}
-
 function switchSession(id: string): void {
+    if (id.startsWith("__pending__")) return;
     currentSessionId = id;
     const sess = sessions.get(id);
     if (sess) {
@@ -575,7 +685,10 @@ function switchSession(id: string): void {
         updateModelBadge(sess.model);
         void refreshHistoryFromBrain(sess);
     }
-    renderSessionList();
+    for (const child of sessionList.children) {
+        const el = child as HTMLElement;
+        el.classList.toggle("active", el.dataset.id === id);
+    }
     void pollBrainStatus();
     syncStatusPolling();
 }

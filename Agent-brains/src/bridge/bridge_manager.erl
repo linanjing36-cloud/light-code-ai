@@ -295,11 +295,13 @@ handle_info({tcp, Sock, Bin}, #state{pending = Pending, timers = Timers} = State
                                   [RespKind, Kind]),
                     TRef = maps:get(Sock, Timers, undefined),
                     _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
-                    gen_statem:cast(FsmPid, {bridge_disconnect}),
+                    case FsmPid of
+                        undefined -> ok;
+                        _ -> gen_statem:cast(FsmPid, {bridge_disconnect})
+                    end,
                     Conns = mark_conn(State#state.conns, Sock, idle),
-                    NewState = State#state{conns = Conns,
-                                           pending = maps:remove(Sock, Pending),
-                                           timers = maps:remove(Sock, Timers)},
+                    NewState = reply_sync_error(State, ReqId, Conns, Sock, Pending, Timers,
+                                                unexpected_response),
                     {noreply, dispatch_next(NewState)}
             end;
         undefined ->
@@ -439,6 +441,19 @@ reply_tool_timeout(#state{sync_waiters = Sync} = State, ReqId) ->
         From ->
             gen_server:reply(From, {error, timeout}),
             State#state{sync_waiters = maps:remove(ReqId, Sync)}
+    end.
+
+%% 异常响应时立即回复同步调用方, 避免 list_tools 等卡满超时
+reply_sync_error(#state{sync_waiters = Sync} = State, ReqId, Conns, Sock, Pending, Timers, Reason) ->
+    Base = State#state{conns = Conns,
+                       pending = maps:remove(Sock, Pending),
+                       timers = maps:remove(Sock, Timers)},
+    case maps:get(ReqId, Sync, undefined) of
+        undefined ->
+            Base;
+        From ->
+            gen_server:reply(From, {error, Reason}),
+            Base#state{sync_waiters = maps:remove(ReqId, Sync)}
     end.
 
 %%%===================================================================

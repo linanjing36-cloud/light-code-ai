@@ -2,7 +2,7 @@
 
 -export([default_tool_descs/0, fetch_tool_descs/0]).
 
--define(LIST_TOOLS_TIMEOUT, 5000).
+-define(LIST_TOOLS_TIMEOUT, 1500).
 
 %% 静态兜底（Eion-tools 不可达时使用）。
 default_tool_descs() ->

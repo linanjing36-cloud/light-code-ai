@@ -170,8 +170,8 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
   padding:12px 12px; border-radius:var(--r);
   margin-bottom:3px; cursor:pointer; transition:.15s;
   border:1px solid transparent; position:relative;
-  animation: slideIn .4s ease both;
 }
+.session-new{animation: slideIn .4s ease both}
 .session:hover{background:var(--surface)}
 .session.active{
   background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
@@ -212,6 +212,8 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 .st-done::before{background:var(--done)}
 .st-idle{color:var(--ink-3);background:var(--surface-2)}
 .st-idle::before{background:var(--idle)}
+.st-wait{color:var(--running);background:rgba(232,165,64,.1);letter-spacing:.12em}
+.st-wait::before{display:none}
 .st-error{color:var(--error);background:rgba(216,107,92,.1)}
 .st-error::before{background:var(--error)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}

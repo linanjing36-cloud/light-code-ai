@@ -266,7 +266,7 @@ handle_client_frame(_Sock, Remote, Bin) ->
             ConnPid = self(),
             spawn(fun() ->
                 MethodBin = ensure_method_binary(Method),
-                {RespTag, RespData} = dispatch(Id, MethodBin, ArgsMap),
+                {RespTag, RespData} = dispatch(Id, MethodBin, ArgsMap, ConnPid),
                 Frame = case RespTag of
                     ok -> panel_pb_codec:pack_response_ok(Id, MethodBin, RespData);
                     error -> panel_pb_codec:pack_response_err(Id, RespData)
@@ -298,8 +298,8 @@ cleanup_streams_for_self() ->
 %% 调度: Id + Method + ArgsMap -> {ok, ResultMap} | {error, ErrMsg}
 %%====================================================================
 
-dispatch(_Id, Method, ArgsMap) ->
-    try handle_method(Method, ArgsMap)
+dispatch(_Id, Method, ArgsMap, ConnPid) ->
+    try handle_method(Method, ArgsMap, ConnPid)
     catch
         Class:Reason:Stack ->
             ?log_error("dispatch method=~s failed: ~p:~p~n~p", [Method, Class, Reason, Stack]),
@@ -308,7 +308,7 @@ dispatch(_Id, Method, ArgsMap) ->
     end.
 
 %% ---- start_session: 派发一个 agent_fsm 进程 ----
-handle_method(<<"start_session">>, ArgsMap) ->
+handle_method(<<"start_session">>, ArgsMap, _ConnPid) ->
     SystemPrompt = maps:get(system_prompt, ArgsMap, <<>>),
     Model = case maps:get(model, ArgsMap, <<>>) of
                 <<>> -> application:get_env(hermes_brains, default_model, <<"deepseek-v4-pro">>);
@@ -322,7 +322,7 @@ handle_method(<<"start_session">>, ArgsMap) ->
     SessionId = generate_session_id(),
     FSMArgs = [{session_id, SessionId},
                {model, Model},
-               {tools, panel_tools:fetch_tool_descs()},
+               {tools, panel_tools:default_tool_descs()},
                {session_prompt, SystemPrompt},
                {api_key, ApiKey},
                {api_base, ApiBase},
@@ -338,7 +338,7 @@ handle_method(<<"start_session">>, ArgsMap) ->
     end;
 
 %% ---- send: 触发 ReAct 循环, 注册 stream ----
-handle_method(<<"send">>, ArgsMap) ->
+handle_method(<<"send">>, ArgsMap, ConnPid) ->
     SessionId = maps:get(session_id, ArgsMap),
     Message = maps:get(message, ArgsMap),
     case state_store:lookup_session(SessionId) of
@@ -348,9 +348,9 @@ handle_method(<<"send">>, ArgsMap) ->
             %% 触发 ReAct (cast, 异步)
             agent_fsm:start(Pid, #{}),
             %% 注册 stream: session_id -> {stream_id, conn_pid}
-            %% ConnPid = self() = connection 进程 (本进程)
+            %% ConnPid 为 connection handler (dispatch 在 spawn 中执行, 不能用 self())
             StreamId = generate_stream_id(),
-            ets:insert(?STREAMS_TABLE, {SessionId, StreamId, self()}),
+            ets:insert(?STREAMS_TABLE, {SessionId, StreamId, ConnPid}),
             {ok, #{stream_id => StreamId}};
         not_found ->
             ErrMsg = erlang:iolist_to_binary(io_lib:format("session_not_found: ~s", [SessionId])),
@@ -358,11 +358,11 @@ handle_method(<<"send">>, ArgsMap) ->
     end;
 
 %% ---- list_tools: 从 Eion-tools 动态同步工具注册表 ----
-handle_method(<<"list_tools">>, _ArgsMap) ->
+handle_method(<<"list_tools">>, _ArgsMap, _ConnPid) ->
     {ok, #{tools => panel_tools:fetch_tool_descs()}};
 
 %% ---- get_history: 读 state_store 短期记忆 ----
-handle_method(<<"get_history">>, ArgsMap) ->
+handle_method(<<"get_history">>, ArgsMap, _ConnPid) ->
     SessionId = maps:get(session_id, ArgsMap, <<>>),
     case state_store:get_history(SessionId) of
         {ok, Msgs} ->
@@ -372,11 +372,11 @@ handle_method(<<"get_history">>, ArgsMap) ->
     end;
 
 %% ---- approve: 工具调用授权 (占位) ----
-handle_method(<<"approve">>, _ArgsMap) ->
+handle_method(<<"approve">>, _ArgsMap, _ConnPid) ->
     {ok, #{ok => true}};
 
 %% ---- brain_status: 读 FSM 当前状态 ----
-handle_method(<<"brain_status">>, ArgsMap) ->
+handle_method(<<"brain_status">>, ArgsMap, _ConnPid) ->
     SessionId = maps:get(session_id, ArgsMap, <<>>),
     case state_store:lookup_session(SessionId) of
         {ok, Pid} ->
@@ -387,7 +387,7 @@ handle_method(<<"brain_status">>, ArgsMap) ->
     end;
 
 %% ---- delete_session: 终止 FSM + 清理 state_store / 摘要 / 向量记忆 ----
-handle_method(<<"delete_session">>, ArgsMap) ->
+handle_method(<<"delete_session">>, ArgsMap, _ConnPid) ->
     SessionId = maps:get(session_id, ArgsMap),
     ok = panel_server:unregister_stream(SessionId),
     ok = memory_summarizer:purge_session(SessionId),
@@ -404,12 +404,12 @@ handle_method(<<"delete_session">>, ArgsMap) ->
     {ok, #{ok => true}};
 
 %% ---- stop: 优雅退出整个 erl 节点 ----
-handle_method(<<"stop">>, _ArgsMap) ->
+handle_method(<<"stop">>, _ArgsMap, _ConnPid) ->
     spawn(fun() -> timer:sleep(100), init:stop() end),
     {ok, #{ok => true}};
 
 %% ---- 兜底 ----
-handle_method(Method, _ArgsMap) ->
+handle_method(Method, _ArgsMap, _ConnPid) ->
     ErrMsg = erlang:iolist_to_binary(io_lib:format("unknown_method: ~s", [Method])),
     {error, ErrMsg}.
 
