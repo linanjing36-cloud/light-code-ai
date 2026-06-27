@@ -21,6 +21,8 @@
 %%   - 响应: {response, Id, ok, ResultMap} | {response, Id, error, ErrMsg}
 %%   - 流式 push: {stream, StreamId, {chunk|tool_event|final|error, Map}}
 %%     (在 send 方法的原连接上连续推, 直到 final/error 终态)
+%%   - connection handler: {active, once} multiplex tcp / push_stream / rpc_reply
+%%     dispatch 在 spawn 中执行, 不阻塞读循环与流式 push
 %%
 %% 流式输出 (Task 4):
 %%   - send 方法注册 session_id -> {stream_id, conn_pid} 到 ETS panel_streams
@@ -235,13 +237,16 @@ connection_recv_loop(Sock, Remote) ->
     connection_active_loop(Sock, Remote).
 
 connection_active_loop(Sock, Remote) ->
+    ok = inet:setopts(Sock, [{active, once}]),
     receive
         {push_stream, FrameBin} ->
             send_frame(Sock, FrameBin),
             connection_active_loop(Sock, Remote);
+        {rpc_reply, FrameBin} ->
+            send_frame(Sock, FrameBin),
+            connection_active_loop(Sock, Remote);
         {tcp, Sock, Bin} ->
             handle_client_frame(Sock, Remote, Bin),
-            ok = inet:setopts(Sock, [{active, once}]),
             connection_active_loop(Sock, Remote);
         {tcp_closed, Sock} ->
             ?log("connection handler exiting: remote=~s closed by peer", [Remote]),
@@ -257,16 +262,16 @@ handle_client_frame(Sock, Remote, Bin) ->
     case panel_pb_codec:unpack_frame(Bin) of
         {request, Id, Method, ArgsMap} ->
             ?log("request received: remote=~s id=~p method=~s", [Remote, Id, Method]),
-            MethodBin = ensure_method_binary(Method),
-            {RespTag, RespData} = dispatch(Id, MethodBin, ArgsMap),
-            case RespTag of
-                ok ->
-                    Frame = panel_pb_codec:pack_response_ok(Id, MethodBin, RespData),
-                    send_frame(Sock, Frame);
-                error ->
-                    Frame = panel_pb_codec:pack_response_err(Id, RespData),
-                    send_frame(Sock, Frame)
-            end;
+            ConnPid = self(),
+            spawn(fun() ->
+                MethodBin = ensure_method_binary(Method),
+                {RespTag, RespData} = dispatch(Id, MethodBin, ArgsMap),
+                Frame = case RespTag of
+                    ok -> panel_pb_codec:pack_response_ok(Id, MethodBin, RespData);
+                    error -> panel_pb_codec:pack_response_err(Id, RespData)
+                end,
+                ConnPid ! {rpc_reply, Frame}
+            end);
         Other ->
             ?log_warning("invalid frame from remote=~s: ~p", [Remote, Other])
     end.

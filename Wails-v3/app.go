@@ -77,8 +77,8 @@ type SendResult struct {
 	StreamID string `json:"stream_id"`
 }
 
-// Send 向指定会话发送用户消息, 触发 ReAct 循环。
-// 当前是同步等待 final answer 返回 (后续可改 stream)。
+// Send 向指定会话发送用户消息, 触发 ReAct 循环 (异步)。
+// 立即返回 stream_id; chunk/final 经 panel:stream 事件推送, 前端监听后刷新 history。
 func (s *HermesService) Send(sessionID, message string) (*SendResult, error) {
 	out, err := s.brain.Call("send", map[string]any{
 		"session_id": sessionID,

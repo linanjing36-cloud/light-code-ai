@@ -3,6 +3,11 @@
 // 通信协议 (Step 1.4 / panel.proto):
 //   4 字节大端长度 + PanelFrame Protobuf
 //   请求 PanelFrame.request / 响应 PanelFrame.response / 流式 PanelFrame.stream
+//
+// 异步模型 (与架构 §3.1 对齐):
+//   - 每连接独立 reader goroutine 持续读帧, 按 req id 路由 PanelResponse
+//   - PanelStream 帧异步 EmitEvent("panel:stream"), 不阻塞 RPC 调用方
+//   - send 收到 stream_id 即返回; chunk/final 由前端事件驱动
 package brain
 
 import (
@@ -30,6 +35,7 @@ const (
 	reconnectDelay     = 2 * time.Second
 	dialTimeout        = 5 * time.Second
 	addrResolveTimeout = 30 * time.Second
+	defaultRPCDeadline = 30 * time.Second
 )
 
 type Bridge struct {
@@ -40,16 +46,28 @@ type Bridge struct {
 
 	addr     string
 	poolSize int
-	conns    []net.Conn
-	queue    chan pendingCall
+	slots    []*connSlot
 
 	reqSeq atomic.Uint64
+	next   atomic.Uint64
+}
+
+type connSlot struct {
+	conn net.Conn
+	reqQ chan pendingCall
+
+	writeMu sync.Mutex
 }
 
 type pendingCall struct {
 	id     uint64
 	method string
 	body   []byte
+	ch     chan callResult
+}
+
+type pendingReply struct {
+	method string
 	ch     chan callResult
 }
 
@@ -89,22 +107,24 @@ func (b *Bridge) Start(parentCtx context.Context) error {
 	b.addr = addr
 	log.Printf("[brain] panel_server addr resolved: %s", addr)
 
-	b.queue = make(chan pendingCall, 64)
-	b.conns = make([]net.Conn, 0, b.poolSize)
+	b.slots = make([]*connSlot, 0, b.poolSize)
 	for i := 0; i < b.poolSize; i++ {
 		conn, err := dialPanel(addr, dialTimeout)
 		if err != nil {
 			log.Printf("[brain] pool slot %d/%d connect failed: %v", i+1, b.poolSize, err)
-			go b.reconnectLoop(ctx)
 			continue
 		}
-		b.conns = append(b.conns, conn)
-		go b.connWorker(ctx, conn, bufio.NewReaderSize(conn, 64*1024))
+		slot := &connSlot{
+			conn: conn,
+			reqQ: make(chan pendingCall, 16),
+		}
+		b.slots = append(b.slots, slot)
+		go b.runConn(ctx, slot)
 	}
-	if len(b.conns) == 0 {
+	if len(b.slots) == 0 {
 		go b.reconnectLoop(ctx)
 	} else {
-		log.Printf("[brain] connection pool ready: %d/%d", len(b.conns), b.poolSize)
+		log.Printf("[brain] connection pool ready: %d/%d", len(b.slots), b.poolSize)
 	}
 
 	b.started = true
@@ -128,14 +148,11 @@ func (b *Bridge) Stop() {
 	if b.cancel != nil {
 		b.cancel()
 	}
-	for _, conn := range b.conns {
-		_ = conn.Close()
+	for _, slot := range b.slots {
+		close(slot.reqQ)
+		_ = slot.conn.Close()
 	}
-	if b.queue != nil {
-		close(b.queue)
-	}
-	b.conns = nil
-	b.queue = nil
+	b.slots = nil
 	b.started = false
 }
 
@@ -150,10 +167,8 @@ func (b *Bridge) Call(method string, args map[string]any) (any, error) {
 }
 
 func (b *Bridge) callInternal(ctx context.Context, method string, args map[string]any) (any, error) {
-	b.mu.Lock()
-	q := b.queue
-	b.mu.Unlock()
-	if q == nil {
+	slot := b.pickSlot()
+	if slot == nil {
 		return nil, fmt.Errorf("brain: connection pool closed")
 	}
 
@@ -170,98 +185,123 @@ func (b *Bridge) callInternal(ctx context.Context, method string, args map[strin
 	pc := pendingCall{id: id, method: method, body: frame, ch: ch}
 
 	select {
-	case q <- pc:
+	case slot.reqQ <- pc:
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	default:
 		return nil, fmt.Errorf("brain: request queue full")
 	}
 
+	deadline := rpcDeadline(method)
+	timer := time.NewTimer(deadline)
+	defer timer.Stop()
+
 	select {
 	case resp := <-ch:
 		return resp.result, resp.err
 	case <-ctx.Done():
 		return nil, fmt.Errorf("brain: %s: %w", method, ctx.Err())
-	case <-time.After(callTimeout(method)):
-		return nil, fmt.Errorf("brain: %s: timeout (%s)", method, callTimeout(method))
+	case <-timer.C:
+		return nil, fmt.Errorf("brain: %s: timeout (%s)", method, deadline)
 	}
 }
 
-func callTimeout(method string) time.Duration {
+func rpcDeadline(method string) time.Duration {
 	if method == "send" {
-		return 120 * time.Second
+		// send 只等 PanelResponse(stream_id); 流式终态走 panel:stream 事件
+		return defaultRPCDeadline
 	}
-	return 30 * time.Second
+	return defaultRPCDeadline
 }
 
-func isStreamTerminal(stream *panelpb.PanelStream) bool {
-	return stream.GetFinal() != nil || stream.GetError() != nil
+func (b *Bridge) pickSlot() *connSlot {
+	b.mu.Lock()
+	slots := b.slots
+	b.mu.Unlock()
+	if len(slots) == 0 {
+		return nil
+	}
+	i := b.next.Add(1) % uint64(len(slots))
+	return slots[i]
 }
 
-// connWorker: 从全局队列取请求, 在本连接上写帧, 读帧直到匹配 id (跳过 stream push)。
-func (b *Bridge) connWorker(ctx context.Context, conn net.Conn, reader *bufio.Reader) {
-	remote := conn.RemoteAddr().String()
+// runConn: 每连接一个 writer 循环 + 独立 reader goroutine 多路复用响应/流式 push。
+func (b *Bridge) runConn(ctx context.Context, slot *connSlot) {
+	remote := slot.conn.RemoteAddr().String()
+	pending := sync.Map{}
+
+	go b.connReader(ctx, slot, &pending, remote)
+
 	go func() {
 		<-ctx.Done()
-		_ = conn.Close()
+		_ = slot.conn.Close()
 	}()
 
-	for req := range b.queue {
-		if _, err := conn.Write(req.body); err != nil {
-			req.ch <- callResult{err: fmt.Errorf("write: %w", err)}
-			b.markConnBroken(conn, remote)
+	for pc := range slot.reqQ {
+		pending.Store(pc.id, pendingReply{method: pc.method, ch: pc.ch})
+
+		slot.writeMu.Lock()
+		_, err := slot.conn.Write(pc.body)
+		slot.writeMu.Unlock()
+		if err != nil {
+			pending.Delete(pc.id)
+			pc.ch <- callResult{err: fmt.Errorf("write: %w", err)}
+			b.markSlotBroken(slot, remote)
 			return
 		}
-
-		var result callResult
-		gotResponse := false
-		for {
-			frame, err := readPanelFrame(reader)
-			if err != nil {
-				result = callResult{err: fmt.Errorf("read: %w", err)}
-				b.markConnBroken(conn, remote)
-				req.ch <- result
-				return
-			}
-			if resp := frame.GetResponse(); resp != nil {
-				if resp.GetId() == req.id {
-					r, decErr := decodePanelResponse(req.method, resp)
-					result = callResult{result: r, err: decErr}
-					gotResponse = true
-					// send 的 PanelResponse 立即返回; 流式 chunk/final 仍在同连接上推送,
-					// 必须继续读直到 final/error, 否则 worker 阻塞在 queue 上导致流事件丢失。
-					if req.method != "send" {
-						break
-					}
-					continue
-				}
-				log.Printf("[brain] worker skip orphan response id=%d want=%d", resp.GetId(), req.id)
-				continue
-			}
-			if stream := frame.GetStream(); stream != nil {
-				emitPanelStream(stream)
-				if gotResponse && req.method == "send" && isStreamTerminal(stream) {
-					break
-				}
-				continue
-			}
-		}
-		req.ch <- result
 	}
 }
 
-func (b *Bridge) markConnBroken(conn net.Conn, remote string) {
+func (b *Bridge) connReader(ctx context.Context, slot *connSlot, pending *sync.Map, remote string) {
+	reader := bufio.NewReaderSize(slot.conn, 64*1024)
+	for {
+		if ctx.Err() != nil {
+			return
+		}
+		frame, err := readPanelFrame(reader)
+		if err != nil {
+			log.Printf("[brain] reader %s exit: %v", remote, err)
+			pending.Range(func(k, v any) bool {
+				pr := v.(pendingReply)
+				pr.ch <- callResult{err: fmt.Errorf("read: %w", err)}
+				pending.Delete(k)
+				return true
+			})
+			b.markSlotBroken(slot, remote)
+			return
+		}
+		if resp := frame.GetResponse(); resp != nil {
+			if v, ok := pending.Load(resp.GetId()); ok {
+				pr := v.(pendingReply)
+				pending.Delete(resp.GetId())
+				r, decErr := decodePanelResponse(pr.method, resp)
+				pr.ch <- callResult{result: r, err: decErr}
+			} else {
+				log.Printf("[brain] orphan response id=%d from %s", resp.GetId(), remote)
+			}
+			continue
+		}
+		if stream := frame.GetStream(); stream != nil {
+			emitPanelStream(stream)
+		}
+	}
+}
+
+func (b *Bridge) markSlotBroken(slot *connSlot, remote string) {
 	b.mu.Lock()
-	for i, c := range b.conns {
-		if c == conn {
-			b.conns = append(b.conns[:i], b.conns[i+1:]...)
+	for i, s := range b.slots {
+		if s == slot {
+			b.slots = append(b.slots[:i], b.slots[i+1:]...)
 			break
 		}
 	}
 	ctx := b.ctx
+	poolSize := b.poolSize
+	needReconnect := len(b.slots) < poolSize
 	b.mu.Unlock()
-	_ = conn.Close()
-	if ctx != nil && ctx.Err() == nil {
+
+	_ = slot.conn.Close()
+	if needReconnect && ctx != nil && ctx.Err() == nil {
 		go b.reconnectLoop(ctx)
 	}
 }
@@ -276,7 +316,7 @@ func (b *Bridge) reconnectLoop(ctx context.Context) {
 
 		b.mu.Lock()
 		addr := b.addr
-		if len(b.conns) >= b.poolSize {
+		if len(b.slots) >= b.poolSize {
 			b.mu.Unlock()
 			return
 		}
@@ -287,16 +327,21 @@ func (b *Bridge) reconnectLoop(ctx context.Context) {
 			continue
 		}
 
+		slot := &connSlot{
+			conn: conn,
+			reqQ: make(chan pendingCall, 16),
+		}
+
 		b.mu.Lock()
 		if b.ctx == nil || b.ctx.Err() != nil {
 			b.mu.Unlock()
 			_ = conn.Close()
 			return
 		}
-		b.conns = append(b.conns, conn)
+		b.slots = append(b.slots, slot)
 		b.mu.Unlock()
 
-		go b.connWorker(ctx, conn, bufio.NewReaderSize(conn, 64*1024))
+		go b.runConn(ctx, slot)
 	}
 }
 
