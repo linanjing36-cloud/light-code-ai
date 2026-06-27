@@ -48,7 +48,7 @@
     session_prompt = <<>> :: binary(),
     api_key = <<>> :: binary(),
     api_base = <<>> :: binary(),
-    %% 工具描述列表 (ToolDesc map): #{name, description, parameters_json}
+    %% 统一能力描述列表 (兼容旧 ToolDesc): #{name, description, parameters_json, kind, source, ...}
     tools = [] :: [map()],
     %% 对话历史 (Message map): #{role, content, tool_calls, tool_call_id}
     history = [] :: [map()],
@@ -207,10 +207,21 @@ thinking(enter, _OldState, Data) ->
     Summaries = query_session_summaries(Data#data.session_id),
     Snippets = query_memory_snippets(Data#data.session_id, Data#data.history),
     Phase = detect_prompt_phase(Data),
+    SelectionCtx = #{
+        history => Data#data.history,
+        session_prompt => Data#data.session_prompt,
+        loop_count => Data#data.loop_count,
+        max_loops => Data#data.max_loops,
+        prompt_phase => Phase
+    },
+    VisibleTools = capability_selector:select(Data#data.tools, SelectionCtx),
+    HiddenTools = capability_selector:dropped(Data#data.tools, SelectionCtx),
+    lager:info("capability_selector selected=~p hidden=~p",
+               [[maps:get(name, T, <<>>) || T <- VisibleTools], HiddenTools]),
     maybe_schedule_mid_session_summary(Data#data.session_id, length(Data#data.history)),
     Req = context_assembler:build(Data#data.model, #{
         history => Data#data.history,
-        tools => Data#data.tools,
+        tools => VisibleTools,
         failure_cases => Cases,
         session_summaries => Summaries,
         memory_snippets => Snippets,

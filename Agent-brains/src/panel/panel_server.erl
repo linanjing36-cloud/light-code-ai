@@ -394,7 +394,10 @@ handle_method(<<"start_session">>, ArgsMap, _ConnPid) ->
     SessionId = generate_session_id(),
     FSMArgs = [{session_id, SessionId},
                {model, Model},
-               {tools, panel_tools:default_tool_descs()},
+               %% 会话启动时直接注入统一 capability 描述。
+               %% 后续在 agent_fsm/thinking(enter) 中再做基于上下文的裁剪，
+               %% 保证真正暴露给模型的是 Erlang 侧筛过的一致能力集。
+               {tools, panel_tools:fetch_capability_descs()},
                {session_prompt, SystemPrompt},
                {api_key, ApiKey},
                {api_base, ApiBase},
