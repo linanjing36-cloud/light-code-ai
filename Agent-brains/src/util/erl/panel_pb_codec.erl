@@ -205,8 +205,13 @@ decode_stream(Stream) ->
 %%%===================================================================
 
 %% ---- Args (request) ----
-encode_args(<<"start_session">>, #{system_prompt := SP}) ->
-    ?PANEL_PB:encode_msg(#{system_prompt => SP}, 'StartSessionArgs');
+encode_args(<<"start_session">>, Args) ->
+    ?PANEL_PB:encode_msg(#{
+        system_prompt => maps:get(system_prompt, Args, <<>>),
+        model => maps:get(model, Args, <<>>),
+        api_key => maps:get(api_key, Args, <<>>),
+        api_base => maps:get(api_base, Args, <<>>)
+    }, 'StartSessionArgs');
 encode_args(<<"send">>, #{session_id := SessId, message := Msg}) ->
     ?PANEL_PB:encode_msg(#{session_id => SessId, message => Msg}, 'SendArgs');
 encode_args(<<"approve">>, #{req_id := ReqId, allow := Allow}) ->
@@ -221,7 +226,10 @@ encode_args(_NoArgsMethod, _ArgsMap) ->
 
 decode_args(<<"start_session">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'StartSessionArgs'),
-    #{system_prompt => maps:get(system_prompt, M, <<>>)};
+    #{system_prompt => maps:get(system_prompt, M, <<>>),
+      model => maps:get(model, M, <<>>),
+      api_key => maps:get(api_key, M, <<>>),
+      api_base => maps:get(api_base, M, <<>>)};
 decode_args(<<"send">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'SendArgs'),
     #{session_id => maps:get(session_id, M, <<>>),

@@ -11,5 +11,6 @@ export {
     HistoryEntry,
     SendResult,
     SessionInfo,
+    SessionStartRequest,
     ToolDesc
 } from "./models.js";

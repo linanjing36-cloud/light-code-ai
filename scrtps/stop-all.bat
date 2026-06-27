@@ -18,6 +18,13 @@ call "%SCRIPT_DIR%stop-wails.bat" %FORCE%
 
 echo [2/3] Agent-brains ...
 call "%SCRIPT_DIR%stop.bat" %FORCE%
+REM 兜底: 仍有 erl 残留则强杀 (节点名 hermes_brains 占用会导致无法重启)
+tasklist /FI "IMAGENAME eq erl.exe" 2>nul | find /I "erl.exe" >nul
+if not errorlevel 1 (
+    echo        清理残留 erl.exe ...
+    taskkill /F /IM erl.exe >nul 2>&1
+    taskkill /F /IM beam.smp.exe >nul 2>&1
+)
 
 echo [3/3] Eion-tools (bin/eion_bin) ...
 tasklist /FI "IMAGENAME eq eion-tools-server.exe" 2>nul | find /I "eion-tools-server.exe" >nul

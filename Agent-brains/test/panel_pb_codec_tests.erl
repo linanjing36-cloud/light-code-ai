@@ -3,7 +3,10 @@
 -include_lib("eunit/include/eunit.hrl").
 
 start_session_roundtrip_test() ->
-    Args = #{system_prompt => <<"你是 Hermes">>},
+    Args = #{system_prompt => <<"你是 Hermes">>,
+             model => <<"deepseek-v4-pro">>,
+             api_key => <<"sk-test">>,
+             api_base => <<"https://api.deepseek.com">>},
     Bin = panel_pb_codec:pack_request(1, <<"start_session">>, Args),
     ?assert(is_binary(Bin)),
     {request, 1, <<"start_session">>, DecArgs} = panel_pb_codec:unpack_frame(Bin),

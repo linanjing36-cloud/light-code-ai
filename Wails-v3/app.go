@@ -43,11 +43,21 @@ type SessionInfo struct {
 	Started   bool   `json:"started"`
 }
 
+// SessionStartRequest 新建会话参数 (模型/凭证可按会话覆盖 app env)
+type SessionStartRequest struct {
+	SystemPrompt string `json:"system_prompt"`
+	Model        string `json:"model"`
+	ApiKey       string `json:"api_key"`
+	ApiBase      string `json:"api_base"`
+}
+
 // StartSession 启动一个新的 Agent 会话, Erlang 侧会派发一个 Agent_FSM 进程。
-// systemPrompt: 系统提示词 (定义 agent 角色/约束), 可为空使用默认值。
-func (s *HermesService) StartSession(systemPrompt string) (*SessionInfo, error) {
+func (s *HermesService) StartSession(req SessionStartRequest) (*SessionInfo, error) {
 	out, err := s.brain.Call("start_session", map[string]any{
-		"system_prompt": systemPrompt,
+		"system_prompt": req.SystemPrompt,
+		"model":         req.Model,
+		"api_key":       req.ApiKey,
+		"api_base":      req.ApiBase,
 	})
 	if err != nil {
 		return nil, err

@@ -128,6 +128,58 @@ export class SessionInfo {
 }
 
 /**
+ * SessionStartRequest 新建会话参数 (模型/凭证可按会话覆盖 app env)
+ */
+export class SessionStartRequest {
+    /**
+     * Creates a new SessionStartRequest instance.
+     * @param {Partial<SessionStartRequest>} [$$source = {}] - The source object to create the SessionStartRequest.
+     */
+    constructor($$source = {}) {
+        if (!("system_prompt" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["system_prompt"] = "";
+        }
+        if (!("model" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["model"] = "";
+        }
+        if (!("api_key" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["api_key"] = "";
+        }
+        if (!("api_base" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["api_base"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new SessionStartRequest instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {SessionStartRequest}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new SessionStartRequest(/** @type {Partial<SessionStartRequest>} */($$parsedSource));
+    }
+}
+
+/**
  * ToolDesc 工具描述 (与 panel.proto ListToolsResult 对齐)
  */
 export class ToolDesc {

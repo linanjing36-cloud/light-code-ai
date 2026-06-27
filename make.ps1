@@ -21,7 +21,8 @@ make.ps1 - Hermes Agent 大脑构建与运行 (Windows / PowerShell 版, Makefil
 
 param(
     [Parameter(Position = 0)]
-    [string]$Target = ""
+    [string]$Target = "",
+    [switch]$Force
 )
 
 $ErrorActionPreference = "Stop"
@@ -519,16 +520,59 @@ function Apply-MemoryEnv {
     if (-not $env:HERMES_EMBEDDING_DIM) { $env:HERMES_EMBEDDING_DIM = "1536" }
 }
 
-function Test-AgentRunning {
-    if (-not (Test-CommandExists "erl")) { return $false }
+function Test-AgentHealthy {
+    param([string]$PanelAddrFile)
+    if (-not (Test-Path $PanelAddrFile)) { return $false }
+    if (-not (Test-CommandExists "erl")) { return $true }
     & erl -noshell -eval "case net_adm:names() of {ok, Ns} -> case lists:member(hermes_brains, Ns) of true -> halt(0); false -> halt(1) end; _ -> halt(1) end." 2>$null | Out-Null
     return ($LASTEXITCODE -eq 0)
 }
 
+function Test-ErlProcessRunning {
+    return [bool](Get-Process -Name "erl" -ErrorAction SilentlyContinue)
+}
+
 function Invoke-StopAll {
+    param([switch]$Force)
     $bat = Join-Path $ScrtpsDir "stop-all.bat"
     if (-not (Test-Path $bat)) { throw "未找到 $bat" }
-    & cmd /c $bat
+    if ($Force) {
+        & cmd /c "$bat -f"
+    } else {
+        & cmd /c $bat
+    }
+}
+
+function Invoke-Status {
+    $RunDir = Join-Path $BinDir "run"
+    $PanelAddrFile = Join-Path $RunDir "panel.addr"
+    $EionAddrFile = Join-Path $RunDir "eion-tools.addr"
+    Write-Host ""
+    Write-Host "Hermes 进程状态"
+    Write-Host "----------------"
+    $tools = Get-Process -Name "eion-tools-server" -ErrorAction SilentlyContinue
+    Write-Host ("  Eion-tools:    " + $(if ($tools) { "运行中 PID=$($tools.Id -join ',')" } else { "未运行" }))
+    $erl = Get-Process -Name "erl" -ErrorAction SilentlyContinue
+    Write-Host ("  erl.exe:       " + $(if ($erl) { "运行中 PID=$($erl.Id -join ',')" } else { "未运行" }))
+    $healthy = Test-AgentHealthy -PanelAddrFile $PanelAddrFile
+    Write-Host ("  Agent 健康:    " + $(if ($healthy) { "正常" } elseif ($erl) { "异常 (erl 在跑但 panel 不可用)" } else { "未运行" }))
+    if (Test-Path $PanelAddrFile) {
+        Write-Host ("  panel.addr:    " + (Get-Content $PanelAddrFile -Raw).Trim())
+    } else {
+        Write-Host "  panel.addr:    (缺失)"
+    }
+    if (Test-Path $EionAddrFile) {
+        Write-Host ("  eion-tools.addr: " + (Get-Content $EionAddrFile -Raw).Trim())
+    } else {
+        Write-Host "  eion-tools.addr: (缺失)"
+    }
+    $wails = Get-Process -Name "hermes" -ErrorAction SilentlyContinue
+    Write-Host ("  Wails UI:      " + $(if ($wails) { "运行中" } else { "未运行" }))
+    if ($erl -and -not $healthy) {
+        Write-Host ""
+        Write-Host "  提示: 节点名 hermes_brains 可能被占用, 请执行: .\make.ps1 stop-all"
+    }
+    Write-Host ""
 }
 
 function Invoke-StartAll {
@@ -578,19 +622,45 @@ function Invoke-StartAll {
         }
     }
 
-    if (-not (Test-AgentRunning)) {
+    if (Test-AgentHealthy -PanelAddrFile $PanelAddrFile) {
+        Write-Host "[2/3] Agent-brains 已在运行, 跳过"
+        Write-Host "       panel_server @ $((Get-Content $PanelAddrFile -Raw).Trim())"
+    } elseif (Test-ErlProcessRunning) {
+        Write-Host "[2/3] 检测到残留 erl (hermes_brains 节点占用), 正在清理..."
+        Invoke-StopAll -Force
+        Start-Sleep -Seconds 2
         Write-Host "[2/3] 启动 Agent-brains ..."
         Remove-Item $PanelAddrFile -ErrorAction SilentlyContinue
         Start-Process -FilePath "cmd.exe" `
             -ArgumentList "/k", "`"$StartAgentBat`"" `
             -WorkingDirectory $ScrtpsDir `
             -WindowStyle Normal | Out-Null
-        $panelAddr = Wait-AddrFile -Path $PanelAddrFile -TimeoutSec 45 -Label "panel_server"
-        Write-Host "       panel_server @ $panelAddr"
+        try {
+            $panelAddr = Wait-AddrFile -Path $PanelAddrFile -TimeoutSec 45 -Label "panel_server"
+            Write-Host "       panel_server @ $panelAddr"
+        } catch {
+            Write-Host ""
+            Write-Host "[error] Agent-brains 启动失败: $_"
+            Write-Host "        请查看 'Hermes Agent-brains' 控制台窗口的错误信息"
+            Write-Host "        或执行: .\make.ps1 stop-all  后重试"
+            throw
+        }
     } else {
-        Write-Host "[2/3] Agent-brains 已在运行, 跳过"
-        if (Test-Path $PanelAddrFile) {
-            Write-Host "       panel_server @ $((Get-Content $PanelAddrFile -Raw).Trim())"
+        Write-Host "[2/3] 启动 Agent-brains ..."
+        Remove-Item $PanelAddrFile -ErrorAction SilentlyContinue
+        Start-Process -FilePath "cmd.exe" `
+            -ArgumentList "/k", "`"$StartAgentBat`"" `
+            -WorkingDirectory $ScrtpsDir `
+            -WindowStyle Normal | Out-Null
+        try {
+            $panelAddr = Wait-AddrFile -Path $PanelAddrFile -TimeoutSec 45 -Label "panel_server"
+            Write-Host "       panel_server @ $panelAddr"
+        } catch {
+            Write-Host ""
+            Write-Host "[error] Agent-brains 启动失败: $_"
+            Write-Host "        常见原因: 上次 erl 未退出 (节点名 hermes_brains 占用)"
+            Write-Host "        解决: .\make.ps1 stop-all  然后 .\make.ps1 start-all-ui"
+            throw
         }
     }
 
@@ -628,6 +698,8 @@ function Show-Help {
     Write-Host "  start-all-ui  一键启动 + Wails UI"
     Write-Host "  stop     优雅停止 Agent 大脑 (rpc init:stop 触发 app terminate)"
     Write-Host "  stop-all 一键停止 Wails + Agent + Eion-tools"
+    Write-Host "  stop-all -Force  强制停止 (等同 stop-all.bat -f)"
+    Write-Host "  status   查看进程与端口文件状态"
     Write-Host "  clean    清理编译产物与 bin\erl_bin\"
     Write-Host "  test     跑 Eion-tools go test + Agent-brains eunit"
     Write-Host "  help     显示此帮助"
@@ -653,10 +725,11 @@ switch ($Target) {
     "start-all"    { Invoke-StartAll }
     "start-all-ui" { Invoke-StartAll -Wails }
     "stop"   { Invoke-Stop }
-    "stop-all" { Invoke-StopAll }
+    "stop-all" { if ($Force) { Invoke-StopAll -Force } else { Invoke-StopAll } }
+    "status"   { Invoke-Status }
     "clean"  { Invoke-Clean }
     "test"   { Invoke-Test }
     "help"   { Show-Help }
     ""       { Show-Help }
-    default  { Write-Host "未知目标: $Target (可用: bin / env / agent / tools / wails_v3 / run / start-all / start-all-ui / stop / stop-all / clean / test / help)"; exit 1 }
+    default  { Write-Host "未知目标: $Target (可用: bin / env / agent / tools / wails_v3 / run / start-all / start-all-ui / stop / stop-all / status / clean / test / help)"; exit 1 }
 }

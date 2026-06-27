@@ -46,6 +46,8 @@
     session_id :: binary(),
     model :: binary(),
     session_prompt = <<>> :: binary(),
+    api_key = <<>> :: binary(),
+    api_base = <<>> :: binary(),
     %% 工具描述列表 (ToolDesc map): #{name, description, parameters_json}
     tools = [] :: [map()],
     %% 对话历史 (Message map): #{role, content, tool_calls, tool_call_id}
@@ -97,8 +99,10 @@ init(Args) ->
     Tools = proplists:get_value(tools, Args, []),
     History0 = proplists:get_value(history, Args, []),
     SessionPrompt = proplists:get_value(session_prompt, Args, <<>>),
+    ApiKey = proplists:get_value(api_key, Args, <<>>),
+    ApiBase = proplists:get_value(api_base, Args, <<>>),
     ok = state_store:register_session(SessionId, self()),
-    case load_recovered_snapshot(SessionId, Model, Tools, History0, SessionPrompt) of
+    case load_recovered_snapshot(SessionId, Model, Tools, History0, SessionPrompt, ApiKey, ApiBase) of
         {ok, StateName, Data} ->
             lager:info("agent_fsm resume session_id=~p state=~p loop=~p/~p history_len=~p",
                        [SessionId, StateName, Data#data.loop_count,
@@ -111,25 +115,26 @@ init(Args) ->
                          tools = Tools,
                          history = History0,
                          session_prompt = SessionPrompt,
+                         api_key = ApiKey,
+                         api_base = ApiBase,
                          max_loops = ?MAX_LOOPS},
             {ok, idle, Data}
     end.
 
 %% 从 state_store 恢复快照; 无快照则走全新会话。
-load_recovered_snapshot(SessionId, Model, Tools, History0, SessionPrompt) ->
+load_recovered_snapshot(SessionId, Model, Tools, History0, SessionPrompt, ApiKey, ApiBase) ->
     case state_store:get_snapshot(SessionId) of
         {ok, {StateName, #data{} = Saved}}
           when StateName =:= idle; StateName =:= thinking; StateName =:= acting ->
-            {ok, StateName, sanitize_recovered(Saved, Model, Tools, History0, SessionPrompt)};
+            {ok, StateName, sanitize_recovered(Saved, Model, Tools, History0, SessionPrompt, ApiKey, ApiBase)};
         {ok, #data{} = Saved} ->
-            %% 兼容旧快照 (仅 #data{}, 无状态名)
-            {ok, idle, sanitize_recovered(Saved, Model, Tools, History0, SessionPrompt)};
+            {ok, idle, sanitize_recovered(Saved, Model, Tools, History0, SessionPrompt, ApiKey, ApiBase)};
         not_found ->
             fresh
     end.
 
 %% 恢复时清除已失效的异步引用; acting 保留 pending_tool_calls 以便 enter 重派发。
-sanitize_recovered(Saved, Model, Tools, History0, SessionPrompt) ->
+sanitize_recovered(Saved, Model, Tools, History0, SessionPrompt, ApiKey, ApiBase) ->
     Hist = case History0 of
                [] -> Saved#data.history;
                _ -> History0
@@ -138,19 +143,29 @@ sanitize_recovered(Saved, Model, Tools, History0, SessionPrompt) ->
                  <<>> -> Saved#data.session_prompt;
                  _ -> SessionPrompt
              end,
-    Base = Saved#data{
+    Key = case ApiKey of
+              <<>> -> Saved#data.api_key;
+              _ -> ApiKey
+          end,
+    Base = case ApiBase of
+               <<>> -> Saved#data.api_base;
+               _ -> ApiBase
+           end,
+    SavedBase = Saved#data{
         model = Model,
         tools = Tools,
         history = Hist,
         session_prompt = Prompt,
+        api_key = Key,
+        api_base = Base,
         llm_ref = undefined,
         tool_results = #{}
     },
     case Saved#data.pending_tool_calls of
         TCs when TCs =/= [], Saved#data.pending_count > 0 ->
-            Base;
+            SavedBase;
         _ ->
-            Base#data{pending_tool_calls = [], pending_count = 0}
+            SavedBase#data{pending_tool_calls = [], pending_count = 0}
     end.
 
 callback_mode() ->
@@ -202,9 +217,8 @@ thinking(enter, _OldState, Data) ->
         prompt_phase => Phase,
         session_prompt => Data#data.session_prompt
     }),
-    %% 异步投递 LLMInferRequest → bridge_manager → Eion-tools (Eino ChatModel 调 LLM API)
-    %% Erlang 侧不直连 LLM; 只等 {llm_response, Ref, Resp} 回链。
-    Ref = bridge_manager:call_llm(self(), Req),
+    Req1 = maybe_inject_session_creds(Req, Data),
+    Ref = bridge_manager:call_llm(self(), Req1),
     lager:info("llm request dispatched, ref=~p", [Ref]),
     Data1 = Data#data{llm_ref = Ref},
     ok = snapshot(thinking, Data1),
@@ -525,6 +539,11 @@ looks_like_tool_error(Content) when is_binary(Content) ->
          binary:match(Content, <<"not found">>) =/= nomatch);
 looks_like_tool_error(_) ->
     false.
+
+maybe_inject_session_creds(Req, #data{api_key = <<>>}) ->
+    Req;
+maybe_inject_session_creds(Req, #data{api_key = Key, api_base = Base}) ->
+    Req#{api_key => Key, api_base => Base}.
 
 %% 记录失败案例 (防御性: 写入失败不阻断 FSM 主流程)
 record_case(CaseMap) ->

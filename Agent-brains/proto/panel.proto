@@ -81,7 +81,12 @@ message StreamError {
 }
 
 // ---- 方法参数 ----
-message StartSessionArgs { string system_prompt = 1; }
+message StartSessionArgs {
+  string system_prompt = 1;
+  string model = 2;       // 空则 Erlang 侧 default_model
+  string api_key = 3;     // 空则 api-key.json / app env
+  string api_base = 4;    // 空则 app env (如 https://api.deepseek.com)
+}
 message SendArgs { string session_id = 1; string message = 2; }
 message ApproveArgs { string req_id = 1; bool allow = 2; }
 message BrainStatusArgs { string session_id = 1; }

@@ -27,10 +27,32 @@ for /f "delims=" %%H in ('hostname') do set "HOST=%%H"
 set "TARGET_NODE=%NODE_NAME%@%HOST%"
 
 REM 检查节点是否在 epmd 注册
-epmd -names 2>nul | findstr "name %NODE_NAME%" >nul
-if errorlevel 1 (
-    echo ==> Agent 大脑未运行 (epmd 未找到节点 %NODE_NAME%)
+set "EPMD_OK=0"
+where epmd >nul 2>&1
+if not errorlevel 1 (
+    epmd -names 2>nul | findstr /I "name %NODE_NAME%" >nul
+    if not errorlevel 1 set "EPMD_OK=1"
+)
+
+if "%EPMD_OK%"=="0" (
+    tasklist /FI "IMAGENAME eq erl.exe" 2>nul | find /I "erl.exe" >nul
+    if errorlevel 1 (
+        echo ==> Agent 大脑未运行
+        if exist "%PID_FILE%" del "%PID_FILE%"
+        exit /b 0
+    )
+    echo ==> epmd 未找到节点 %NODE_NAME%, 但检测到残留 erl.exe, 正在清理...
+    if "%FORCE%"=="1" (
+        taskkill /F /IM erl.exe >nul 2>&1
+    ) else (
+        taskkill /IM erl.exe >nul 2>&1
+        timeout /t 2 /nobreak >nul
+        tasklist /FI "IMAGENAME eq erl.exe" 2>nul | find /I "erl.exe" >nul
+        if not errorlevel 1 taskkill /F /IM erl.exe >nul 2>&1
+    )
+    taskkill /F /IM beam.smp.exe >nul 2>&1
     if exist "%PID_FILE%" del "%PID_FILE%"
+    echo ==> 残留 erl 已清理
     exit /b 0
 )
 

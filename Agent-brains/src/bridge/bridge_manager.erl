@@ -152,12 +152,7 @@ handle_call(_Request, _From, State) ->
 
 handle_cast({call_llm, FsmPid, Ref, Req}, State) ->
     lager:info("call_llm queued, ref=~p, fsm_pid=~p", [Ref, FsmPid]),
-    %% 注入凭证 (来自 app env, 不来自 FSM)
-    ApiBase = application:get_env(hermes_brains, api_base, <<>>),
-    ApiKey = application:get_env(hermes_brains, api_key, <<>>),
-    BizReq = Req#{kind => llm_infer,
-                  api_base => ApiBase,
-                  api_key => ApiKey},
+    BizReq = inject_llm_creds(Req),
     Payload = pb_codec:encode_req(BizReq),
     Item = {Ref, FsmPid, llm, undefined, Payload, ?LLM_TIMEOUT},
     {noreply, dispatch(State, Item)};
@@ -576,3 +571,16 @@ index_of_conn(Conns, Sock) ->
 index_of_conn([#conn{socket = S} | _], Sock, Idx) when S =:= Sock -> Idx;
 index_of_conn([_ | Rest], Sock, Idx) -> index_of_conn(Rest, Sock, Idx + 1);
 index_of_conn([], _Sock, _Idx) -> 0.
+
+inject_llm_creds(Req) when is_map(Req) ->
+    DefaultBase = application:get_env(hermes_brains, api_base, <<>>),
+    DefaultKey = application:get_env(hermes_brains, api_key, <<>>),
+    Base = case maps:get(api_base, Req, <<>>) of
+               <<>> -> DefaultBase;
+               B -> B
+           end,
+    Key = case maps:get(api_key, Req, <<>>) of
+              <<>> -> DefaultKey;
+              K -> K
+          end,
+    Req#{kind => llm_infer, api_base => Base, api_key => Key}.

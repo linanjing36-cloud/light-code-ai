@@ -77,12 +77,11 @@ export function Send(sessionID, message) {
 
 /**
  * StartSession 启动一个新的 Agent 会话, Erlang 侧会派发一个 Agent_FSM 进程。
- * systemPrompt: 系统提示词 (定义 agent 角色/约束), 可为空使用默认值。
- * @param {string} systemPrompt
+ * @param {$models.SessionStartRequest} req
  * @returns {$CancellablePromise<$models.SessionInfo | null>}
  */
-export function StartSession(systemPrompt) {
-    return $Call.ByID(3191461447, systemPrompt).then(/** @type {($result: any) => any} */(($result) => {
+export function StartSession(req) {
+    return $Call.ByID(3191461447, req).then(/** @type {($result: any) => any} */(($result) => {
         return $$createType8($result);
     }));
 }

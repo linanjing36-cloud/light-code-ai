@@ -104,7 +104,10 @@
        }.
 
 -type 'StartSessionArgs'() ::
-      #{system_prompt           => unicode:chardata() % = 1, optional
+      #{system_prompt           => unicode:chardata(), % = 1, optional
+        model                   => unicode:chardata(), % = 2, optional
+        api_key                 => unicode:chardata(), % = 3, optional
+        api_base                => unicode:chardata() % = 4, optional
        }.
 
 -type 'SendArgs'() ::
@@ -470,16 +473,49 @@ encode_msg_StartSessionArgs(Msg, TrUserData) -> encode_msg_StartSessionArgs(Msg,
 
 
 encode_msg_StartSessionArgs(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{system_prompt := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{model := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     case is_empty_string(TrF2) of
+                         true -> B1;
+                         false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    B3 = case M of
+             #{api_key := F3} ->
+                 begin
+                     TrF3 = id(F3, TrUserData),
+                     case is_empty_string(TrF3) of
+                         true -> B2;
+                         false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                     end
+                 end;
+             _ -> B2
+         end,
     case M of
-        #{system_prompt := F1} ->
+        #{api_base := F4} ->
             begin
-                TrF1 = id(F1, TrUserData),
-                case is_empty_string(TrF1) of
-                    true -> Bin;
-                    false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                TrF4 = id(F4, TrUserData),
+                case is_empty_string(TrF4) of
+                    true -> B3;
+                    false -> e_type_string(TrF4, <<B3/binary, 34>>, TrUserData)
                 end
             end;
-        _ -> Bin
+        _ -> B3
     end.
 
 encode_msg_SendArgs(Msg, TrUserData) -> encode_msg_SendArgs(Msg, <<>>, TrUserData).
@@ -1587,49 +1623,70 @@ skip_32_StreamError(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_r
 
 skip_64_StreamError(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_StreamError(Rest, Z1, Z2, F, F@_1, TrUserData).
 
-decode_msg_StartSessionArgs(Bin, TrUserData) -> dfp_read_field_def_StartSessionArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), TrUserData).
+decode_msg_StartSessionArgs(Bin, TrUserData) -> dfp_read_field_def_StartSessionArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
 
-dfp_read_field_def_StartSessionArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_StartSessionArgs_system_prompt(Rest, Z1, Z2, F, F@_1, TrUserData);
-dfp_read_field_def_StartSessionArgs(<<>>, 0, 0, _, F@_1, _) -> #{system_prompt => F@_1};
-dfp_read_field_def_StartSessionArgs(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_StartSessionArgs(Other, Z1, Z2, F, F@_1, TrUserData).
+dfp_read_field_def_StartSessionArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_StartSessionArgs_system_prompt(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_StartSessionArgs(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_StartSessionArgs_model(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_StartSessionArgs(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_StartSessionArgs_api_key(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_StartSessionArgs(<<34, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_StartSessionArgs_api_base(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_StartSessionArgs(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, _) -> #{system_prompt => F@_1, model => F@_2, api_key => F@_3, api_base => F@_4};
+dfp_read_field_def_StartSessionArgs(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dg_read_field_def_StartSessionArgs(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
-dg_read_field_def_StartSessionArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_StartSessionArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
-dg_read_field_def_StartSessionArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+dg_read_field_def_StartSessionArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 32 - 7 -> dg_read_field_def_StartSessionArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dg_read_field_def_StartSessionArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-        10 -> d_field_StartSessionArgs_system_prompt(Rest, 0, 0, 0, F@_1, TrUserData);
+        10 -> d_field_StartSessionArgs_system_prompt(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        18 -> d_field_StartSessionArgs_model(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        26 -> d_field_StartSessionArgs_api_key(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        34 -> d_field_StartSessionArgs_api_base(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
         _ ->
             case Key band 7 of
-                0 -> skip_varint_StartSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
-                1 -> skip_64_StartSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
-                2 -> skip_length_delimited_StartSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
-                3 -> skip_group_StartSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
-                5 -> skip_32_StartSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+                0 -> skip_varint_StartSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                1 -> skip_64_StartSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                2 -> skip_length_delimited_StartSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                3 -> skip_group_StartSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                5 -> skip_32_StartSessionArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData)
             end
     end;
-dg_read_field_def_StartSessionArgs(<<>>, 0, 0, _, F@_1, _) -> #{system_prompt => F@_1}.
+dg_read_field_def_StartSessionArgs(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, _) -> #{system_prompt => F@_1, model => F@_2, api_key => F@_3, api_base => F@_4}.
 
-d_field_StartSessionArgs_system_prompt(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_StartSessionArgs_system_prompt(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
-d_field_StartSessionArgs_system_prompt(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+d_field_StartSessionArgs_system_prompt(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_StartSessionArgs_system_prompt(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_StartSessionArgs_system_prompt(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
-    dfp_read_field_def_StartSessionArgs(RestF, 0, 0, F, NewFValue, TrUserData).
+    dfp_read_field_def_StartSessionArgs(RestF, 0, 0, F, NewFValue, F@_2, F@_3, F@_4, TrUserData).
 
-skip_varint_StartSessionArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_StartSessionArgs(Rest, Z1, Z2, F, F@_1, TrUserData);
-skip_varint_StartSessionArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_StartSessionArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+d_field_StartSessionArgs_model(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_StartSessionArgs_model(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_StartSessionArgs_model(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_StartSessionArgs(RestF, 0, 0, F, F@_1, NewFValue, F@_3, F@_4, TrUserData).
 
-skip_length_delimited_StartSessionArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_StartSessionArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
-skip_length_delimited_StartSessionArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+d_field_StartSessionArgs_api_key(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_StartSessionArgs_api_key(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_StartSessionArgs_api_key(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_StartSessionArgs(RestF, 0, 0, F, F@_1, F@_2, NewFValue, F@_4, TrUserData).
+
+d_field_StartSessionArgs_api_base(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_StartSessionArgs_api_base(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_StartSessionArgs_api_base(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_StartSessionArgs(RestF, 0, 0, F, F@_1, F@_2, F@_3, NewFValue, TrUserData).
+
+skip_varint_StartSessionArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> skip_varint_StartSessionArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_varint_StartSessionArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_StartSessionArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_length_delimited_StartSessionArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> skip_length_delimited_StartSessionArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_length_delimited_StartSessionArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_StartSessionArgs(Rest2, 0, 0, F, F@_1, TrUserData).
+    dfp_read_field_def_StartSessionArgs(Rest2, 0, 0, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
-skip_group_StartSessionArgs(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+skip_group_StartSessionArgs(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_StartSessionArgs(Rest, 0, Z2, FNum, F@_1, TrUserData).
+    dfp_read_field_def_StartSessionArgs(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
-skip_32_StartSessionArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_StartSessionArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+skip_32_StartSessionArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_StartSessionArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
-skip_64_StartSessionArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_StartSessionArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+skip_64_StartSessionArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_StartSessionArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
 decode_msg_SendArgs(Bin, TrUserData) -> dfp_read_field_def_SendArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
 
@@ -2535,10 +2592,25 @@ merge_msg_StreamError(PMsg, NMsg, _) ->
 -compile({nowarn_unused_function,merge_msg_StartSessionArgs/3}).
 merge_msg_StartSessionArgs(PMsg, NMsg, _) ->
     S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{system_prompt := NFsystem_prompt}} -> S1#{system_prompt => NFsystem_prompt};
+             {#{system_prompt := PFsystem_prompt}, _} -> S1#{system_prompt => PFsystem_prompt};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{model := NFmodel}} -> S2#{model => NFmodel};
+             {#{model := PFmodel}, _} -> S2#{model => PFmodel};
+             _ -> S2
+         end,
+    S4 = case {PMsg, NMsg} of
+             {_, #{api_key := NFapi_key}} -> S3#{api_key => NFapi_key};
+             {#{api_key := PFapi_key}, _} -> S3#{api_key => PFapi_key};
+             _ -> S3
+         end,
     case {PMsg, NMsg} of
-        {_, #{system_prompt := NFsystem_prompt}} -> S1#{system_prompt => NFsystem_prompt};
-        {#{system_prompt := PFsystem_prompt}, _} -> S1#{system_prompt => PFsystem_prompt};
-        _ -> S1
+        {_, #{api_base := NFapi_base}} -> S4#{api_base => NFapi_base};
+        {#{api_base := PFapi_base}, _} -> S4#{api_base => PFapi_base};
+        _ -> S4
     end.
 
 -compile({nowarn_unused_function,merge_msg_SendArgs/3}).
@@ -3019,7 +3091,22 @@ v_msg_StartSessionArgs(#{} = M, Path, TrUserData) ->
         #{system_prompt := F1} -> v_type_string(F1, [system_prompt | Path], TrUserData);
         _ -> ok
     end,
-    lists:foreach(fun (system_prompt) -> ok;
+    case M of
+        #{model := F2} -> v_type_string(F2, [model | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{api_key := F3} -> v_type_string(F3, [api_key | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{api_base := F4} -> v_type_string(F4, [api_base | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (api_base) -> ok;
+                      (api_key) -> ok;
+                      (model) -> ok;
+                      (system_prompt) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
                   end,
                   maps:keys(M)),
@@ -3402,7 +3489,11 @@ get_msg_defs() ->
        #{name => completion_tokens, fnum => 3, rnum => 4, type => int32, occurrence => optional, opts => []},
        #{name => loop_count, fnum => 4, rnum => 5, type => int32, occurrence => optional, opts => []}]},
      {{msg, 'StreamError'}, [#{name => message, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
-     {{msg, 'StartSessionArgs'}, [#{name => system_prompt, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'StartSessionArgs'},
+      [#{name => system_prompt, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => model, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+       #{name => api_key, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+       #{name => api_base, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []}]},
      {{msg, 'SendArgs'}, [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => message, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}]},
      {{msg, 'ApproveArgs'}, [#{name => req_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => allow, fnum => 2, rnum => 3, type => bool, occurrence => optional, opts => []}]},
      {{msg, 'BrainStatusArgs'}, [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
@@ -3533,7 +3624,11 @@ find_msg_def('FinalAnswer') ->
      #{name => completion_tokens, fnum => 3, rnum => 4, type => int32, occurrence => optional, opts => []},
      #{name => loop_count, fnum => 4, rnum => 5, type => int32, occurrence => optional, opts => []}];
 find_msg_def('StreamError') -> [#{name => message, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];
-find_msg_def('StartSessionArgs') -> [#{name => system_prompt, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];
+find_msg_def('StartSessionArgs') ->
+    [#{name => system_prompt, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => model, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+     #{name => api_key, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+     #{name => api_base, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []}];
 find_msg_def('SendArgs') -> [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => message, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}];
 find_msg_def('ApproveArgs') -> [#{name => req_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => allow, fnum => 2, rnum => 3, type => bool, occurrence => optional, opts => []}];
 find_msg_def('BrainStatusArgs') -> [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];

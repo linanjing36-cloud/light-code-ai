@@ -189,6 +189,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 .session.active .session-title{color:var(--ink)}
 .session-meta{display:flex;align-items:center;gap:8px}
 .session-time{font-family:var(--mono);font-size:10px;color:var(--ink-4)}
+.session-model{font-family:var(--mono);font-size:9px;color:var(--ink-4);opacity:.85}
 .status-pill{
   font-family:var(--mono); font-size:9px; letter-spacing:.06em;
   text-transform:uppercase; padding:2px 7px; border-radius:4px;
@@ -406,6 +407,27 @@ button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:n
 }
 .tool-mini .dot{width:6px;height:6px;border-radius:50%;background:var(--done)}
 .tool-mini .dot.off{background:var(--ink-4)}
+
+/* LLM config form */
+.config-form{display:flex;flex-direction:column;gap:10px;padding:0 4px}
+.cfg-field{display:flex;flex-direction:column;gap:5px}
+.cfg-label{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.config-form select,
+.config-form input,
+.config-form textarea{
+  width:100%;box-sizing:border-box;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:8px 10px;
+  font-family:var(--mono);font-size:11.5px;color:var(--ink);
+  outline:none;transition:.15s;
+}
+.config-form select:focus,
+.config-form input:focus,
+.config-form textarea:focus{border-color:var(--accent-dim);box-shadow:0 0 0 2px rgba(232,165,64,.08)}
+.config-form textarea{resize:vertical;min-height:64px;line-height:1.45}
+.cfg-save{width:100%;margin-top:2px}
+.cfg-hint{font-size:10px;color:var(--ink-4);line-height:1.45;margin:0}
+.cfg-hint strong{color:var(--ink-3);font-weight:500}
 
 /* scrollbars */
 ::-webkit-scrollbar{width:9px;height:9px}

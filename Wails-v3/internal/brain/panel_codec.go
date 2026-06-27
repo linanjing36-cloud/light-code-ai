@@ -33,6 +33,9 @@ func encodePanelArgs(method string, args map[string]any) ([]byte, error) {
 	case "start_session":
 		msg := &panelpb.StartSessionArgs{
 			SystemPrompt: stringArg(args, "system_prompt"),
+			Model:        stringArg(args, "model"),
+			ApiKey:       stringArg(args, "api_key"),
+			ApiBase:      stringArg(args, "api_base"),
 		}
 		return proto.Marshal(msg)
 	case "send":

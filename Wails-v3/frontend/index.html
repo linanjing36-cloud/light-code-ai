@@ -29,9 +29,9 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
         Erlang/OTP
       </div>
-      <div class="badge model" title="Default model">
+      <div class="badge model" id="model-badge" title="当前模型">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>
-        deepseek-v4-pro
+        <span id="model-badge-text">deepseek-v4-pro</span>
       </div>
       <div class="badge live" id="brain-badge">
         <span class="pulse-dot dead" id="brain-dot"></span>
@@ -46,11 +46,13 @@
   <!-- ===================== WORKSPACE ===================== -->
   <div class="workspace">
 
-    <!-- ===== LEFT RAIL: sessions ===== -->
+    <!-- ===== LEFT RAIL: sessions / chat windows ===== -->
     <aside class="rail rail-left">
       <div class="rail-header">
-        <span>Sessions</span>
-        <span class="count" id="session-count">0</span>
+        <span>聊天</span>
+        <button class="add-btn" id="btn-new-session" title="新对话">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
       </div>
       <div class="session-list" id="session-list">
         <!-- sessions dynamically populated by main.ts -->
@@ -61,9 +63,6 @@
           <div class="foot-name">zhangsan</div>
           <div class="foot-sub">local · dev mode</div>
         </div>
-        <button class="icon-btn" id="btn-new-session" title="New session">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
       </div>
     </aside>
 
@@ -85,7 +84,7 @@
       <div class="conversation" id="conv">
         <div class="empty-state">
           <div class="glyph">☿</div>
-          <div>点击左下角 + 新建一个会话</div>
+          <div>点击左侧 + 新建聊天，或在连接后自动创建</div>
         </div>
       </div>
 
@@ -139,6 +138,36 @@
             <span class="k">连接</span>
             <span class="v danger" id="ctx-conn">disconnected</span>
           </div>
+        </div>
+      </div>
+
+      <div class="ctx-section">
+        <div class="ctx-label">LLM 配置</div>
+        <div class="config-form">
+          <label class="cfg-field">
+            <span class="cfg-label">模型</span>
+            <select id="cfg-model">
+              <option value="deepseek-v4-pro">deepseek-v4-pro</option>
+              <option value="deepseek-chat">deepseek-chat</option>
+              <option value="deepseek-reasoner">deepseek-reasoner</option>
+              <option value="gpt-4o">gpt-4o</option>
+              <option value="gpt-4o-mini">gpt-4o-mini</option>
+            </select>
+          </label>
+          <label class="cfg-field">
+            <span class="cfg-label">API Base</span>
+            <input id="cfg-api-base" type="text" placeholder="https://api.deepseek.com" spellcheck="false" />
+          </label>
+          <label class="cfg-field">
+            <span class="cfg-label">API Key</span>
+            <input id="cfg-api-key" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" />
+          </label>
+          <label class="cfg-field">
+            <span class="cfg-label">系统提示词</span>
+            <textarea id="cfg-system-prompt" rows="3" placeholder="可选：定义 Agent 角色与约束"></textarea>
+          </label>
+          <button class="ghost-btn cfg-save" id="btn-save-config">保存配置</button>
+          <p class="cfg-hint">配置作用于<strong>新建</strong>会话；Key 仅存本地浏览器。</p>
         </div>
       </div>
 

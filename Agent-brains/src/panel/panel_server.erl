@@ -306,12 +306,22 @@ dispatch(_Id, Method, ArgsMap) ->
 %% ---- start_session: 派发一个 agent_fsm 进程 ----
 handle_method(<<"start_session">>, ArgsMap) ->
     SystemPrompt = maps:get(system_prompt, ArgsMap, <<>>),
+    Model = case maps:get(model, ArgsMap, <<>>) of
+                <<>> -> application:get_env(hermes_brains, default_model, <<"deepseek-v4-pro">>);
+                M -> M
+            end,
+    ApiKey = maps:get(api_key, ArgsMap, <<>>),
+    ApiBase = case maps:get(api_base, ArgsMap, <<>>) of
+                  <<>> -> application:get_env(hermes_brains, api_base, <<>>);
+                  B -> B
+              end,
     SessionId = generate_session_id(),
-    Model = application:get_env(hermes_brains, default_model, <<"deepseek-v4-pro">>),
     FSMArgs = [{session_id, SessionId},
                {model, Model},
                {tools, panel_tools:fetch_tool_descs()},
                {session_prompt, SystemPrompt},
+               {api_key, ApiKey},
+               {api_base, ApiBase},
                {history, []}],
     case agent_sup:start_agent(FSMArgs) of
         {ok, Pid} ->

@@ -11,6 +11,23 @@
 // 流式 chunk/final 由 panel:stream 事件驱动; 终态后 get_history 同步对话区。
 
 import { HermesService } from "../bindings/hermes";
+import { SessionStartRequest } from "../bindings/hermes/models.js";
+
+const CONFIG_STORAGE_KEY = "hermes_llm_config";
+
+interface LLMConfig {
+    model: string;
+    apiBase: string;
+    apiKey: string;
+    systemPrompt: string;
+}
+
+const DEFAULT_CONFIG: LLMConfig = {
+    model: "deepseek-v4-pro",
+    apiBase: "https://api.deepseek.com",
+    apiKey: "",
+    systemPrompt: "",
+};
 
 // ---- 类型 ----
 type BrainState = "idle" | "thinking" | "acting" | "unknown" | "not_found" | "error";
@@ -18,6 +35,7 @@ type BrainState = "idle" | "thinking" | "acting" | "unknown" | "not_found" | "er
 interface Session {
     id: string;
     title: string;
+    model: string;
     createdAt: number;
     lastState: BrainState;
     msgCount: number;
@@ -133,11 +151,18 @@ const conv = $("conv")!;
 const prompt = $("prompt") as HTMLTextAreaElement;
 const btnSend = $("btn-send") as HTMLButtonElement;
 const btnNewSession = $("btn-new-session") as HTMLButtonElement;
+const btnSaveConfig = $("btn-save-config") as HTMLButtonElement;
+const cfgModel = $("cfg-model") as HTMLSelectElement;
+const cfgApiBase = $("cfg-api-base") as HTMLInputElement;
+const cfgApiKey = $("cfg-api-key") as HTMLInputElement;
+const cfgSystemPrompt = $("cfg-system-prompt") as HTMLTextAreaElement;
+const modelBadgeText = $("model-badge-text")!;
+const ctxTools = $("ctx-tools")!;
 const btnStop = $("btn-stop") as HTMLButtonElement;
 const btnShutdown = $("btn-shutdown") as HTMLButtonElement;
 const btnClear = $("btn-clear") as HTMLButtonElement;
 const sessionList = $("session-list")!;
-const sessionCount = $("session-count")!;
+const sessionCount = document.getElementById("session-count");
 const canvasTitle = $("canvas-title")!;
 const canvasMeta = $("canvas-meta")!;
 const brainDot = $("brain-dot")!;
@@ -153,13 +178,80 @@ const ctxConn = $("ctx-conn")!;
 // 这里轮询探活, 等连接就绪后启用 UI
 // ============================================================
 console.log("[hermes] workbench starting");
+loadConfigToUI();
 setTimeout(checkBrainReady, 500);
+
+function loadConfig(): LLMConfig {
+    try {
+        const raw = localStorage.getItem(CONFIG_STORAGE_KEY);
+        if (!raw) return { ...DEFAULT_CONFIG };
+        return { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
+    } catch {
+        return { ...DEFAULT_CONFIG };
+    }
+}
+
+function saveConfig(cfg: LLMConfig): void {
+    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(cfg));
+    updateModelBadge(cfg.model);
+}
+
+function loadConfigToUI(): void {
+    const cfg = loadConfig();
+    cfgModel.value = cfg.model;
+    cfgApiBase.value = cfg.apiBase;
+    cfgApiKey.value = cfg.apiKey;
+    cfgSystemPrompt.value = cfg.systemPrompt;
+    updateModelBadge(cfg.model);
+}
+
+function getConfigFromUI(): LLMConfig {
+    return {
+        model: cfgModel.value || DEFAULT_CONFIG.model,
+        apiBase: cfgApiBase.value.trim(),
+        apiKey: cfgApiKey.value.trim(),
+        systemPrompt: cfgSystemPrompt.value.trim(),
+    };
+}
+
+function updateModelBadge(model: string): void {
+    modelBadgeText.textContent = model || DEFAULT_CONFIG.model;
+}
+
+btnSaveConfig.addEventListener("click", () => {
+    const cfg = getConfigFromUI();
+    saveConfig(cfg);
+    toast("LLM 配置已保存");
+});
+
+async function loadToolsList(): Promise<void> {
+    try {
+        const tools = await HermesService.ListTools();
+        if (!tools?.length) {
+            ctxTools.innerHTML = `<div class="tool-mini"><span class="dot off"></span>无可用工具</div>`;
+            return;
+        }
+        ctxTools.innerHTML = tools
+            .map(
+                (t) =>
+                    `<div class="tool-mini" title="${escapeHtml(t.description || "")}"><span class="dot"></span>${escapeHtml(t.name || "")}</div>`
+            )
+            .join("");
+    } catch (e) {
+        ctxTools.innerHTML = `<div class="tool-mini"><span class="dot off"></span>加载失败</div>`;
+        console.warn("[hermes] list_tools:", e);
+    }
+}
 
 async function checkBrainReady(): Promise<void> {
     try {
         // list_tools 不需要 session, 适合探活
         await HermesService.ListTools();
         setBrainConnected(true);
+        await loadToolsList();
+        if (sessions.size === 0) {
+            await createNewSession();
+        }
         console.log("[hermes] brain connected");
     } catch (e) {
         console.log("[hermes] brain not ready, retry in 1s:", e);
@@ -189,23 +281,36 @@ function setBrainConnected(connected: boolean): void {
 }
 
 // ============================================================
-// 新建会话
+// 新建聊天会话
 // ============================================================
-btnNewSession.addEventListener("click", async () => {
+btnNewSession.addEventListener("click", () => {
+    void createNewSession();
+});
+
+async function createNewSession(): Promise<void> {
     if (!brainConnected) {
         toast("Brain 未连接, 请稍候...");
         return;
     }
+    const cfg = getConfigFromUI();
+    saveConfig(cfg);
     try {
         btnNewSession.disabled = true;
-        const info = await HermesService.StartSession("");
+        const req = new SessionStartRequest({
+            system_prompt: cfg.systemPrompt,
+            model: cfg.model,
+            api_key: cfg.apiKey,
+            api_base: cfg.apiBase,
+        });
+        const info = await HermesService.StartSession(req);
         if (!info?.session_id) {
             toast("StartSession 返回空 session_id");
             return;
         }
         const sess: Session = {
             id: info.session_id,
-            title: `Session ${sessions.size + 1}`,
+            title: `聊天 ${sessions.size + 1}`,
+            model: cfg.model,
             createdAt: Date.now(),
             lastState: "idle",
             msgCount: 0,
@@ -218,13 +323,14 @@ btnNewSession.addEventListener("click", async () => {
         renderConversation(sess);
         enableComposer();
         startStatusPolling();
-        console.log("[hermes] session started:", sess.id);
+        updateModelBadge(cfg.model);
+        console.log("[hermes] session started:", sess.id, "model=", cfg.model);
     } catch (e) {
         toast("StartSession 失败: " + e);
     } finally {
         btnNewSession.disabled = false;
     }
-});
+}
 
 // ============================================================
 // 发送消息
@@ -247,6 +353,11 @@ async function doSend(): Promise<void> {
     const sess = sessions.get(currentSessionId);
     if (sess) {
         sess.msgCount += 1;
+        if (sess.msgCount === 1 && sess.title.startsWith("聊天 ")) {
+            sess.title = text.length > 24 ? text.slice(0, 24) + "…" : text;
+            canvasTitle.textContent = sess.title;
+            renderSessionList();
+        }
         updateCanvasMeta(sess);
     }
 
@@ -358,7 +469,7 @@ function stateClass(state: string): string {
 // 渲染: session list
 // ============================================================
 function renderSessionList(): void {
-    sessionCount.textContent = String(sessions.size);
+    if (sessionCount) sessionCount.textContent = String(sessions.size);
     sessionList.innerHTML = "";
     for (const sess of sessions.values()) {
         const div = document.createElement("div");
@@ -368,6 +479,7 @@ function renderSessionList(): void {
             <div class="session-title">${escapeHtml(sess.title)}</div>
             <div class="session-meta">
                 <span class="session-time">${formatTime(sess.createdAt)}</span>
+                <span class="session-model">${escapeHtml(sess.model)}</span>
                 <span class="status-pill ${pillClass(sess.lastState)}">${sess.lastState}</span>
             </div>
         `;
@@ -389,7 +501,11 @@ function pillClass(state: BrainState): string {
 function switchSession(id: string): void {
     currentSessionId = id;
     const sess = sessions.get(id);
-    if (sess) void refreshHistoryFromBrain(sess);
+    if (sess) {
+        canvasTitle.textContent = sess.title;
+        updateModelBadge(sess.model);
+        void refreshHistoryFromBrain(sess);
+    }
     renderSessionList();
     startStatusPolling();
 }
