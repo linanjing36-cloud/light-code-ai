@@ -241,8 +241,20 @@ encode_args(<<"get_history">>, #{session_id := SessId}) ->
     ?PANEL_PB:encode_msg(#{session_id => SessId}, 'GetHistoryArgs');
 encode_args(<<"delete_session">>, #{session_id := SessId}) ->
     ?PANEL_PB:encode_msg(#{session_id => SessId}, 'DeleteSessionArgs');
+encode_args(<<"debug_capability">>, #{capability_name := Name} = M) ->
+    ?PANEL_PB:encode_msg(
+      #{capability_name => Name,
+        arguments_json => maps:get(arguments_json, M, <<>>),
+        timeout_ms => maps:get(timeout_ms, M, 5000)},
+      'DebugCapabilityArgs');
+encode_args(<<"debug_capability">>, #{name := Name} = M) ->
+    ?PANEL_PB:encode_msg(
+      #{capability_name => Name,
+        arguments_json => maps:get(arguments_json, M, <<>>),
+        timeout_ms => maps:get(timeout_ms, M, 5000)},
+      'DebugCapabilityArgs');
 encode_args(_NoArgsMethod, _ArgsMap) ->
-    %% list_tools / stop 无参数, args_bytes 为空
+    %% list_tools / list_capabilities / stop 无参数, args_bytes 为空
     <<>>.
 
 decode_args(<<"start_session">>, Bin) ->
@@ -265,6 +277,11 @@ decode_args(<<"brain_status">>, Bin) ->
 decode_args(<<"get_history">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'GetHistoryArgs'),
     #{session_id => maps:get(session_id, M, <<>>)};
+decode_args(<<"debug_capability">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'DebugCapabilityArgs'),
+    #{capability_name => maps:get(capability_name, M, <<>>),
+      arguments_json => maps:get(arguments_json, M, <<>>),
+      timeout_ms => maps:get(timeout_ms, M, 5000)};
 decode_args(<<"delete_session">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'DeleteSessionArgs'),
     #{session_id => maps:get(session_id, M, <<>>)};
@@ -279,6 +296,15 @@ encode_result(<<"send">>, #{stream_id := StreamId}) ->
 encode_result(<<"list_tools">>, #{tools := Tools}) ->
     PbTools = [tool_desc_to_pb(T) || T <- Tools],
     ?PANEL_PB:encode_msg(#{tools => PbTools}, 'ListToolsResult');
+encode_result(<<"list_capabilities">>, #{capabilities := Caps}) ->
+    PbCaps = [capability_desc_to_pb(C) || C <- Caps],
+    ?PANEL_PB:encode_msg(#{capabilities => PbCaps}, 'ListCapabilitiesResult');
+encode_result(<<"debug_capability">>, M) ->
+    ?PANEL_PB:encode_msg(
+      #{capability_name => maps:get(capability_name, M, <<>>),
+        result_json => maps:get(result_json, M, <<>>),
+        error => maps:get(error, M, <<>>)},
+      'DebugCapabilityResult');
 encode_result(<<"approve">>, #{ok := Ok}) ->
     ?PANEL_PB:encode_msg(#{ok => Ok}, 'ApproveResult');
 encode_result(<<"brain_status">>, M) ->
@@ -308,6 +334,14 @@ decode_result(<<"send">>, Bin) ->
 decode_result(<<"list_tools">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'ListToolsResult'),
     #{tools => [tool_desc_from_pb(T) || T <- maps:get(tools, M, [])]};
+decode_result(<<"list_capabilities">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'ListCapabilitiesResult'),
+    #{capabilities => [capability_desc_from_pb(C) || C <- maps:get(capabilities, M, [])]};
+decode_result(<<"debug_capability">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'DebugCapabilityResult'),
+    #{capability_name => maps:get(capability_name, M, <<>>),
+      result_json => maps:get(result_json, M, <<>>),
+      error => maps:get(error, M, <<>>)};
 decode_result(<<"approve">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'ApproveResult'),
     #{ok => maps:get(ok, M, false)};
@@ -367,6 +401,33 @@ tool_desc_from_pb(T) ->
     Base = #{name => maps:get(name, T, <<>>),
              description => maps:get(description, T, <<>>)},
     maybe_put_tool_parameters_json(parameters_json, maps:get(parameters_pb, T, undefined), Base).
+
+capability_desc_to_pb(C) ->
+    Base = #{name => maps:get(name, C, <<>>),
+             kind => maps:get(kind, C, <<>>),
+             source => maps:get(source, C, <<>>),
+             version => maps:get(version, C, <<>>),
+             description => maps:get(description, C, <<>>),
+             streaming => maps:get(streaming, C, false),
+             risk_level => maps:get(risk_level, C, <<>>),
+             cost_hint => maps:get(cost_hint, C, <<>>),
+             tags => [ensure_binary(Tag) || Tag <- maps:get(tags, C, [])]},
+    maybe_put_tool_parameters_pb(input_schema_pb, maps:get(parameters_json, C, <<>>), Base).
+
+capability_desc_from_pb(C) ->
+    Base0 = #{name => maps:get(name, C, <<>>),
+              kind => maps:get(kind, C, <<>>),
+              source => maps:get(source, C, <<>>),
+              version => maps:get(version, C, <<>>),
+              description => maps:get(description, C, <<>>),
+              streaming => maps:get(streaming, C, false),
+              risk_level => maps:get(risk_level, C, <<>>),
+              cost_hint => maps:get(cost_hint, C, <<>>)},
+    Base1 = maybe_put_tool_parameters_json(parameters_json, maps:get(input_schema_pb, C, undefined), Base0),
+    case maps:get(tags, C, []) of
+        [] -> Base1;
+        Tags -> Base1#{tags => Tags}
+    end.
 
 tool_call_to_pb(TC) ->
     Fun0 = #{name => ensure_binary(maps:get(name, TC, <<>>))},

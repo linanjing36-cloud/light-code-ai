@@ -15,6 +15,7 @@ import (
 	"github.com/eino-contrib/jsonschema"
 	"github.com/cloudwego/eino/components/tool"
 	"github.com/cloudwego/eino/schema"
+	"github.com/light-code-ai/eion-tools/internal/capability"
 )
 
 // HandlerFunc 是最朴素的 Go 工具实现形式：
@@ -24,29 +25,41 @@ type HandlerFunc func(ctx context.Context, argumentsJSON string) (resultJSON str
 
 // Eino_Tool_Wrapper 维护工具注册表。不持有任何会话状态。
 type Eino_Tool_Wrapper struct {
-	registry map[string]*registeredTool
+	registry    map[string]*registeredTool
+	capRegistry *capability.Registry
 }
 
 // New 创建包装器。
 func New() *Eino_Tool_Wrapper {
-	return &Eino_Tool_Wrapper{registry: make(map[string]*registeredTool)}
+	return &Eino_Tool_Wrapper{
+		registry:    make(map[string]*registeredTool),
+		capRegistry: capability.NewRegistry(),
+	}
 }
 
 // Register 注册一个 HandlerFunc 为 Eino InvokableTool。
 // parametersJSON 为 JSON Schema 字符串（OpenAI tool 参数格式）。
 func (w *Eino_Tool_Wrapper) Register(name, description, parametersJSON string, h HandlerFunc) {
+	w.RegisterCapability(capability.NewToolDesc(name, description, parametersJSON), h)
+}
+
+func (w *Eino_Tool_Wrapper) RegisterCapability(desc capability.Desc, h HandlerFunc) {
+	desc = capability.Normalize(desc)
 	info := &schema.ToolInfo{
-		Name: name,
-		Desc: description,
+		Name: desc.Name,
+		Desc: desc.Description,
 	}
-	if parametersJSON != "" {
+	if desc.InputSchema != "" {
 		var s jsonschema.Schema
-		if err := json.Unmarshal([]byte(parametersJSON), &s); err == nil {
+		if err := json.Unmarshal([]byte(desc.InputSchema), &s); err == nil {
 			info.ParamsOneOf = schema.NewParamsOneOfByJSONSchema(&s)
 		}
 		// 解析失败则该工具视为无参工具（ParamsOneOf 为 nil）
 	}
-	w.registry[name] = &registeredTool{info: info, handler: h, paramsJSON: parametersJSON}
+	w.registry[desc.Name] = &registeredTool{info: info, handler: h, paramsJSON: desc.InputSchema}
+	if w.capRegistry != nil {
+		_ = w.capRegistry.Register(desc)
+	}
 }
 
 // Desc 是对外暴露的工具描述（与 hermes.ToolDesc / panel_tools 对齐）。
@@ -94,6 +107,13 @@ func (w *Eino_Tool_Wrapper) ToolInfos() []*schema.ToolInfo {
 		infos = append(infos, t.info)
 	}
 	return infos
+}
+
+func (w *Eino_Tool_Wrapper) CapabilityDescs() []capability.Desc {
+	if w == nil || w.capRegistry == nil {
+		return nil
+	}
+	return w.capRegistry.List()
 }
 
 // registeredTool 实现 tool.InvokableTool 接口（BaseTool + InvokableRun）。

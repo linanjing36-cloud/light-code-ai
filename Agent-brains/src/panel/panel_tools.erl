@@ -1,12 +1,16 @@
 -module(panel_tools).
 
--export([default_tool_descs/0, fetch_tool_descs/0]).
+-export([default_tool_descs/0, fetch_tool_descs/0,
+         default_capability_descs/0, fetch_capability_descs/0]).
 
 -define(LIST_TOOLS_TIMEOUT, 1500).
 
 %% 静态兜底（Eion-tools 不可达时使用）。
 default_tool_descs() ->
     [get_weather_desc(), memory_store_desc(), memory_search_desc(), memory_import_desc()].
+
+default_capability_descs() ->
+    [tool_desc_to_capability_desc(T, <<"builtin">>) || T <- default_tool_descs()].
 
 %% 从 Eion-tools 动态拉取工具注册表；失败时回退 default_tool_descs/0。
 fetch_tool_descs() ->
@@ -19,6 +23,17 @@ fetch_tool_descs() ->
         default_tool_descs()
     end.
 
+fetch_capability_descs() ->
+    try bridge_manager:list_tools(?LIST_TOOLS_TIMEOUT) of
+        {ok, Tools} when is_list(Tools), Tools =/= [] ->
+            [tool_desc_to_capability_desc(normalize_desc(T), <<"eion-tools">>)
+             || T <- Tools, not is_internal_tool(T)];
+        _ ->
+            default_capability_descs()
+    catch _:_ ->
+        default_capability_descs()
+    end.
+
 is_internal_tool(T) when is_map(T) ->
     maps:get(name, T, <<>>) =:= <<"memory_purge_session">>;
 is_internal_tool(_) -> false.
@@ -27,6 +42,44 @@ normalize_desc(T) when is_map(T) ->
     #{name => maps:get(name, T, <<>>),
       description => maps:get(description, T, <<>>),
       parameters_json => maps:get(parameters_json, T, <<>>)}.
+
+tool_desc_to_capability_desc(T, Source) ->
+    Name = maps:get(name, T, <<>>),
+    #{name => Name,
+      kind => <<"tool">>,
+      source => Source,
+      version => <<"v1">>,
+      description => maps:get(description, T, <<>>),
+      parameters_json => maps:get(parameters_json, T, <<>>),
+      streaming => false,
+      risk_level => default_risk_level(Name),
+      cost_hint => default_cost_hint(Name),
+      tags => default_tags(Name)}.
+
+default_risk_level(_Name) ->
+    <<"safe">>.
+
+default_cost_hint(Name) ->
+    case Name of
+        <<"memory_import">> -> <<"medium">>;
+        <<"repo_map">> -> <<"medium">>;
+        _ -> <<"low">>
+    end.
+
+default_tags(<<"get_weather">>) ->
+    [<<"tool">>, <<"builtin">>, <<"weather">>];
+default_tags(<<"memory_store">>) ->
+    [<<"tool">>, <<"memory">>];
+default_tags(<<"memory_search">>) ->
+    [<<"tool">>, <<"memory">>, <<"search">>];
+default_tags(<<"memory_import">>) ->
+    [<<"tool">>, <<"memory">>, <<"import">>];
+default_tags(<<"repo_map">>) ->
+    [<<"plugin">>, <<"workspace">>, <<"token-saving">>];
+default_tags(<<"code_search">>) ->
+    [<<"plugin">>, <<"code">>, <<"search">>, <<"token-saving">>];
+default_tags(_) ->
+    [<<"tool">>].
 
 get_weather_desc() ->
     #{name => <<"get_weather">>,

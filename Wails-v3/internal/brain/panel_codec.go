@@ -23,6 +23,25 @@ type ToolDesc struct {
 	Parameters  any
 }
 
+type CapabilityDesc struct {
+	Name        string
+	Kind        string
+	Source      string
+	Version     string
+	Description string
+	InputSchema any
+	Streaming   bool
+	RiskLevel   string
+	CostHint    string
+	Tags        []string
+}
+
+type DebugCapabilityResult struct {
+	CapabilityName string
+	ResultJSON     string
+	Error          string
+}
+
 type ToolFunction struct {
 	Name      string
 	Arguments any
@@ -107,6 +126,13 @@ func encodePanelArgs(method string, args map[string]any) ([]byte, error) {
 			SessionId: stringArg(args, "session_id"),
 		}
 		return proto.Marshal(msg)
+	case "debug_capability":
+		msg := &panelpb.DebugCapabilityArgs{
+			CapabilityName: stringArg(args, "capability_name"),
+			ArgumentsJson:  stringArg(args, "arguments_json"),
+			TimeoutMs:      uint32(intArg(args, "timeout_ms")),
+		}
+		return proto.Marshal(msg)
 	case "get_history":
 		msg := &panelpb.GetHistoryArgs{
 			SessionId: stringArg(args, "session_id"),
@@ -117,7 +143,7 @@ func encodePanelArgs(method string, args map[string]any) ([]byte, error) {
 			SessionId: stringArg(args, "session_id"),
 		}
 		return proto.Marshal(msg)
-	case "list_tools", "stop":
+	case "list_tools", "list_capabilities", "stop":
 		return nil, nil
 	default:
 		return nil, fmt.Errorf("unknown method: %s", method)
@@ -162,6 +188,37 @@ func decodePanelResult(method string, bin []byte) (any, error) {
 			})
 		}
 		return tools, nil
+	case "list_capabilities":
+		var msg panelpb.ListCapabilitiesResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		caps := make([]CapabilityDesc, 0, len(msg.GetCapabilities()))
+		for _, c := range msg.GetCapabilities() {
+			caps = append(caps, CapabilityDesc{
+				Name:        c.GetName(),
+				Kind:        c.GetKind(),
+				Source:      c.GetSource(),
+				Version:     c.GetVersion(),
+				Description: c.GetDescription(),
+				InputSchema: decodeToolParametersPB(c.GetInputSchemaPb()),
+				Streaming:   c.GetStreaming(),
+				RiskLevel:   c.GetRiskLevel(),
+				CostHint:    c.GetCostHint(),
+				Tags:        append([]string(nil), c.GetTags()...),
+			})
+		}
+		return caps, nil
+	case "debug_capability":
+		var msg panelpb.DebugCapabilityResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		return DebugCapabilityResult{
+			CapabilityName: msg.GetCapabilityName(),
+			ResultJSON:     msg.GetResultJson(),
+			Error:          msg.GetError(),
+		}, nil
 	case "approve":
 		var msg panelpb.ApproveResult
 		if err := proto.Unmarshal(bin, &msg); err != nil {
@@ -231,6 +288,27 @@ func boolArg(args map[string]any, key string) bool {
 	}
 	b, _ := v.(bool)
 	return b
+}
+
+func intArg(args map[string]any, key string) int {
+	v, ok := args[key]
+	if !ok || v == nil {
+		return 0
+	}
+	switch n := v.(type) {
+	case int:
+		return n
+	case int32:
+		return int(n)
+	case int64:
+		return int(n)
+	case float64:
+		return int(n)
+	case float32:
+		return int(n)
+	default:
+		return 0
+	}
 }
 
 // StreamEvent 是 panel_server 推送到 Wails 前端的流式事件 (经 Wails EmitEvent 广播)。

@@ -103,6 +103,19 @@ type ToolDesc struct {
 	Parameters  any    `json:"parameters,omitempty"`
 }
 
+type CapabilityDesc struct {
+	Name        string   `json:"name"`
+	Kind        string   `json:"kind"`
+	Source      string   `json:"source"`
+	Version     string   `json:"version"`
+	Description string   `json:"description"`
+	InputSchema any      `json:"input_schema,omitempty"`
+	Streaming   bool     `json:"streaming"`
+	RiskLevel   string   `json:"risk_level"`
+	CostHint    string   `json:"cost_hint"`
+	Tags        []string `json:"tags,omitempty"`
+}
+
 type ToolFunction struct {
 	Name      string `json:"name"`
 	Arguments any    `json:"arguments,omitempty"`
@@ -132,6 +145,33 @@ func (s *HermesService) ListTools() ([]ToolDesc, error) {
 		})
 	}
 	return tools, nil
+}
+
+func (s *HermesService) ListCapabilities() ([]CapabilityDesc, error) {
+	out, err := s.router.CallPanel("list_capabilities", nil)
+	if err != nil {
+		return nil, err
+	}
+	raw, ok := out.([]brain.CapabilityDesc)
+	if !ok {
+		return nil, fmt.Errorf("router: invalid list_capabilities response: %T", out)
+	}
+	caps := make([]CapabilityDesc, 0, len(raw))
+	for _, item := range raw {
+		caps = append(caps, CapabilityDesc{
+			Name:        item.Name,
+			Kind:        item.Kind,
+			Source:      item.Source,
+			Version:     item.Version,
+			Description: item.Description,
+			InputSchema: item.InputSchema,
+			Streaming:   item.Streaming,
+			RiskLevel:   item.RiskLevel,
+			CostHint:    item.CostHint,
+			Tags:        append([]string(nil), item.Tags...),
+		})
+	}
+	return caps, nil
 }
 
 func (s *HermesService) ApproveToolCall(reqID string, allow bool) error {

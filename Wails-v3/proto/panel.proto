@@ -42,7 +42,7 @@ message PanelExecResult {
 // 一次性请求。
 message PanelRequest {
   uint64 id = 1;          // 请求 ID (用于 response 路由匹配, stream 不复用此 id)
-  string method = 2;      // start_session / send / list_tools / approve / brain_status / get_history / delete_session / stop
+  string method = 2;      // start_session / send / list_tools / list_capabilities / approve / brain_status / get_history / delete_session / stop
   bytes args_bytes = 3;   // 方法对应 Args message 的 Protobuf 编码
 }
 
@@ -166,6 +166,36 @@ message ToolDesc {
   string name = 1;
   string description = 2;
   bytes parameters_pb = 3;
+}
+
+message ListCapabilitiesResult {
+  repeated CapabilityDesc capabilities = 1;
+}
+
+message CapabilityDesc {
+  string name = 1;
+  string kind = 2;
+  string source = 3;
+  string version = 4;
+  string description = 5;
+  bytes input_schema_pb = 6;
+  bytes output_schema_pb = 7;
+  bool streaming = 8;
+  string risk_level = 9;
+  string cost_hint = 10;
+  repeated string tags = 11;
+}
+
+message DebugCapabilityArgs {
+  string capability_name = 1;
+  string arguments_json = 2;
+  uint32 timeout_ms = 3;
+}
+
+message DebugCapabilityResult {
+  string capability_name = 1;
+  string result_json = 2;
+  string error = 3;
 }
 
 message ApproveResult { bool ok = 1; }

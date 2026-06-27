@@ -209,6 +209,36 @@
         parameters_pb           => iodata()         % = 3, optional
        }.
 
+-type 'ListCapabilitiesResult'() ::
+      #{capabilities            => ['CapabilityDesc'()] % = 1, repeated
+       }.
+
+-type 'CapabilityDesc'() ::
+      #{name                    => unicode:chardata(), % = 1, optional
+        kind                    => unicode:chardata(), % = 2, optional
+        source                  => unicode:chardata(), % = 3, optional
+        version                 => unicode:chardata(), % = 4, optional
+        description             => unicode:chardata(), % = 5, optional
+        input_schema_pb         => iodata(),        % = 6, optional
+        output_schema_pb        => iodata(),        % = 7, optional
+        streaming               => boolean() | 0 | 1, % = 8, optional
+        risk_level              => unicode:chardata(), % = 9, optional
+        cost_hint               => unicode:chardata(), % = 10, optional
+        tags                    => [unicode:chardata()] % = 11, repeated
+       }.
+
+-type 'DebugCapabilityArgs'() ::
+      #{capability_name         => unicode:chardata(), % = 1, optional
+        arguments_json          => unicode:chardata(), % = 2, optional
+        timeout_ms              => non_neg_integer() % = 3, optional, 32 bits
+       }.
+
+-type 'DebugCapabilityResult'() ::
+      #{capability_name         => unicode:chardata(), % = 1, optional
+        result_json             => unicode:chardata(), % = 2, optional
+        error                   => unicode:chardata() % = 3, optional
+       }.
+
 -type 'ApproveResult'() ::
       #{ok                      => boolean() | 0 | 1 % = 1, optional
        }.
@@ -239,9 +269,9 @@
       #{ok                      => boolean() | 0 | 1 % = 1, optional
        }.
 
--export_type(['PanelFrame'/0, 'PanelExec'/0, 'PanelExecResult'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'LlmChunk'/0, 'JsonField'/0, 'ToolParameter'/0, 'ToolParameters'/0, 'JsonObject'/0, 'JsonArray'/0, 'JsonValue'/0, 'ToolFunction'/0, 'ToolCall'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
--type '$msg_name'() :: 'PanelFrame' | 'PanelExec' | 'PanelExecResult' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'LlmChunk' | 'JsonField' | 'ToolParameter' | 'ToolParameters' | 'JsonObject' | 'JsonArray' | 'JsonValue' | 'ToolFunction' | 'ToolCall' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
--type '$msg'() :: 'PanelFrame'() | 'PanelExec'() | 'PanelExecResult'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'LlmChunk'() | 'JsonField'() | 'ToolParameter'() | 'ToolParameters'() | 'JsonObject'() | 'JsonArray'() | 'JsonValue'() | 'ToolFunction'() | 'ToolCall'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
+-export_type(['PanelFrame'/0, 'PanelExec'/0, 'PanelExecResult'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'LlmChunk'/0, 'JsonField'/0, 'ToolParameter'/0, 'ToolParameters'/0, 'JsonObject'/0, 'JsonArray'/0, 'JsonValue'/0, 'ToolFunction'/0, 'ToolCall'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ListCapabilitiesResult'/0, 'CapabilityDesc'/0, 'DebugCapabilityArgs'/0, 'DebugCapabilityResult'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
+-type '$msg_name'() :: 'PanelFrame' | 'PanelExec' | 'PanelExecResult' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'LlmChunk' | 'JsonField' | 'ToolParameter' | 'ToolParameters' | 'JsonObject' | 'JsonArray' | 'JsonValue' | 'ToolFunction' | 'ToolCall' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ListCapabilitiesResult' | 'CapabilityDesc' | 'DebugCapabilityArgs' | 'DebugCapabilityResult' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
+-type '$msg'() :: 'PanelFrame'() | 'PanelExec'() | 'PanelExecResult'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'LlmChunk'() | 'JsonField'() | 'ToolParameter'() | 'ToolParameters'() | 'JsonObject'() | 'JsonArray'() | 'JsonValue'() | 'ToolFunction'() | 'ToolCall'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ListCapabilitiesResult'() | 'CapabilityDesc'() | 'DebugCapabilityArgs'() | 'DebugCapabilityResult'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
 -export_type(['$msg_name'/0, '$msg'/0]).
 
 -if(?OTP_RELEASE >= 24).
@@ -289,6 +319,10 @@ encode_msg(Msg, MsgName, Opts) ->
         'SendResult' -> encode_msg_SendResult(id(Msg, TrUserData), TrUserData);
         'ListToolsResult' -> encode_msg_ListToolsResult(id(Msg, TrUserData), TrUserData);
         'ToolDesc' -> encode_msg_ToolDesc(id(Msg, TrUserData), TrUserData);
+        'ListCapabilitiesResult' -> encode_msg_ListCapabilitiesResult(id(Msg, TrUserData), TrUserData);
+        'CapabilityDesc' -> encode_msg_CapabilityDesc(id(Msg, TrUserData), TrUserData);
+        'DebugCapabilityArgs' -> encode_msg_DebugCapabilityArgs(id(Msg, TrUserData), TrUserData);
+        'DebugCapabilityResult' -> encode_msg_DebugCapabilityResult(id(Msg, TrUserData), TrUserData);
         'ApproveResult' -> encode_msg_ApproveResult(id(Msg, TrUserData), TrUserData);
         'BrainStatusResult' -> encode_msg_BrainStatusResult(id(Msg, TrUserData), TrUserData);
         'HistoryEntry' -> encode_msg_HistoryEntry(id(Msg, TrUserData), TrUserData);
@@ -1055,6 +1089,216 @@ encode_msg_ToolDesc(#{} = M, Bin, TrUserData) ->
         _ -> B2
     end.
 
+encode_msg_ListCapabilitiesResult(Msg, TrUserData) -> encode_msg_ListCapabilitiesResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_ListCapabilitiesResult(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{capabilities := F1} ->
+            TrF1 = id(F1, TrUserData),
+            if TrF1 == [] -> Bin;
+               true -> e_field_ListCapabilitiesResult_capabilities(TrF1, Bin, TrUserData)
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_CapabilityDesc(Msg, TrUserData) -> encode_msg_CapabilityDesc(Msg, <<>>, TrUserData).
+
+
+encode_msg_CapabilityDesc(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{name := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{kind := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     case is_empty_string(TrF2) of
+                         true -> B1;
+                         false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    B3 = case M of
+             #{source := F3} ->
+                 begin
+                     TrF3 = id(F3, TrUserData),
+                     case is_empty_string(TrF3) of
+                         true -> B2;
+                         false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                     end
+                 end;
+             _ -> B2
+         end,
+    B4 = case M of
+             #{version := F4} ->
+                 begin
+                     TrF4 = id(F4, TrUserData),
+                     case is_empty_string(TrF4) of
+                         true -> B3;
+                         false -> e_type_string(TrF4, <<B3/binary, 34>>, TrUserData)
+                     end
+                 end;
+             _ -> B3
+         end,
+    B5 = case M of
+             #{description := F5} ->
+                 begin
+                     TrF5 = id(F5, TrUserData),
+                     case is_empty_string(TrF5) of
+                         true -> B4;
+                         false -> e_type_string(TrF5, <<B4/binary, 42>>, TrUserData)
+                     end
+                 end;
+             _ -> B4
+         end,
+    B6 = case M of
+             #{input_schema_pb := F6} ->
+                 begin
+                     TrF6 = id(F6, TrUserData),
+                     case iolist_size(TrF6) of
+                         0 -> B5;
+                         _ -> e_type_bytes(TrF6, <<B5/binary, 50>>, TrUserData)
+                     end
+                 end;
+             _ -> B5
+         end,
+    B7 = case M of
+             #{output_schema_pb := F7} ->
+                 begin
+                     TrF7 = id(F7, TrUserData),
+                     case iolist_size(TrF7) of
+                         0 -> B6;
+                         _ -> e_type_bytes(TrF7, <<B6/binary, 58>>, TrUserData)
+                     end
+                 end;
+             _ -> B6
+         end,
+    B8 = case M of
+             #{streaming := F8} ->
+                 begin
+                     TrF8 = id(F8, TrUserData),
+                     if TrF8 =:= false -> B7;
+                        true -> e_type_bool(TrF8, <<B7/binary, 64>>, TrUserData)
+                     end
+                 end;
+             _ -> B7
+         end,
+    B9 = case M of
+             #{risk_level := F9} ->
+                 begin
+                     TrF9 = id(F9, TrUserData),
+                     case is_empty_string(TrF9) of
+                         true -> B8;
+                         false -> e_type_string(TrF9, <<B8/binary, 74>>, TrUserData)
+                     end
+                 end;
+             _ -> B8
+         end,
+    B10 = case M of
+              #{cost_hint := F10} ->
+                  begin
+                      TrF10 = id(F10, TrUserData),
+                      case is_empty_string(TrF10) of
+                          true -> B9;
+                          false -> e_type_string(TrF10, <<B9/binary, 82>>, TrUserData)
+                      end
+                  end;
+              _ -> B9
+          end,
+    case M of
+        #{tags := F11} ->
+            TrF11 = id(F11, TrUserData),
+            if TrF11 == [] -> B10;
+               true -> e_field_CapabilityDesc_tags(TrF11, B10, TrUserData)
+            end;
+        _ -> B10
+    end.
+
+encode_msg_DebugCapabilityArgs(Msg, TrUserData) -> encode_msg_DebugCapabilityArgs(Msg, <<>>, TrUserData).
+
+
+encode_msg_DebugCapabilityArgs(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{capability_name := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{arguments_json := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     case is_empty_string(TrF2) of
+                         true -> B1;
+                         false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    case M of
+        #{timeout_ms := F3} ->
+            begin
+                TrF3 = id(F3, TrUserData),
+                if TrF3 =:= 0 -> B2;
+                   true -> e_varint(TrF3, <<B2/binary, 24>>, TrUserData)
+                end
+            end;
+        _ -> B2
+    end.
+
+encode_msg_DebugCapabilityResult(Msg, TrUserData) -> encode_msg_DebugCapabilityResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_DebugCapabilityResult(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{capability_name := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{result_json := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     case is_empty_string(TrF2) of
+                         true -> B1;
+                         false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    case M of
+        #{error := F3} ->
+            begin
+                TrF3 = id(F3, TrUserData),
+                case is_empty_string(TrF3) of
+                    true -> B2;
+                    false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                end
+            end;
+        _ -> B2
+    end.
+
 encode_msg_ApproveResult(Msg, TrUserData) -> encode_msg_ApproveResult(Msg, <<>>, TrUserData).
 
 
@@ -1329,6 +1573,23 @@ e_field_ListToolsResult_tools([Elem | Rest], Bin, TrUserData) ->
     e_field_ListToolsResult_tools(Rest, Bin3, TrUserData);
 e_field_ListToolsResult_tools([], Bin, _TrUserData) -> Bin.
 
+e_mfield_ListCapabilitiesResult_capabilities(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_CapabilityDesc(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_ListCapabilitiesResult_capabilities([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 10>>,
+    Bin3 = e_mfield_ListCapabilitiesResult_capabilities(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_ListCapabilitiesResult_capabilities(Rest, Bin3, TrUserData);
+e_field_ListCapabilitiesResult_capabilities([], Bin, _TrUserData) -> Bin.
+
+e_field_CapabilityDesc_tags([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 90>>,
+    Bin3 = e_type_string(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_CapabilityDesc_tags(Rest, Bin3, TrUserData);
+e_field_CapabilityDesc_tags([], Bin, _TrUserData) -> Bin.
+
 e_mfield_HistoryEntry_tool_calls(Msg, Bin, TrUserData) ->
     SubBin = encode_msg_ToolCall(Msg, <<>>, TrUserData),
     Bin2 = e_varint(byte_size(SubBin), Bin),
@@ -1508,6 +1769,10 @@ decode_msg_2_doit('StartSessionResult', Bin, TrUserData) -> id(decode_msg_StartS
 decode_msg_2_doit('SendResult', Bin, TrUserData) -> id(decode_msg_SendResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ListToolsResult', Bin, TrUserData) -> id(decode_msg_ListToolsResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ToolDesc', Bin, TrUserData) -> id(decode_msg_ToolDesc(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ListCapabilitiesResult', Bin, TrUserData) -> id(decode_msg_ListCapabilitiesResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('CapabilityDesc', Bin, TrUserData) -> id(decode_msg_CapabilityDesc(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('DebugCapabilityArgs', Bin, TrUserData) -> id(decode_msg_DebugCapabilityArgs(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('DebugCapabilityResult', Bin, TrUserData) -> id(decode_msg_DebugCapabilityResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ApproveResult', Bin, TrUserData) -> id(decode_msg_ApproveResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('BrainStatusResult', Bin, TrUserData) -> id(decode_msg_BrainStatusResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('HistoryEntry', Bin, TrUserData) -> id(decode_msg_HistoryEntry(Bin, TrUserData), TrUserData);
@@ -3334,6 +3599,335 @@ skip_32_ToolDesc(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData)
 
 skip_64_ToolDesc(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_ToolDesc(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
 
+decode_msg_ListCapabilitiesResult(Bin, TrUserData) -> dfp_read_field_def_ListCapabilitiesResult(Bin, 0, 0, 0, id([], TrUserData), TrUserData).
+
+dfp_read_field_def_ListCapabilitiesResult(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_ListCapabilitiesResult_capabilities(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_ListCapabilitiesResult(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{capabilities => lists_reverse(R1, TrUserData)}
+    end;
+dfp_read_field_def_ListCapabilitiesResult(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_ListCapabilitiesResult(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_ListCapabilitiesResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_ListCapabilitiesResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_ListCapabilitiesResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_ListCapabilitiesResult_capabilities(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ListCapabilitiesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_ListCapabilitiesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_ListCapabilitiesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_ListCapabilitiesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_ListCapabilitiesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_ListCapabilitiesResult(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{capabilities => lists_reverse(R1, TrUserData)}
+    end.
+
+d_field_ListCapabilitiesResult_capabilities(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_ListCapabilitiesResult_capabilities(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_ListCapabilitiesResult_capabilities(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_CapabilityDesc(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_ListCapabilitiesResult(RestF, 0, 0, F, cons(NewFValue, Prev, TrUserData), TrUserData).
+
+skip_varint_ListCapabilitiesResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_ListCapabilitiesResult(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_ListCapabilitiesResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_ListCapabilitiesResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_ListCapabilitiesResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_ListCapabilitiesResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_ListCapabilitiesResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ListCapabilitiesResult(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_ListCapabilitiesResult(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ListCapabilitiesResult(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_ListCapabilitiesResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_ListCapabilitiesResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_ListCapabilitiesResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_ListCapabilitiesResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_CapabilityDesc(Bin, TrUserData) ->
+    dfp_read_field_def_CapabilityDesc(Bin,
+                                      0,
+                                      0,
+                                      0,
+                                      id(<<>>, TrUserData),
+                                      id(<<>>, TrUserData),
+                                      id(<<>>, TrUserData),
+                                      id(<<>>, TrUserData),
+                                      id(<<>>, TrUserData),
+                                      id(<<>>, TrUserData),
+                                      id(<<>>, TrUserData),
+                                      id(false, TrUserData),
+                                      id(<<>>, TrUserData),
+                                      id(<<>>, TrUserData),
+                                      id([], TrUserData),
+                                      TrUserData).
+
+dfp_read_field_def_CapabilityDesc(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    d_field_CapabilityDesc_name(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+dfp_read_field_def_CapabilityDesc(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    d_field_CapabilityDesc_kind(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+dfp_read_field_def_CapabilityDesc(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    d_field_CapabilityDesc_source(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+dfp_read_field_def_CapabilityDesc(<<34, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    d_field_CapabilityDesc_version(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+dfp_read_field_def_CapabilityDesc(<<42, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    d_field_CapabilityDesc_description(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+dfp_read_field_def_CapabilityDesc(<<50, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    d_field_CapabilityDesc_input_schema_pb(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+dfp_read_field_def_CapabilityDesc(<<58, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    d_field_CapabilityDesc_output_schema_pb(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+dfp_read_field_def_CapabilityDesc(<<64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    d_field_CapabilityDesc_streaming(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+dfp_read_field_def_CapabilityDesc(<<74, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    d_field_CapabilityDesc_risk_level(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+dfp_read_field_def_CapabilityDesc(<<82, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    d_field_CapabilityDesc_cost_hint(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+dfp_read_field_def_CapabilityDesc(<<90, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    d_field_CapabilityDesc_tags(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+dfp_read_field_def_CapabilityDesc(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, R1, TrUserData) ->
+    #{name => F@_1, kind => F@_2, source => F@_3, version => F@_4, description => F@_5, input_schema_pb => F@_6, output_schema_pb => F@_7, streaming => F@_8, risk_level => F@_9, cost_hint => F@_10, tags => lists_reverse(R1, TrUserData)};
+dfp_read_field_def_CapabilityDesc(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    dg_read_field_def_CapabilityDesc(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData).
+
+dg_read_field_def_CapabilityDesc(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) when N < 32 - 7 ->
+    dg_read_field_def_CapabilityDesc(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+dg_read_field_def_CapabilityDesc(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_CapabilityDesc_name(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+        18 -> d_field_CapabilityDesc_kind(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+        26 -> d_field_CapabilityDesc_source(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+        34 -> d_field_CapabilityDesc_version(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+        42 -> d_field_CapabilityDesc_description(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+        50 -> d_field_CapabilityDesc_input_schema_pb(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+        58 -> d_field_CapabilityDesc_output_schema_pb(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+        64 -> d_field_CapabilityDesc_streaming(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+        74 -> d_field_CapabilityDesc_risk_level(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+        82 -> d_field_CapabilityDesc_cost_hint(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+        90 -> d_field_CapabilityDesc_tags(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_CapabilityDesc(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+                1 -> skip_64_CapabilityDesc(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+                2 -> skip_length_delimited_CapabilityDesc(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+                3 -> skip_group_CapabilityDesc(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+                5 -> skip_32_CapabilityDesc(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData)
+            end
+    end;
+dg_read_field_def_CapabilityDesc(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, R1, TrUserData) ->
+    #{name => F@_1, kind => F@_2, source => F@_3, version => F@_4, description => F@_5, input_schema_pb => F@_6, output_schema_pb => F@_7, streaming => F@_8, risk_level => F@_9, cost_hint => F@_10, tags => lists_reverse(R1, TrUserData)}.
+
+d_field_CapabilityDesc_name(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) when N < 57 ->
+    d_field_CapabilityDesc_name(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+d_field_CapabilityDesc_name(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_CapabilityDesc(RestF, 0, 0, F, NewFValue, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData).
+
+d_field_CapabilityDesc_kind(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) when N < 57 ->
+    d_field_CapabilityDesc_kind(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+d_field_CapabilityDesc_kind(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_CapabilityDesc(RestF, 0, 0, F, F@_1, NewFValue, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData).
+
+d_field_CapabilityDesc_source(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) when N < 57 ->
+    d_field_CapabilityDesc_source(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+d_field_CapabilityDesc_source(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_CapabilityDesc(RestF, 0, 0, F, F@_1, F@_2, NewFValue, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData).
+
+d_field_CapabilityDesc_version(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) when N < 57 ->
+    d_field_CapabilityDesc_version(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+d_field_CapabilityDesc_version(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, _, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_CapabilityDesc(RestF, 0, 0, F, F@_1, F@_2, F@_3, NewFValue, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData).
+
+d_field_CapabilityDesc_description(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) when N < 57 ->
+    d_field_CapabilityDesc_description(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+d_field_CapabilityDesc_description(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, _, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_CapabilityDesc(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, NewFValue, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData).
+
+d_field_CapabilityDesc_input_schema_pb(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) when N < 57 ->
+    d_field_CapabilityDesc_input_schema_pb(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+d_field_CapabilityDesc_input_schema_pb(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, _, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_CapabilityDesc(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, NewFValue, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData).
+
+d_field_CapabilityDesc_output_schema_pb(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) when N < 57 ->
+    d_field_CapabilityDesc_output_schema_pb(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+d_field_CapabilityDesc_output_schema_pb(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, _, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_CapabilityDesc(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, NewFValue, F@_8, F@_9, F@_10, F@_11, TrUserData).
+
+d_field_CapabilityDesc_streaming(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) when N < 57 ->
+    d_field_CapabilityDesc_streaming(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+d_field_CapabilityDesc_streaming(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, _, F@_9, F@_10, F@_11, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_CapabilityDesc(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, NewFValue, F@_9, F@_10, F@_11, TrUserData).
+
+d_field_CapabilityDesc_risk_level(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) when N < 57 ->
+    d_field_CapabilityDesc_risk_level(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+d_field_CapabilityDesc_risk_level(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, _, F@_10, F@_11, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_CapabilityDesc(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, NewFValue, F@_10, F@_11, TrUserData).
+
+d_field_CapabilityDesc_cost_hint(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) when N < 57 ->
+    d_field_CapabilityDesc_cost_hint(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+d_field_CapabilityDesc_cost_hint(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, _, F@_11, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_CapabilityDesc(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, NewFValue, F@_11, TrUserData).
+
+d_field_CapabilityDesc_tags(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) when N < 57 ->
+    d_field_CapabilityDesc_tags(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+d_field_CapabilityDesc_tags(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_CapabilityDesc(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, cons(NewFValue, Prev, TrUserData), TrUserData).
+
+skip_varint_CapabilityDesc(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    skip_varint_CapabilityDesc(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+skip_varint_CapabilityDesc(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    dfp_read_field_def_CapabilityDesc(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData).
+
+skip_length_delimited_CapabilityDesc(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) when N < 57 ->
+    skip_length_delimited_CapabilityDesc(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData);
+skip_length_delimited_CapabilityDesc(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_CapabilityDesc(Rest2, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData).
+
+skip_group_CapabilityDesc(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_CapabilityDesc(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData).
+
+skip_32_CapabilityDesc(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    dfp_read_field_def_CapabilityDesc(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData).
+
+skip_64_CapabilityDesc(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData) ->
+    dfp_read_field_def_CapabilityDesc(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, F@_9, F@_10, F@_11, TrUserData).
+
+decode_msg_DebugCapabilityArgs(Bin, TrUserData) -> dfp_read_field_def_DebugCapabilityArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(0, TrUserData), TrUserData).
+
+dfp_read_field_def_DebugCapabilityArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_DebugCapabilityArgs_capability_name(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_DebugCapabilityArgs(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_DebugCapabilityArgs_arguments_json(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_DebugCapabilityArgs(<<24, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_DebugCapabilityArgs_timeout_ms(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_DebugCapabilityArgs(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{capability_name => F@_1, arguments_json => F@_2, timeout_ms => F@_3};
+dfp_read_field_def_DebugCapabilityArgs(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_DebugCapabilityArgs(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+dg_read_field_def_DebugCapabilityArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_DebugCapabilityArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+dg_read_field_def_DebugCapabilityArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_DebugCapabilityArgs_capability_name(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        18 -> d_field_DebugCapabilityArgs_arguments_json(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        24 -> d_field_DebugCapabilityArgs_timeout_ms(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_DebugCapabilityArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                1 -> skip_64_DebugCapabilityArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                2 -> skip_length_delimited_DebugCapabilityArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                3 -> skip_group_DebugCapabilityArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                5 -> skip_32_DebugCapabilityArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData)
+            end
+    end;
+dg_read_field_def_DebugCapabilityArgs(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{capability_name => F@_1, arguments_json => F@_2, timeout_ms => F@_3}.
+
+d_field_DebugCapabilityArgs_capability_name(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_DebugCapabilityArgs_capability_name(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_DebugCapabilityArgs_capability_name(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_DebugCapabilityArgs(RestF, 0, 0, F, NewFValue, F@_2, F@_3, TrUserData).
+
+d_field_DebugCapabilityArgs_arguments_json(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_DebugCapabilityArgs_arguments_json(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_DebugCapabilityArgs_arguments_json(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_DebugCapabilityArgs(RestF, 0, 0, F, F@_1, NewFValue, F@_3, TrUserData).
+
+d_field_DebugCapabilityArgs_timeout_ms(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_DebugCapabilityArgs_timeout_ms(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_DebugCapabilityArgs_timeout_ms(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, TrUserData) ->
+    {NewFValue, RestF} = {id((X bsl N + Acc) band 4294967295, TrUserData), Rest},
+    dfp_read_field_def_DebugCapabilityArgs(RestF, 0, 0, F, F@_1, F@_2, NewFValue, TrUserData).
+
+skip_varint_DebugCapabilityArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_DebugCapabilityArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+skip_varint_DebugCapabilityArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_DebugCapabilityArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_length_delimited_DebugCapabilityArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> skip_length_delimited_DebugCapabilityArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+skip_length_delimited_DebugCapabilityArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_DebugCapabilityArgs(Rest2, 0, 0, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_group_DebugCapabilityArgs(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_DebugCapabilityArgs(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, TrUserData).
+
+skip_32_DebugCapabilityArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_DebugCapabilityArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_64_DebugCapabilityArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_DebugCapabilityArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+decode_msg_DebugCapabilityResult(Bin, TrUserData) -> dfp_read_field_def_DebugCapabilityResult(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_DebugCapabilityResult(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_DebugCapabilityResult_capability_name(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_DebugCapabilityResult(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_DebugCapabilityResult_result_json(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_DebugCapabilityResult(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_DebugCapabilityResult_error(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_DebugCapabilityResult(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{capability_name => F@_1, result_json => F@_2, error => F@_3};
+dfp_read_field_def_DebugCapabilityResult(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_DebugCapabilityResult(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+dg_read_field_def_DebugCapabilityResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_DebugCapabilityResult(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+dg_read_field_def_DebugCapabilityResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_DebugCapabilityResult_capability_name(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        18 -> d_field_DebugCapabilityResult_result_json(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        26 -> d_field_DebugCapabilityResult_error(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_DebugCapabilityResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                1 -> skip_64_DebugCapabilityResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                2 -> skip_length_delimited_DebugCapabilityResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                3 -> skip_group_DebugCapabilityResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                5 -> skip_32_DebugCapabilityResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData)
+            end
+    end;
+dg_read_field_def_DebugCapabilityResult(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{capability_name => F@_1, result_json => F@_2, error => F@_3}.
+
+d_field_DebugCapabilityResult_capability_name(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_DebugCapabilityResult_capability_name(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_DebugCapabilityResult_capability_name(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_DebugCapabilityResult(RestF, 0, 0, F, NewFValue, F@_2, F@_3, TrUserData).
+
+d_field_DebugCapabilityResult_result_json(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_DebugCapabilityResult_result_json(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_DebugCapabilityResult_result_json(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_DebugCapabilityResult(RestF, 0, 0, F, F@_1, NewFValue, F@_3, TrUserData).
+
+d_field_DebugCapabilityResult_error(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_DebugCapabilityResult_error(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_DebugCapabilityResult_error(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_DebugCapabilityResult(RestF, 0, 0, F, F@_1, F@_2, NewFValue, TrUserData).
+
+skip_varint_DebugCapabilityResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_DebugCapabilityResult(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+skip_varint_DebugCapabilityResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_DebugCapabilityResult(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_length_delimited_DebugCapabilityResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> skip_length_delimited_DebugCapabilityResult(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+skip_length_delimited_DebugCapabilityResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_DebugCapabilityResult(Rest2, 0, 0, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_group_DebugCapabilityResult(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_DebugCapabilityResult(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, TrUserData).
+
+skip_32_DebugCapabilityResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_DebugCapabilityResult(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_64_DebugCapabilityResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_DebugCapabilityResult(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
 decode_msg_ApproveResult(Bin, TrUserData) -> dfp_read_field_def_ApproveResult(Bin, 0, 0, 0, id(false, TrUserData), TrUserData).
 
 dfp_read_field_def_ApproveResult(<<8, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_ApproveResult_ok(Rest, Z1, Z2, F, F@_1, TrUserData);
@@ -3747,6 +4341,10 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'SendResult' -> merge_msg_SendResult(Prev, New, TrUserData);
         'ListToolsResult' -> merge_msg_ListToolsResult(Prev, New, TrUserData);
         'ToolDesc' -> merge_msg_ToolDesc(Prev, New, TrUserData);
+        'ListCapabilitiesResult' -> merge_msg_ListCapabilitiesResult(Prev, New, TrUserData);
+        'CapabilityDesc' -> merge_msg_CapabilityDesc(Prev, New, TrUserData);
+        'DebugCapabilityArgs' -> merge_msg_DebugCapabilityArgs(Prev, New, TrUserData);
+        'DebugCapabilityResult' -> merge_msg_DebugCapabilityResult(Prev, New, TrUserData);
         'ApproveResult' -> merge_msg_ApproveResult(Prev, New, TrUserData);
         'BrainStatusResult' -> merge_msg_BrainStatusResult(Prev, New, TrUserData);
         'HistoryEntry' -> merge_msg_HistoryEntry(Prev, New, TrUserData);
@@ -4213,6 +4811,114 @@ merge_msg_ToolDesc(PMsg, NMsg, _) ->
         _ -> S3
     end.
 
+-compile({nowarn_unused_function,merge_msg_ListCapabilitiesResult/3}).
+merge_msg_ListCapabilitiesResult(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {#{capabilities := PFcapabilities}, #{capabilities := NFcapabilities}} -> S1#{capabilities => 'erlang_++'(PFcapabilities, NFcapabilities, TrUserData)};
+        {_, #{capabilities := NFcapabilities}} -> S1#{capabilities => NFcapabilities};
+        {#{capabilities := PFcapabilities}, _} -> S1#{capabilities => PFcapabilities};
+        {_, _} -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_CapabilityDesc/3}).
+merge_msg_CapabilityDesc(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{name := NFname}} -> S1#{name => NFname};
+             {#{name := PFname}, _} -> S1#{name => PFname};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{kind := NFkind}} -> S2#{kind => NFkind};
+             {#{kind := PFkind}, _} -> S2#{kind => PFkind};
+             _ -> S2
+         end,
+    S4 = case {PMsg, NMsg} of
+             {_, #{source := NFsource}} -> S3#{source => NFsource};
+             {#{source := PFsource}, _} -> S3#{source => PFsource};
+             _ -> S3
+         end,
+    S5 = case {PMsg, NMsg} of
+             {_, #{version := NFversion}} -> S4#{version => NFversion};
+             {#{version := PFversion}, _} -> S4#{version => PFversion};
+             _ -> S4
+         end,
+    S6 = case {PMsg, NMsg} of
+             {_, #{description := NFdescription}} -> S5#{description => NFdescription};
+             {#{description := PFdescription}, _} -> S5#{description => PFdescription};
+             _ -> S5
+         end,
+    S7 = case {PMsg, NMsg} of
+             {_, #{input_schema_pb := NFinput_schema_pb}} -> S6#{input_schema_pb => NFinput_schema_pb};
+             {#{input_schema_pb := PFinput_schema_pb}, _} -> S6#{input_schema_pb => PFinput_schema_pb};
+             _ -> S6
+         end,
+    S8 = case {PMsg, NMsg} of
+             {_, #{output_schema_pb := NFoutput_schema_pb}} -> S7#{output_schema_pb => NFoutput_schema_pb};
+             {#{output_schema_pb := PFoutput_schema_pb}, _} -> S7#{output_schema_pb => PFoutput_schema_pb};
+             _ -> S7
+         end,
+    S9 = case {PMsg, NMsg} of
+             {_, #{streaming := NFstreaming}} -> S8#{streaming => NFstreaming};
+             {#{streaming := PFstreaming}, _} -> S8#{streaming => PFstreaming};
+             _ -> S8
+         end,
+    S10 = case {PMsg, NMsg} of
+              {_, #{risk_level := NFrisk_level}} -> S9#{risk_level => NFrisk_level};
+              {#{risk_level := PFrisk_level}, _} -> S9#{risk_level => PFrisk_level};
+              _ -> S9
+          end,
+    S11 = case {PMsg, NMsg} of
+              {_, #{cost_hint := NFcost_hint}} -> S10#{cost_hint => NFcost_hint};
+              {#{cost_hint := PFcost_hint}, _} -> S10#{cost_hint => PFcost_hint};
+              _ -> S10
+          end,
+    case {PMsg, NMsg} of
+        {#{tags := PFtags}, #{tags := NFtags}} -> S11#{tags => 'erlang_++'(PFtags, NFtags, TrUserData)};
+        {_, #{tags := NFtags}} -> S11#{tags => NFtags};
+        {#{tags := PFtags}, _} -> S11#{tags => PFtags};
+        {_, _} -> S11
+    end.
+
+-compile({nowarn_unused_function,merge_msg_DebugCapabilityArgs/3}).
+merge_msg_DebugCapabilityArgs(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{capability_name := NFcapability_name}} -> S1#{capability_name => NFcapability_name};
+             {#{capability_name := PFcapability_name}, _} -> S1#{capability_name => PFcapability_name};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{arguments_json := NFarguments_json}} -> S2#{arguments_json => NFarguments_json};
+             {#{arguments_json := PFarguments_json}, _} -> S2#{arguments_json => PFarguments_json};
+             _ -> S2
+         end,
+    case {PMsg, NMsg} of
+        {_, #{timeout_ms := NFtimeout_ms}} -> S3#{timeout_ms => NFtimeout_ms};
+        {#{timeout_ms := PFtimeout_ms}, _} -> S3#{timeout_ms => PFtimeout_ms};
+        _ -> S3
+    end.
+
+-compile({nowarn_unused_function,merge_msg_DebugCapabilityResult/3}).
+merge_msg_DebugCapabilityResult(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{capability_name := NFcapability_name}} -> S1#{capability_name => NFcapability_name};
+             {#{capability_name := PFcapability_name}, _} -> S1#{capability_name => PFcapability_name};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{result_json := NFresult_json}} -> S2#{result_json => NFresult_json};
+             {#{result_json := PFresult_json}, _} -> S2#{result_json => PFresult_json};
+             _ -> S2
+         end,
+    case {PMsg, NMsg} of
+        {_, #{error := NFerror}} -> S3#{error => NFerror};
+        {#{error := PFerror}, _} -> S3#{error => PFerror};
+        _ -> S3
+    end.
+
 -compile({nowarn_unused_function,merge_msg_ApproveResult/3}).
 merge_msg_ApproveResult(PMsg, NMsg, _) ->
     S1 = #{},
@@ -4333,6 +5039,10 @@ verify_msg(Msg, MsgName, Opts) ->
         'SendResult' -> v_msg_SendResult(Msg, [MsgName], TrUserData);
         'ListToolsResult' -> v_msg_ListToolsResult(Msg, [MsgName], TrUserData);
         'ToolDesc' -> v_msg_ToolDesc(Msg, [MsgName], TrUserData);
+        'ListCapabilitiesResult' -> v_msg_ListCapabilitiesResult(Msg, [MsgName], TrUserData);
+        'CapabilityDesc' -> v_msg_CapabilityDesc(Msg, [MsgName], TrUserData);
+        'DebugCapabilityArgs' -> v_msg_DebugCapabilityArgs(Msg, [MsgName], TrUserData);
+        'DebugCapabilityResult' -> v_msg_DebugCapabilityResult(Msg, [MsgName], TrUserData);
         'ApproveResult' -> v_msg_ApproveResult(Msg, [MsgName], TrUserData);
         'BrainStatusResult' -> v_msg_BrainStatusResult(Msg, [MsgName], TrUserData);
         'HistoryEntry' -> v_msg_HistoryEntry(Msg, [MsgName], TrUserData);
@@ -5122,6 +5832,150 @@ v_msg_ToolDesc(#{} = M, Path, TrUserData) ->
 v_msg_ToolDesc(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ToolDesc'}, M, Path);
 v_msg_ToolDesc(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ToolDesc'}, X, Path).
 
+-compile({nowarn_unused_function,v_msg_ListCapabilitiesResult/3}).
+-dialyzer({nowarn_function,v_msg_ListCapabilitiesResult/3}).
+v_msg_ListCapabilitiesResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{capabilities := F1} ->
+            if is_list(F1) ->
+                   _ = [v_submsg_CapabilityDesc(Elem, [capabilities | Path], TrUserData) || Elem <- F1],
+                   ok;
+               true -> mk_type_error({invalid_list_of, {msg, 'CapabilityDesc'}}, F1, [capabilities | Path])
+            end;
+        _ -> ok
+    end,
+    lists:foreach(fun (capabilities) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ListCapabilitiesResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ListCapabilitiesResult'}, M, Path);
+v_msg_ListCapabilitiesResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ListCapabilitiesResult'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_CapabilityDesc/3}).
+-dialyzer({nowarn_function,v_submsg_CapabilityDesc/3}).
+v_submsg_CapabilityDesc(Msg, Path, TrUserData) -> v_msg_CapabilityDesc(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_CapabilityDesc/3}).
+-dialyzer({nowarn_function,v_msg_CapabilityDesc/3}).
+v_msg_CapabilityDesc(#{} = M, Path, TrUserData) ->
+    case M of
+        #{name := F1} -> v_type_string(F1, [name | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{kind := F2} -> v_type_string(F2, [kind | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{source := F3} -> v_type_string(F3, [source | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{version := F4} -> v_type_string(F4, [version | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{description := F5} -> v_type_string(F5, [description | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{input_schema_pb := F6} -> v_type_bytes(F6, [input_schema_pb | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{output_schema_pb := F7} -> v_type_bytes(F7, [output_schema_pb | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{streaming := F8} -> v_type_bool(F8, [streaming | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{risk_level := F9} -> v_type_string(F9, [risk_level | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{cost_hint := F10} -> v_type_string(F10, [cost_hint | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{tags := F11} ->
+            if is_list(F11) ->
+                   _ = [v_type_string(Elem, [tags | Path], TrUserData) || Elem <- F11],
+                   ok;
+               true -> mk_type_error({invalid_list_of, string}, F11, [tags | Path])
+            end;
+        _ -> ok
+    end,
+    lists:foreach(fun (tags) -> ok;
+                      (cost_hint) -> ok;
+                      (risk_level) -> ok;
+                      (streaming) -> ok;
+                      (output_schema_pb) -> ok;
+                      (input_schema_pb) -> ok;
+                      (description) -> ok;
+                      (version) -> ok;
+                      (source) -> ok;
+                      (kind) -> ok;
+                      (name) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_CapabilityDesc(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'CapabilityDesc'}, M, Path);
+v_msg_CapabilityDesc(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'CapabilityDesc'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_DebugCapabilityArgs/3}).
+-dialyzer({nowarn_function,v_msg_DebugCapabilityArgs/3}).
+v_msg_DebugCapabilityArgs(#{} = M, Path, TrUserData) ->
+    case M of
+        #{capability_name := F1} -> v_type_string(F1, [capability_name | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{arguments_json := F2} -> v_type_string(F2, [arguments_json | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{timeout_ms := F3} -> v_type_uint32(F3, [timeout_ms | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (timeout_ms) -> ok;
+                      (arguments_json) -> ok;
+                      (capability_name) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_DebugCapabilityArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'DebugCapabilityArgs'}, M, Path);
+v_msg_DebugCapabilityArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'DebugCapabilityArgs'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_DebugCapabilityResult/3}).
+-dialyzer({nowarn_function,v_msg_DebugCapabilityResult/3}).
+v_msg_DebugCapabilityResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{capability_name := F1} -> v_type_string(F1, [capability_name | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{result_json := F2} -> v_type_string(F2, [result_json | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{error := F3} -> v_type_string(F3, [error | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (error) -> ok;
+                      (result_json) -> ok;
+                      (capability_name) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_DebugCapabilityResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'DebugCapabilityResult'}, M, Path);
+v_msg_DebugCapabilityResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'DebugCapabilityResult'}, X, Path).
+
 -compile({nowarn_unused_function,v_msg_ApproveResult/3}).
 -dialyzer({nowarn_function,v_msg_ApproveResult/3}).
 v_msg_ApproveResult(#{} = M, Path, TrUserData) ->
@@ -5261,6 +6115,12 @@ v_msg_DeleteSessionResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 
 v_type_int32(N, _Path, _TrUserData) when is_integer(N), -2147483648 =< N, N =< 2147483647 -> ok;
 v_type_int32(N, Path, _TrUserData) when is_integer(N) -> mk_type_error({value_out_of_range, int32, signed, 32}, N, Path);
 v_type_int32(X, Path, _TrUserData) -> mk_type_error({bad_integer, int32, signed, 32}, X, Path).
+
+-compile({nowarn_unused_function,v_type_uint32/3}).
+-dialyzer({nowarn_function,v_type_uint32/3}).
+v_type_uint32(N, _Path, _TrUserData) when is_integer(N), 0 =< N, N =< 4294967295 -> ok;
+v_type_uint32(N, Path, _TrUserData) when is_integer(N) -> mk_type_error({value_out_of_range, uint32, unsigned, 32}, N, Path);
+v_type_uint32(X, Path, _TrUserData) -> mk_type_error({bad_integer, uint32, unsigned, 32}, X, Path).
 
 -compile({nowarn_unused_function,v_type_uint64/3}).
 -dialyzer({nowarn_function,v_type_uint64/3}).
@@ -5426,6 +6286,27 @@ get_msg_defs() ->
       [#{name => name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
        #{name => description, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
        #{name => parameters_pb, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'ListCapabilitiesResult'}, [#{name => capabilities, fnum => 1, rnum => 2, type => {msg, 'CapabilityDesc'}, occurrence => repeated, opts => []}]},
+     {{msg, 'CapabilityDesc'},
+      [#{name => name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => kind, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+       #{name => source, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+       #{name => version, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []},
+       #{name => description, fnum => 5, rnum => 6, type => string, occurrence => optional, opts => []},
+       #{name => input_schema_pb, fnum => 6, rnum => 7, type => bytes, occurrence => optional, opts => []},
+       #{name => output_schema_pb, fnum => 7, rnum => 8, type => bytes, occurrence => optional, opts => []},
+       #{name => streaming, fnum => 8, rnum => 9, type => bool, occurrence => optional, opts => []},
+       #{name => risk_level, fnum => 9, rnum => 10, type => string, occurrence => optional, opts => []},
+       #{name => cost_hint, fnum => 10, rnum => 11, type => string, occurrence => optional, opts => []},
+       #{name => tags, fnum => 11, rnum => 12, type => string, occurrence => repeated, opts => []}]},
+     {{msg, 'DebugCapabilityArgs'},
+      [#{name => capability_name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => arguments_json, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+       #{name => timeout_ms, fnum => 3, rnum => 4, type => uint32, occurrence => optional, opts => []}]},
+     {{msg, 'DebugCapabilityResult'},
+      [#{name => capability_name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => result_json, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+       #{name => error, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []}]},
      {{msg, 'ApproveResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}]},
      {{msg, 'BrainStatusResult'},
       [#{name => state, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
@@ -5471,6 +6352,10 @@ get_msg_names() ->
      'SendResult',
      'ListToolsResult',
      'ToolDesc',
+     'ListCapabilitiesResult',
+     'CapabilityDesc',
+     'DebugCapabilityArgs',
+     'DebugCapabilityResult',
      'ApproveResult',
      'BrainStatusResult',
      'HistoryEntry',
@@ -5511,6 +6396,10 @@ get_msg_or_group_names() ->
      'SendResult',
      'ListToolsResult',
      'ToolDesc',
+     'ListCapabilitiesResult',
+     'CapabilityDesc',
+     'DebugCapabilityArgs',
+     'DebugCapabilityResult',
      'ApproveResult',
      'BrainStatusResult',
      'HistoryEntry',
@@ -5619,6 +6508,27 @@ find_msg_def('ToolDesc') ->
     [#{name => name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
      #{name => description, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
      #{name => parameters_pb, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}];
+find_msg_def('ListCapabilitiesResult') -> [#{name => capabilities, fnum => 1, rnum => 2, type => {msg, 'CapabilityDesc'}, occurrence => repeated, opts => []}];
+find_msg_def('CapabilityDesc') ->
+    [#{name => name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => kind, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+     #{name => source, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+     #{name => version, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []},
+     #{name => description, fnum => 5, rnum => 6, type => string, occurrence => optional, opts => []},
+     #{name => input_schema_pb, fnum => 6, rnum => 7, type => bytes, occurrence => optional, opts => []},
+     #{name => output_schema_pb, fnum => 7, rnum => 8, type => bytes, occurrence => optional, opts => []},
+     #{name => streaming, fnum => 8, rnum => 9, type => bool, occurrence => optional, opts => []},
+     #{name => risk_level, fnum => 9, rnum => 10, type => string, occurrence => optional, opts => []},
+     #{name => cost_hint, fnum => 10, rnum => 11, type => string, occurrence => optional, opts => []},
+     #{name => tags, fnum => 11, rnum => 12, type => string, occurrence => repeated, opts => []}];
+find_msg_def('DebugCapabilityArgs') ->
+    [#{name => capability_name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => arguments_json, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+     #{name => timeout_ms, fnum => 3, rnum => 4, type => uint32, occurrence => optional, opts => []}];
+find_msg_def('DebugCapabilityResult') ->
+    [#{name => capability_name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => result_json, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+     #{name => error, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []}];
 find_msg_def('ApproveResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}];
 find_msg_def('BrainStatusResult') ->
     [#{name => state, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
@@ -5719,6 +6629,10 @@ fqbin_to_msg_name(<<"panel.StartSessionResult">>) -> 'StartSessionResult';
 fqbin_to_msg_name(<<"panel.SendResult">>) -> 'SendResult';
 fqbin_to_msg_name(<<"panel.ListToolsResult">>) -> 'ListToolsResult';
 fqbin_to_msg_name(<<"panel.ToolDesc">>) -> 'ToolDesc';
+fqbin_to_msg_name(<<"panel.ListCapabilitiesResult">>) -> 'ListCapabilitiesResult';
+fqbin_to_msg_name(<<"panel.CapabilityDesc">>) -> 'CapabilityDesc';
+fqbin_to_msg_name(<<"panel.DebugCapabilityArgs">>) -> 'DebugCapabilityArgs';
+fqbin_to_msg_name(<<"panel.DebugCapabilityResult">>) -> 'DebugCapabilityResult';
 fqbin_to_msg_name(<<"panel.ApproveResult">>) -> 'ApproveResult';
 fqbin_to_msg_name(<<"panel.BrainStatusResult">>) -> 'BrainStatusResult';
 fqbin_to_msg_name(<<"panel.HistoryEntry">>) -> 'HistoryEntry';
@@ -5756,6 +6670,10 @@ msg_name_to_fqbin('StartSessionResult') -> <<"panel.StartSessionResult">>;
 msg_name_to_fqbin('SendResult') -> <<"panel.SendResult">>;
 msg_name_to_fqbin('ListToolsResult') -> <<"panel.ListToolsResult">>;
 msg_name_to_fqbin('ToolDesc') -> <<"panel.ToolDesc">>;
+msg_name_to_fqbin('ListCapabilitiesResult') -> <<"panel.ListCapabilitiesResult">>;
+msg_name_to_fqbin('CapabilityDesc') -> <<"panel.CapabilityDesc">>;
+msg_name_to_fqbin('DebugCapabilityArgs') -> <<"panel.DebugCapabilityArgs">>;
+msg_name_to_fqbin('DebugCapabilityResult') -> <<"panel.DebugCapabilityResult">>;
 msg_name_to_fqbin('ApproveResult') -> <<"panel.ApproveResult">>;
 msg_name_to_fqbin('BrainStatusResult') -> <<"panel.BrainStatusResult">>;
 msg_name_to_fqbin('HistoryEntry') -> <<"panel.HistoryEntry">>;
@@ -5805,6 +6723,9 @@ get_msg_containment("panel") ->
      'ApproveResult',
      'BrainStatusArgs',
      'BrainStatusResult',
+     'CapabilityDesc',
+     'DebugCapabilityArgs',
+     'DebugCapabilityResult',
      'DeleteSessionArgs',
      'DeleteSessionResult',
      'FinalAnswer',
@@ -5815,6 +6736,7 @@ get_msg_containment("panel") ->
      'JsonField',
      'JsonObject',
      'JsonValue',
+     'ListCapabilitiesResult',
      'ListToolsResult',
      'LlmChunk',
      'PanelExec',
@@ -5854,40 +6776,44 @@ get_enum_containment("panel") -> [];
 get_enum_containment(P) -> error({gpb_error, {badproto, P}}).
 
 
-get_proto_by_msg_name_as_fqbin(<<"panel.StopResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelRequest">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelExecResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.JsonField">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StreamError">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ListToolsResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameters">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolEvent">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolDesc">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelStream">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelResponse">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.FinalAnswer">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.JsonValue">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.JsonObject">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelResponse">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DebugCapabilityArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.CapabilityDesc">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.LlmChunk">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolFunction">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.SendResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelExec">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.HistoryEntry">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.JsonArray">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.SendArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelFrame">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ApproveArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolCall">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameter">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelRequest">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.FinalAnswer">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolDesc">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ApproveResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StopResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameters">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolFunction">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelStream">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolEvent">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ListToolsResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameter">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SendResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonValue">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelFrame">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelExecResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonField">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SendArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DebugCapabilityResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StreamError">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ApproveArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelExec">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonObject">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ListCapabilitiesResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolCall">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.HistoryEntry">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 
 

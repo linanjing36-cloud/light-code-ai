@@ -5,7 +5,7 @@
 //   HermesService.Send(sid, msg)        → 触发 ReAct (异步, 立即返回 stream_id)
 //   HermesService.BrainStatus(sid)      → 读 FSM 状态 (idle/thinking/acting)
 //   HermesService.GetHistory(sid)       → 拉取 state_store 短期记忆
-//   HermesService.ListTools()           → 工具列表
+//   RouterBinding.CallPanel(...)        → 直连 panel_server 的能力目录与调试入口
 //   HermesService.StopBrain()            → 优雅停止 Erlang 大脑
 //
 // 流式 chunk/final 由 panel:stream 事件驱动; 终态后 get_history 同步对话区。
@@ -13,6 +13,7 @@
 
 import { HermesService } from "../bindings/hermes";
 import { SessionStartRequest } from "../bindings/hermes/models.js";
+import * as RouterBinding from "../bindings/hermes/internal/router/router.js";
 import { Events } from "@wailsio/runtime";
 
 const CONFIG_STORAGE_KEY = "hermes_llm_config";
@@ -56,6 +57,7 @@ let statusTimer: number | null = null;
 let isSending = false;
 const sessionStreamIds = new Map<string, string>();
 const sessionHistoryDirty = new Set<string>();
+let capabilityCatalog: CapabilityView[] = [];
 let streamingMsgEl: HTMLElement | null = null;
 let streamingMsgText: Text | null = null;
 let streamingText = "";
@@ -81,6 +83,23 @@ interface PanelStreamEvent {
     stream_id: string;
     kind: "chunk" | "tool_event" | "final" | "error" | "unknown";
     payload: Record<string, unknown>;
+}
+
+interface CapabilityView {
+    name: string;
+    description: string;
+    kind: string;
+    source: string;
+    risk_level: string;
+    cost_hint: string;
+    tags?: string[];
+    input_schema?: unknown;
+}
+
+interface DebugCapabilityResult {
+    capability_name?: string;
+    result_json?: string;
+    error?: string;
 }
 
 function setupStreamListener(): void {
@@ -306,6 +325,10 @@ const cfgApiKey = $("cfg-api-key") as HTMLInputElement;
 const cfgSystemPrompt = $("cfg-system-prompt") as HTMLTextAreaElement;
 const modelBadgeText = $("model-badge-text")!;
 const ctxTools = $("ctx-tools")!;
+const capabilitySelect = $("capability-select") as HTMLSelectElement;
+const capabilityArgs = $("capability-args") as HTMLTextAreaElement;
+const capabilityRun = $("capability-run") as HTMLButtonElement;
+const capabilityResult = $("capability-result") as HTMLElement;
 const btnStop = $("btn-stop") as HTMLButtonElement;
 const btnShutdown = $("btn-shutdown") as HTMLButtonElement;
 const btnClear = $("btn-clear") as HTMLButtonElement;
@@ -373,31 +396,126 @@ btnSaveConfig.addEventListener("click", () => {
     toast("LLM 配置已保存");
 });
 
-async function loadToolsList(prefetchedTools?: Array<{ name?: string; description?: string }>): Promise<void> {
+capabilitySelect.addEventListener("change", () => {
+    applyCapabilityPreset(capabilitySelect.value);
+});
+
+capabilityRun.addEventListener("click", async () => {
+    const name = capabilitySelect.value;
+    if (!name) {
+        toast("请先选择能力");
+        return;
+    }
+    let argumentsJSON = capabilityArgs.value.trim() || "{}";
     try {
-        const tools = prefetchedTools ?? await HermesService.ListTools();
-        if (!tools?.length) {
-            ctxTools.innerHTML = `<div class="tool-mini"><span class="dot off"></span>无可用工具</div>`;
+        JSON.parse(argumentsJSON);
+    } catch (e) {
+        toast("能力参数 JSON 非法: " + e);
+        return;
+    }
+    capabilityRun.disabled = true;
+    capabilityResult.textContent = "执行中...";
+    try {
+        const out = (await RouterBinding.CallPanel("debug_capability", {
+            capability_name: name,
+            arguments_json: argumentsJSON,
+            timeout_ms: 12000,
+        })) as DebugCapabilityResult;
+        if (out?.error) {
+            capabilityResult.textContent = `ERROR\n${out.error}`;
+        } else {
+            capabilityResult.textContent = out?.result_json || "{}";
+        }
+    } catch (e) {
+        capabilityResult.textContent = "ERROR\n" + String(e);
+    } finally {
+        capabilityRun.disabled = false;
+    }
+});
+
+function normalizeCapability(raw: Record<string, unknown>): CapabilityView {
+    return {
+        name: String(raw.name || ""),
+        description: String(raw.description || ""),
+        kind: String(raw.kind || "tool"),
+        source: String(raw.source || "builtin"),
+        risk_level: String(raw.risk_level || "safe"),
+        cost_hint: String(raw.cost_hint || "low"),
+        tags: Array.isArray(raw.tags) ? raw.tags.map((tag) => String(tag)) : [],
+        input_schema: raw.input_schema,
+    };
+}
+
+function renderCapabilities(caps: CapabilityView[]): void {
+    capabilityCatalog = caps;
+    if (!caps.length) {
+        ctxTools.innerHTML = `<div class="tool-mini"><span class="dot off"></span>无可用能力</div>`;
+        capabilitySelect.innerHTML = `<option value="">暂无能力</option>`;
+        capabilityArgs.value = "{}";
+        capabilityResult.textContent = "";
+        capabilityRun.disabled = true;
+        return;
+    }
+    ctxTools.innerHTML = caps
+        .map(
+            (cap) =>
+                `<div class="tool-mini" title="${escapeHtml(cap.description || "")}">
+                    <span class="dot"></span>
+                    <div class="tool-mini-body">
+                        <span class="tool-name">${escapeHtml(cap.name)}</span>
+                        <span class="tool-meta">${escapeHtml(cap.kind)} · ${escapeHtml(cap.source)} · ${escapeHtml(cap.risk_level)}</span>
+                    </div>
+                </div>`
+        )
+        .join("");
+    capabilitySelect.innerHTML = caps
+        .map((cap) => `<option value="${escapeHtml(cap.name)}">${escapeHtml(cap.name)} · ${escapeHtml(cap.kind)}</option>`)
+        .join("");
+    if (!capabilitySelect.value && caps[0]) {
+        capabilitySelect.value = caps[0].name;
+    }
+    applyCapabilityPreset(capabilitySelect.value);
+    capabilityRun.disabled = false;
+}
+
+function defaultCapabilityArgs(name: string): string {
+    switch (name) {
+        case "repo_map":
+            return JSON.stringify({ max_depth: 3, max_entries: 40, include_files: false }, null, 2);
+        case "code_search":
+            return JSON.stringify({ query: "panel_server", max_results: 8, case_sensitive: false }, null, 2);
+        default:
+            return "{}";
+    }
+}
+
+function applyCapabilityPreset(name: string): void {
+    const cap = capabilityCatalog.find((item) => item.name === name);
+    capabilityArgs.value = defaultCapabilityArgs(cap?.name || name);
+    capabilityResult.textContent = "";
+}
+
+async function loadCapabilities(prefetchedCaps?: CapabilityView[]): Promise<void> {
+    try {
+        if (prefetchedCaps) {
+            renderCapabilities(prefetchedCaps);
             return;
         }
-        ctxTools.innerHTML = tools
-            .map(
-                (t) =>
-                    `<div class="tool-mini" title="${escapeHtml(t.description || "")}"><span class="dot"></span>${escapeHtml(t.name || "")}</div>`
-            )
-            .join("");
+        const caps = (await RouterBinding.CallPanel("list_capabilities", {})) as Record<string, unknown>[];
+        renderCapabilities((caps || []).map((item) => normalizeCapability(item)));
     } catch (e) {
         ctxTools.innerHTML = `<div class="tool-mini"><span class="dot off"></span>加载失败</div>`;
-        console.warn("[hermes] list_tools:", e);
+        capabilitySelect.innerHTML = `<option value="">加载失败</option>`;
+        capabilityRun.disabled = true;
+        console.warn("[hermes] list_capabilities:", e);
     }
 }
 
 async function checkBrainReady(): Promise<void> {
     try {
-        // list_tools 不需要 session, 适合探活
-        const tools = await HermesService.ListTools();
+        const caps = (await RouterBinding.CallPanel("list_capabilities", {})) as Record<string, unknown>[];
         setBrainConnected(true);
-        await loadToolsList(tools);
+        await loadCapabilities((caps || []).map((item) => normalizeCapability(item)));
         if (sessions.size === 0) {
             await createNewSession();
         }

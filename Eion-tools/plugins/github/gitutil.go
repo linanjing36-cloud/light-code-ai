@@ -1,0 +1,32 @@
+package githubplugin
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"os/exec"
+	"strings"
+
+	"github.com/light-code-ai/eion-tools/internal/workspace"
+)
+
+func resolveGitRoot(explicit string) (string, error) {
+	return workspace.ResolveRoot(explicit)
+}
+
+func runGit(ctx context.Context, dir string, args ...string) (string, error) {
+	cmd := exec.CommandContext(toolCtx(ctx), "git", args...)
+	cmd.Dir = dir
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		errText := strings.TrimSpace(stderr.String())
+		if errText == "" {
+			errText = err.Error()
+		}
+		return "", fmt.Errorf("git %s: %s", strings.Join(args, " "), errText)
+	}
+	return strings.TrimSpace(stdout.String()), nil
+}

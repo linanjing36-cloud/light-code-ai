@@ -433,6 +433,29 @@ handle_method(<<"send">>, ArgsMap, ConnPid) ->
 handle_method(<<"list_tools">>, _ArgsMap, _ConnPid) ->
     {ok, #{tools => panel_tools:fetch_tool_descs()}};
 
+%% ---- list_capabilities: 统一能力目录（首版先把 tool 映射为 capability） ----
+handle_method(<<"list_capabilities">>, _ArgsMap, _ConnPid) ->
+    {ok, #{capabilities => panel_tools:fetch_capability_descs()}};
+
+%% ---- debug_capability: 面板直调单个 capability，供能力市场/调试面板使用 ----
+handle_method(<<"debug_capability">>, ArgsMap, _ConnPid) ->
+    Name = maps:get(capability_name, ArgsMap, <<>>),
+    ArgsJson = maps:get(arguments_json, ArgsMap, <<>>),
+    TimeoutMs = maps:get(timeout_ms, ArgsMap, 5000),
+    ReqId = iolist_to_binary(
+              ["debug-", Name, "-", integer_to_binary(erlang:unique_integer([positive]))]),
+    ToolReq = #{id => ReqId, name => Name, arguments => ArgsJson},
+    case bridge_manager:call_tool_sync(ToolReq, TimeoutMs) of
+        {ok, Resp} ->
+            {ok, #{capability_name => Name,
+                   result_json => maps:get(result_json, Resp, <<>>),
+                   error => maps:get(error, Resp, <<>>)}};
+        {error, Reason} ->
+            {ok, #{capability_name => Name,
+                   result_json => <<>>,
+                   error => iolist_to_binary(io_lib:format("~p", [Reason]))}}
+    end;
+
 %% ---- get_history: 读 state_store 短期记忆 ----
 handle_method(<<"get_history">>, ArgsMap, _ConnPid) ->
     SessionId = maps:get(session_id, ArgsMap, <<>>),

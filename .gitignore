@@ -54,3 +54,6 @@ Wails-v3/extract/
 Agent-brains/config/mnesia/LATEST.LOG
 Agent-brains/log/hermes_brains.log
 erl_crash.dump
+Agent-brains/config/mnesia/DECISION_TAB.LOG
+Agent-brains/config/mnesia/LATEST.LOG
+Agent-brains/config/mnesia/ets_snapshot.DCD

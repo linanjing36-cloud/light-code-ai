@@ -14,6 +14,9 @@ import (
 	"github.com/light-code-ai/eion-tools/internal/logging"
 	"github.com/light-code-ai/eion-tools/internal/memory"
 	"github.com/light-code-ai/eion-tools/internal/tool"
+	codesearch "github.com/light-code-ai/eion-tools/plugins/code_search"
+	githubplugin "github.com/light-code-ai/eion-tools/plugins/github"
+	repomap "github.com/light-code-ai/eion-tools/plugins/repo_map"
 )
 
 // Options 启动参数。
@@ -43,6 +46,9 @@ func New(opts Options) (*Server, error) {
 	d := dispatcher.New()
 	name, desc, params, handler := tool.GetWeatherHandler()
 	d.ToolWrapper().Register(name, desc, params, handler)
+	repomap.Register(d.ToolWrapper())
+	codesearch.Register(d.ToolWrapper())
+	githubplugin.Register(d.ToolWrapper())
 
 	if !opts.DisableMemory && os.Getenv("HERMES_MEMORY_DISABLE") != "1" {
 		memCfg := memory.LoadConfig()

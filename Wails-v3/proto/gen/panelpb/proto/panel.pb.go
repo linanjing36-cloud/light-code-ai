@@ -277,7 +277,7 @@ func (x *PanelExecResult) GetTerminal() bool {
 type PanelRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`                               // 请求 ID (用于 response 路由匹配, stream 不复用此 id)
-	Method        string                 `protobuf:"bytes,2,opt,name=method,proto3" json:"method,omitempty"`                        // start_session / send / list_tools / approve / brain_status / get_history / delete_session / stop
+	Method        string                 `protobuf:"bytes,2,opt,name=method,proto3" json:"method,omitempty"`                        // start_session / send / list_tools / list_capabilities / approve / brain_status / get_history / delete_session / stop
 	ArgsBytes     []byte                 `protobuf:"bytes,3,opt,name=args_bytes,json=argsBytes,proto3" json:"args_bytes,omitempty"` // 方法对应 Args message 的 Protobuf 编码
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1816,6 +1816,294 @@ func (x *ToolDesc) GetParametersPb() []byte {
 	return nil
 }
 
+type ListCapabilitiesResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Capabilities  []*CapabilityDesc      `protobuf:"bytes,1,rep,name=capabilities,proto3" json:"capabilities,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListCapabilitiesResult) Reset() {
+	*x = ListCapabilitiesResult{}
+	mi := &file_proto_panel_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListCapabilitiesResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCapabilitiesResult) ProtoMessage() {}
+
+func (x *ListCapabilitiesResult) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_panel_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCapabilitiesResult.ProtoReflect.Descriptor instead.
+func (*ListCapabilitiesResult) Descriptor() ([]byte, []int) {
+	return file_proto_panel_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *ListCapabilitiesResult) GetCapabilities() []*CapabilityDesc {
+	if x != nil {
+		return x.Capabilities
+	}
+	return nil
+}
+
+type CapabilityDesc struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Name           string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Kind           string                 `protobuf:"bytes,2,opt,name=kind,proto3" json:"kind,omitempty"`
+	Source         string                 `protobuf:"bytes,3,opt,name=source,proto3" json:"source,omitempty"`
+	Version        string                 `protobuf:"bytes,4,opt,name=version,proto3" json:"version,omitempty"`
+	Description    string                 `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
+	InputSchemaPb  []byte                 `protobuf:"bytes,6,opt,name=input_schema_pb,json=inputSchemaPb,proto3" json:"input_schema_pb,omitempty"`
+	OutputSchemaPb []byte                 `protobuf:"bytes,7,opt,name=output_schema_pb,json=outputSchemaPb,proto3" json:"output_schema_pb,omitempty"`
+	Streaming      bool                   `protobuf:"varint,8,opt,name=streaming,proto3" json:"streaming,omitempty"`
+	RiskLevel      string                 `protobuf:"bytes,9,opt,name=risk_level,json=riskLevel,proto3" json:"risk_level,omitempty"`
+	CostHint       string                 `protobuf:"bytes,10,opt,name=cost_hint,json=costHint,proto3" json:"cost_hint,omitempty"`
+	Tags           []string               `protobuf:"bytes,11,rep,name=tags,proto3" json:"tags,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *CapabilityDesc) Reset() {
+	*x = CapabilityDesc{}
+	mi := &file_proto_panel_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CapabilityDesc) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CapabilityDesc) ProtoMessage() {}
+
+func (x *CapabilityDesc) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_panel_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CapabilityDesc.ProtoReflect.Descriptor instead.
+func (*CapabilityDesc) Descriptor() ([]byte, []int) {
+	return file_proto_panel_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *CapabilityDesc) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CapabilityDesc) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *CapabilityDesc) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+func (x *CapabilityDesc) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *CapabilityDesc) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *CapabilityDesc) GetInputSchemaPb() []byte {
+	if x != nil {
+		return x.InputSchemaPb
+	}
+	return nil
+}
+
+func (x *CapabilityDesc) GetOutputSchemaPb() []byte {
+	if x != nil {
+		return x.OutputSchemaPb
+	}
+	return nil
+}
+
+func (x *CapabilityDesc) GetStreaming() bool {
+	if x != nil {
+		return x.Streaming
+	}
+	return false
+}
+
+func (x *CapabilityDesc) GetRiskLevel() string {
+	if x != nil {
+		return x.RiskLevel
+	}
+	return ""
+}
+
+func (x *CapabilityDesc) GetCostHint() string {
+	if x != nil {
+		return x.CostHint
+	}
+	return ""
+}
+
+func (x *CapabilityDesc) GetTags() []string {
+	if x != nil {
+		return x.Tags
+	}
+	return nil
+}
+
+type DebugCapabilityArgs struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	CapabilityName string                 `protobuf:"bytes,1,opt,name=capability_name,json=capabilityName,proto3" json:"capability_name,omitempty"`
+	ArgumentsJson  string                 `protobuf:"bytes,2,opt,name=arguments_json,json=argumentsJson,proto3" json:"arguments_json,omitempty"`
+	TimeoutMs      uint32                 `protobuf:"varint,3,opt,name=timeout_ms,json=timeoutMs,proto3" json:"timeout_ms,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *DebugCapabilityArgs) Reset() {
+	*x = DebugCapabilityArgs{}
+	mi := &file_proto_panel_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugCapabilityArgs) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugCapabilityArgs) ProtoMessage() {}
+
+func (x *DebugCapabilityArgs) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_panel_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugCapabilityArgs.ProtoReflect.Descriptor instead.
+func (*DebugCapabilityArgs) Descriptor() ([]byte, []int) {
+	return file_proto_panel_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *DebugCapabilityArgs) GetCapabilityName() string {
+	if x != nil {
+		return x.CapabilityName
+	}
+	return ""
+}
+
+func (x *DebugCapabilityArgs) GetArgumentsJson() string {
+	if x != nil {
+		return x.ArgumentsJson
+	}
+	return ""
+}
+
+func (x *DebugCapabilityArgs) GetTimeoutMs() uint32 {
+	if x != nil {
+		return x.TimeoutMs
+	}
+	return 0
+}
+
+type DebugCapabilityResult struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	CapabilityName string                 `protobuf:"bytes,1,opt,name=capability_name,json=capabilityName,proto3" json:"capability_name,omitempty"`
+	ResultJson     string                 `protobuf:"bytes,2,opt,name=result_json,json=resultJson,proto3" json:"result_json,omitempty"`
+	Error          string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *DebugCapabilityResult) Reset() {
+	*x = DebugCapabilityResult{}
+	mi := &file_proto_panel_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugCapabilityResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugCapabilityResult) ProtoMessage() {}
+
+func (x *DebugCapabilityResult) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_panel_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugCapabilityResult.ProtoReflect.Descriptor instead.
+func (*DebugCapabilityResult) Descriptor() ([]byte, []int) {
+	return file_proto_panel_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *DebugCapabilityResult) GetCapabilityName() string {
+	if x != nil {
+		return x.CapabilityName
+	}
+	return ""
+}
+
+func (x *DebugCapabilityResult) GetResultJson() string {
+	if x != nil {
+		return x.ResultJson
+	}
+	return ""
+}
+
+func (x *DebugCapabilityResult) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
 type ApproveResult struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Ok            bool                   `protobuf:"varint,1,opt,name=ok,proto3" json:"ok,omitempty"`
@@ -1825,7 +2113,7 @@ type ApproveResult struct {
 
 func (x *ApproveResult) Reset() {
 	*x = ApproveResult{}
-	mi := &file_proto_panel_proto_msgTypes[28]
+	mi := &file_proto_panel_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1837,7 +2125,7 @@ func (x *ApproveResult) String() string {
 func (*ApproveResult) ProtoMessage() {}
 
 func (x *ApproveResult) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_panel_proto_msgTypes[28]
+	mi := &file_proto_panel_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1850,7 +2138,7 @@ func (x *ApproveResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApproveResult.ProtoReflect.Descriptor instead.
 func (*ApproveResult) Descriptor() ([]byte, []int) {
-	return file_proto_panel_proto_rawDescGZIP(), []int{28}
+	return file_proto_panel_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *ApproveResult) GetOk() bool {
@@ -1872,7 +2160,7 @@ type BrainStatusResult struct {
 
 func (x *BrainStatusResult) Reset() {
 	*x = BrainStatusResult{}
-	mi := &file_proto_panel_proto_msgTypes[29]
+	mi := &file_proto_panel_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1884,7 +2172,7 @@ func (x *BrainStatusResult) String() string {
 func (*BrainStatusResult) ProtoMessage() {}
 
 func (x *BrainStatusResult) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_panel_proto_msgTypes[29]
+	mi := &file_proto_panel_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1897,7 +2185,7 @@ func (x *BrainStatusResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BrainStatusResult.ProtoReflect.Descriptor instead.
 func (*BrainStatusResult) Descriptor() ([]byte, []int) {
-	return file_proto_panel_proto_rawDescGZIP(), []int{29}
+	return file_proto_panel_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *BrainStatusResult) GetState() string {
@@ -1940,7 +2228,7 @@ type HistoryEntry struct {
 
 func (x *HistoryEntry) Reset() {
 	*x = HistoryEntry{}
-	mi := &file_proto_panel_proto_msgTypes[30]
+	mi := &file_proto_panel_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1952,7 +2240,7 @@ func (x *HistoryEntry) String() string {
 func (*HistoryEntry) ProtoMessage() {}
 
 func (x *HistoryEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_panel_proto_msgTypes[30]
+	mi := &file_proto_panel_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1965,7 +2253,7 @@ func (x *HistoryEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HistoryEntry.ProtoReflect.Descriptor instead.
 func (*HistoryEntry) Descriptor() ([]byte, []int) {
-	return file_proto_panel_proto_rawDescGZIP(), []int{30}
+	return file_proto_panel_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *HistoryEntry) GetRole() string {
@@ -2005,7 +2293,7 @@ type GetHistoryResult struct {
 
 func (x *GetHistoryResult) Reset() {
 	*x = GetHistoryResult{}
-	mi := &file_proto_panel_proto_msgTypes[31]
+	mi := &file_proto_panel_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2017,7 +2305,7 @@ func (x *GetHistoryResult) String() string {
 func (*GetHistoryResult) ProtoMessage() {}
 
 func (x *GetHistoryResult) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_panel_proto_msgTypes[31]
+	mi := &file_proto_panel_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2030,7 +2318,7 @@ func (x *GetHistoryResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetHistoryResult.ProtoReflect.Descriptor instead.
 func (*GetHistoryResult) Descriptor() ([]byte, []int) {
-	return file_proto_panel_proto_rawDescGZIP(), []int{31}
+	return file_proto_panel_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *GetHistoryResult) GetMessages() []*HistoryEntry {
@@ -2049,7 +2337,7 @@ type StopResult struct {
 
 func (x *StopResult) Reset() {
 	*x = StopResult{}
-	mi := &file_proto_panel_proto_msgTypes[32]
+	mi := &file_proto_panel_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2061,7 +2349,7 @@ func (x *StopResult) String() string {
 func (*StopResult) ProtoMessage() {}
 
 func (x *StopResult) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_panel_proto_msgTypes[32]
+	mi := &file_proto_panel_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2074,7 +2362,7 @@ func (x *StopResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StopResult.ProtoReflect.Descriptor instead.
 func (*StopResult) Descriptor() ([]byte, []int) {
-	return file_proto_panel_proto_rawDescGZIP(), []int{32}
+	return file_proto_panel_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *StopResult) GetOk() bool {
@@ -2093,7 +2381,7 @@ type DeleteSessionResult struct {
 
 func (x *DeleteSessionResult) Reset() {
 	*x = DeleteSessionResult{}
-	mi := &file_proto_panel_proto_msgTypes[33]
+	mi := &file_proto_panel_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2105,7 +2393,7 @@ func (x *DeleteSessionResult) String() string {
 func (*DeleteSessionResult) ProtoMessage() {}
 
 func (x *DeleteSessionResult) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_panel_proto_msgTypes[33]
+	mi := &file_proto_panel_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2118,7 +2406,7 @@ func (x *DeleteSessionResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSessionResult.ProtoReflect.Descriptor instead.
 func (*DeleteSessionResult) Descriptor() ([]byte, []int) {
-	return file_proto_panel_proto_rawDescGZIP(), []int{33}
+	return file_proto_panel_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *DeleteSessionResult) GetOk() bool {
@@ -2255,7 +2543,33 @@ const file_proto_panel_proto_rawDesc = "" +
 	"\bToolDesc\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12#\n" +
-	"\rparameters_pb\x18\x03 \x01(\fR\fparametersPb\"\x1f\n" +
+	"\rparameters_pb\x18\x03 \x01(\fR\fparametersPb\"S\n" +
+	"\x16ListCapabilitiesResult\x129\n" +
+	"\fcapabilities\x18\x01 \x03(\v2\x15.panel.CapabilityDescR\fcapabilities\"\xcc\x02\n" +
+	"\x0eCapabilityDesc\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04kind\x18\x02 \x01(\tR\x04kind\x12\x16\n" +
+	"\x06source\x18\x03 \x01(\tR\x06source\x12\x18\n" +
+	"\aversion\x18\x04 \x01(\tR\aversion\x12 \n" +
+	"\vdescription\x18\x05 \x01(\tR\vdescription\x12&\n" +
+	"\x0finput_schema_pb\x18\x06 \x01(\fR\rinputSchemaPb\x12(\n" +
+	"\x10output_schema_pb\x18\a \x01(\fR\x0eoutputSchemaPb\x12\x1c\n" +
+	"\tstreaming\x18\b \x01(\bR\tstreaming\x12\x1d\n" +
+	"\n" +
+	"risk_level\x18\t \x01(\tR\triskLevel\x12\x1b\n" +
+	"\tcost_hint\x18\n" +
+	" \x01(\tR\bcostHint\x12\x12\n" +
+	"\x04tags\x18\v \x03(\tR\x04tags\"\x84\x01\n" +
+	"\x13DebugCapabilityArgs\x12'\n" +
+	"\x0fcapability_name\x18\x01 \x01(\tR\x0ecapabilityName\x12%\n" +
+	"\x0earguments_json\x18\x02 \x01(\tR\rargumentsJson\x12\x1d\n" +
+	"\n" +
+	"timeout_ms\x18\x03 \x01(\rR\ttimeoutMs\"w\n" +
+	"\x15DebugCapabilityResult\x12'\n" +
+	"\x0fcapability_name\x18\x01 \x01(\tR\x0ecapabilityName\x12\x1f\n" +
+	"\vresult_json\x18\x02 \x01(\tR\n" +
+	"resultJson\x12\x14\n" +
+	"\x05error\x18\x03 \x01(\tR\x05error\"\x1f\n" +
 	"\rApproveResult\x12\x0e\n" +
 	"\x02ok\x18\x01 \x01(\bR\x02ok\"\x86\x01\n" +
 	"\x11BrainStatusResult\x12\x14\n" +
@@ -2292,42 +2606,46 @@ func file_proto_panel_proto_rawDescGZIP() []byte {
 	return file_proto_panel_proto_rawDescData
 }
 
-var file_proto_panel_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
+var file_proto_panel_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
 var file_proto_panel_proto_goTypes = []any{
-	(*PanelFrame)(nil),          // 0: panel.PanelFrame
-	(*PanelExec)(nil),           // 1: panel.PanelExec
-	(*PanelExecResult)(nil),     // 2: panel.PanelExecResult
-	(*PanelRequest)(nil),        // 3: panel.PanelRequest
-	(*PanelResponse)(nil),       // 4: panel.PanelResponse
-	(*PanelStream)(nil),         // 5: panel.PanelStream
-	(*LlmChunk)(nil),            // 6: panel.LlmChunk
-	(*JsonField)(nil),           // 7: panel.JsonField
-	(*ToolParameter)(nil),       // 8: panel.ToolParameter
-	(*ToolParameters)(nil),      // 9: panel.ToolParameters
-	(*JsonObject)(nil),          // 10: panel.JsonObject
-	(*JsonArray)(nil),           // 11: panel.JsonArray
-	(*JsonValue)(nil),           // 12: panel.JsonValue
-	(*ToolFunction)(nil),        // 13: panel.ToolFunction
-	(*ToolCall)(nil),            // 14: panel.ToolCall
-	(*ToolEvent)(nil),           // 15: panel.ToolEvent
-	(*FinalAnswer)(nil),         // 16: panel.FinalAnswer
-	(*StreamError)(nil),         // 17: panel.StreamError
-	(*StartSessionArgs)(nil),    // 18: panel.StartSessionArgs
-	(*SendArgs)(nil),            // 19: panel.SendArgs
-	(*ApproveArgs)(nil),         // 20: panel.ApproveArgs
-	(*BrainStatusArgs)(nil),     // 21: panel.BrainStatusArgs
-	(*GetHistoryArgs)(nil),      // 22: panel.GetHistoryArgs
-	(*DeleteSessionArgs)(nil),   // 23: panel.DeleteSessionArgs
-	(*StartSessionResult)(nil),  // 24: panel.StartSessionResult
-	(*SendResult)(nil),          // 25: panel.SendResult
-	(*ListToolsResult)(nil),     // 26: panel.ListToolsResult
-	(*ToolDesc)(nil),            // 27: panel.ToolDesc
-	(*ApproveResult)(nil),       // 28: panel.ApproveResult
-	(*BrainStatusResult)(nil),   // 29: panel.BrainStatusResult
-	(*HistoryEntry)(nil),        // 30: panel.HistoryEntry
-	(*GetHistoryResult)(nil),    // 31: panel.GetHistoryResult
-	(*StopResult)(nil),          // 32: panel.StopResult
-	(*DeleteSessionResult)(nil), // 33: panel.DeleteSessionResult
+	(*PanelFrame)(nil),             // 0: panel.PanelFrame
+	(*PanelExec)(nil),              // 1: panel.PanelExec
+	(*PanelExecResult)(nil),        // 2: panel.PanelExecResult
+	(*PanelRequest)(nil),           // 3: panel.PanelRequest
+	(*PanelResponse)(nil),          // 4: panel.PanelResponse
+	(*PanelStream)(nil),            // 5: panel.PanelStream
+	(*LlmChunk)(nil),               // 6: panel.LlmChunk
+	(*JsonField)(nil),              // 7: panel.JsonField
+	(*ToolParameter)(nil),          // 8: panel.ToolParameter
+	(*ToolParameters)(nil),         // 9: panel.ToolParameters
+	(*JsonObject)(nil),             // 10: panel.JsonObject
+	(*JsonArray)(nil),              // 11: panel.JsonArray
+	(*JsonValue)(nil),              // 12: panel.JsonValue
+	(*ToolFunction)(nil),           // 13: panel.ToolFunction
+	(*ToolCall)(nil),               // 14: panel.ToolCall
+	(*ToolEvent)(nil),              // 15: panel.ToolEvent
+	(*FinalAnswer)(nil),            // 16: panel.FinalAnswer
+	(*StreamError)(nil),            // 17: panel.StreamError
+	(*StartSessionArgs)(nil),       // 18: panel.StartSessionArgs
+	(*SendArgs)(nil),               // 19: panel.SendArgs
+	(*ApproveArgs)(nil),            // 20: panel.ApproveArgs
+	(*BrainStatusArgs)(nil),        // 21: panel.BrainStatusArgs
+	(*GetHistoryArgs)(nil),         // 22: panel.GetHistoryArgs
+	(*DeleteSessionArgs)(nil),      // 23: panel.DeleteSessionArgs
+	(*StartSessionResult)(nil),     // 24: panel.StartSessionResult
+	(*SendResult)(nil),             // 25: panel.SendResult
+	(*ListToolsResult)(nil),        // 26: panel.ListToolsResult
+	(*ToolDesc)(nil),               // 27: panel.ToolDesc
+	(*ListCapabilitiesResult)(nil), // 28: panel.ListCapabilitiesResult
+	(*CapabilityDesc)(nil),         // 29: panel.CapabilityDesc
+	(*DebugCapabilityArgs)(nil),    // 30: panel.DebugCapabilityArgs
+	(*DebugCapabilityResult)(nil),  // 31: panel.DebugCapabilityResult
+	(*ApproveResult)(nil),          // 32: panel.ApproveResult
+	(*BrainStatusResult)(nil),      // 33: panel.BrainStatusResult
+	(*HistoryEntry)(nil),           // 34: panel.HistoryEntry
+	(*GetHistoryResult)(nil),       // 35: panel.GetHistoryResult
+	(*StopResult)(nil),             // 36: panel.StopResult
+	(*DeleteSessionResult)(nil),    // 37: panel.DeleteSessionResult
 }
 var file_proto_panel_proto_depIdxs = []int32{
 	3,  // 0: panel.PanelFrame.request:type_name -> panel.PanelRequest
@@ -2350,13 +2668,14 @@ var file_proto_panel_proto_depIdxs = []int32{
 	12, // 17: panel.ToolEvent.arguments:type_name -> panel.JsonValue
 	12, // 18: panel.ToolEvent.result:type_name -> panel.JsonValue
 	27, // 19: panel.ListToolsResult.tools:type_name -> panel.ToolDesc
-	14, // 20: panel.HistoryEntry.tool_calls:type_name -> panel.ToolCall
-	30, // 21: panel.GetHistoryResult.messages:type_name -> panel.HistoryEntry
-	22, // [22:22] is the sub-list for method output_type
-	22, // [22:22] is the sub-list for method input_type
-	22, // [22:22] is the sub-list for extension type_name
-	22, // [22:22] is the sub-list for extension extendee
-	0,  // [0:22] is the sub-list for field type_name
+	29, // 20: panel.ListCapabilitiesResult.capabilities:type_name -> panel.CapabilityDesc
+	14, // 21: panel.HistoryEntry.tool_calls:type_name -> panel.ToolCall
+	34, // 22: panel.GetHistoryResult.messages:type_name -> panel.HistoryEntry
+	23, // [23:23] is the sub-list for method output_type
+	23, // [23:23] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_proto_panel_proto_init() }
@@ -2395,7 +2714,7 @@ func file_proto_panel_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_panel_proto_rawDesc), len(file_proto_panel_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   34,
+			NumMessages:   38,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

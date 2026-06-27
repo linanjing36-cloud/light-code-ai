@@ -172,9 +172,27 @@
       </div>
 
       <div class="ctx-section">
-        <div class="ctx-label">工具集</div>
+        <div class="ctx-label">能力集</div>
         <div class="tools-mini" id="ctx-tools">
-          <div class="tool-mini"><span class="dot off"></span>(待 Erlang bridge_manager 注册)</div>
+          <div class="tool-mini"><span class="dot off"></span>(待能力目录加载)</div>
+        </div>
+      </div>
+
+      <div class="ctx-section">
+        <div class="ctx-label">能力调试</div>
+        <div class="cap-debug">
+          <label class="cfg-field">
+            <span class="cfg-label">能力</span>
+            <select id="capability-select">
+              <option value="">待能力目录加载</option>
+            </select>
+          </label>
+          <label class="cfg-field">
+            <span class="cfg-label">参数 JSON</span>
+            <textarea id="capability-args" rows="6" spellcheck="false">{}</textarea>
+          </label>
+          <button class="ghost-btn cfg-save" id="capability-run">执行能力</button>
+          <pre class="cap-result" id="capability-result">(结果输出区)</pre>
         </div>
       </div>
 
