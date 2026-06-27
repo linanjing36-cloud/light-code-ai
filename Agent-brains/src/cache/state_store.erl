@@ -8,7 +8,7 @@
 %% 职责:
 %%   - 持有 ETS 表 (named, public, read_concurrency), 供 FSM 读写
 %%   - 存放 FSM 快照 (session_id => #data{}), 用于崩溃恢复
-%%   - 存放按会话分组的短期记忆 (session_id => [Message])
+%%   - 存放按会话分组的短期记忆 (session_id => queue(Message))
 %%
 %% 作为顶层监督者的子进程, 其崩溃会触发 rest_for_one 重启 (ETS 随之重建)。
 %%====================================================================
@@ -44,7 +44,7 @@ put_snapshot(SessionId, Data) ->
 get_snapshot(SessionId) ->
     lookup_snapshot(SessionId).
 
-%% 追加短期记忆 (按会话): 维护一个倒序表, 读取时反转为正序
+%% 追加短期记忆 (按会话): 使用 queue 保持 O(1) 追加
 append_history(SessionId, Message) ->
     gen_server:call(?MODULE, {append_history, SessionId, Message}).
 
@@ -111,8 +111,28 @@ lookup_snapshot(SessionId) ->
 
 lookup_history(SessionId) ->
     case ets:lookup(?TABLE, {history, SessionId}) of
-        [{{history, SessionId}, Msgs}] -> {ok, lists:reverse(Msgs)};
+        [{{history, SessionId}, History}] -> {ok, history_to_list(History)};
         [] -> {ok, []}
+    end.
+
+history_to_list(History) when is_list(History) ->
+    %% 兼容旧快照: 旧格式按“最新在前”的倒序 list 存储
+    lists:reverse(History);
+history_to_list(History) ->
+    try queue:to_list(History) of
+        Msgs -> Msgs
+    catch
+        _:_ -> []
+    end.
+
+history_to_queue(History) when is_list(History) ->
+    %% 兼容旧快照: 转成时间正序后再建 queue
+    queue:from_list(lists:reverse(History));
+history_to_queue(History) ->
+    try queue:len(History) of
+        N when is_integer(N) -> History
+    catch
+        _:_ -> queue:new()
     end.
 
 %%%===================================================================
@@ -144,11 +164,10 @@ handle_call({get_snapshot, SessionId}, _From, State) ->
     {reply, lookup_snapshot(SessionId), State};
 handle_call({append_history, SessionId, Message}, _From, State) ->
     Current = case ets:lookup(?TABLE, {history, SessionId}) of
-                  [{{history, SessionId}, Msgs}] -> Msgs;
-                  [] -> []
+                  [{{history, SessionId}, History}] -> history_to_queue(History);
+                  [] -> queue:new()
               end,
-    %% 头插 (O(1)); 读取时反转
-    ets:insert(?TABLE, {{history, SessionId}, [Message | Current]}),
+    ets:insert(?TABLE, {{history, SessionId}, queue:in(Message, Current)}),
     {reply, ok, State};
 handle_call({get_history, SessionId}, _From, State) ->
     {reply, lookup_history(SessionId), State};

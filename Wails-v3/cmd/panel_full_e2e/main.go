@@ -88,7 +88,7 @@ func main() {
 	if err != nil {
 		fail("BrainStatus(initial)", err)
 	}
-	fmt.Printf("    brain_status state=%v history_len=%v\n", st["state"], st["history_len"])
+	fmt.Printf("    brain_status state=%s history_len=%d\n", st.State, st.HistoryLen)
 
 	// [3] 等同 doSend + panel:stream 监听
 	msg := "只回复两个字：收到"
@@ -145,18 +145,16 @@ func (p *panelClient) listTools() ([]toolDesc, error) {
 	if err != nil {
 		return nil, err
 	}
-	m, _ := out.(map[string]any)
-	raw, _ := m["tools"].([]any)
+	raw, ok := out.([]brain.ToolDesc)
+	if !ok {
+		return nil, fmt.Errorf("unexpected type %T", out)
+	}
 	tools := make([]toolDesc, 0, len(raw))
 	for _, item := range raw {
-		tm, ok := item.(map[string]any)
-		if !ok {
-			continue
-		}
 		tools = append(tools, toolDesc{
-			Name:           fmt.Sprint(tm["name"]),
-			Description:    fmt.Sprint(tm["description"]),
-			ParametersJSON: fmt.Sprint(tm["parameters_json"]),
+			Name:           item.Name,
+			Description:    item.Description,
+			ParametersJSON: item.ParametersJSON,
 		})
 	}
 	return tools, nil
@@ -170,12 +168,11 @@ func (p *panelClient) startSession(prompt, model string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	m, _ := out.(map[string]any)
-	id, _ := m["session_id"].(string)
-	if id == "" {
+	result, ok := out.(brain.StartSessionResult)
+	if !ok || result.SessionID == "" {
 		return "", fmt.Errorf("empty session_id: %#v", out)
 	}
-	return id, nil
+	return result.SessionID, nil
 }
 
 func (p *panelClient) send(sessionID, message string) (string, error) {
@@ -186,24 +183,23 @@ func (p *panelClient) send(sessionID, message string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	m, _ := out.(map[string]any)
-	id, _ := m["stream_id"].(string)
-	if id == "" {
+	result, ok := out.(brain.SendResult)
+	if !ok || result.StreamID == "" {
 		return "", fmt.Errorf("empty stream_id: %#v", out)
 	}
-	return id, nil
+	return result.StreamID, nil
 }
 
-func (p *panelClient) brainStatus(sessionID string) (map[string]any, error) {
+func (p *panelClient) brainStatus(sessionID string) (brain.BrainStatusResult, error) {
 	out, err := p.r.CallPanel("brain_status", map[string]any{"session_id": sessionID})
 	if err != nil {
-		return nil, err
+		return brain.BrainStatusResult{}, err
 	}
-	m, ok := out.(map[string]any)
+	result, ok := out.(brain.BrainStatusResult)
 	if !ok {
-		return nil, fmt.Errorf("unexpected type %T", out)
+		return brain.BrainStatusResult{}, fmt.Errorf("unexpected type %T", out)
 	}
-	return m, nil
+	return result, nil
 }
 
 func (p *panelClient) getHistory(sessionID string) ([]historyEntry, error) {
@@ -211,19 +207,17 @@ func (p *panelClient) getHistory(sessionID string) ([]historyEntry, error) {
 	if err != nil {
 		return nil, err
 	}
-	m, _ := out.(map[string]any)
-	raw, _ := m["messages"].([]any)
+	raw, ok := out.([]brain.HistoryEntry)
+	if !ok {
+		return nil, fmt.Errorf("unexpected type %T", out)
+	}
 	entries := make([]historyEntry, 0, len(raw))
 	for _, item := range raw {
-		em, ok := item.(map[string]any)
-		if !ok {
-			continue
-		}
 		entries = append(entries, historyEntry{
-			Role:          fmt.Sprint(em["role"]),
-			Content:       fmt.Sprint(em["content"]),
-			ToolCallsJSON: fmt.Sprint(em["tool_calls_json"]),
-			ToolCallID:    fmt.Sprint(em["tool_call_id"]),
+			Role:          item.Role,
+			Content:       item.Content,
+			ToolCallsJSON: item.ToolCallsJSON,
+			ToolCallID:    item.ToolCallID,
 		})
 	}
 	return entries, nil
@@ -234,9 +228,11 @@ func (p *panelClient) deleteSession(sessionID string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	m, _ := out.(map[string]any)
-	ok, _ := m["ok"].(bool)
-	return ok, nil
+	result, ok := out.(brain.DeleteSessionResult)
+	if !ok {
+		return false, fmt.Errorf("unexpected type %T", out)
+	}
+	return result.OK, nil
 }
 
 func waitStream(streamMu *sync.Mutex, streams map[string][]brain.StreamEvent, streamID string, timeout time.Duration) (final string, chunks int, err error) {
@@ -267,9 +263,8 @@ func waitIdle(p *panelClient, sid string, timeout time.Duration) error {
 		if err != nil {
 			return err
 		}
-		state, _ := st["state"].(string)
-		fmt.Printf("    state=%s loop=%v\n", state, st["loop_count"])
-		if state == "idle" {
+		fmt.Printf("    state=%s loop=%d\n", st.State, st.LoopCount)
+		if st.State == "idle" {
 			return nil
 		}
 		time.Sleep(400 * time.Millisecond)

@@ -81,10 +81,11 @@ func main() {
 	if err != nil {
 		fail("start_session", err)
 	}
-	sid, _ := out.(map[string]any)["session_id"].(string)
-	if sid == "" {
+	result, ok := out.(brain.StartSessionResult)
+	if !ok || result.SessionID == "" {
 		fail("start_session", fmt.Errorf("empty session_id: %#v", out))
 	}
+	sid := result.SessionID
 	fmt.Printf("    brain ← session_id=%s\n", sid)
 
 	for r := 1; r <= *rounds; r++ {
@@ -107,10 +108,11 @@ func runRound(ctx context.Context, pc panelCaller, sid, message string, streamMu
 	if err != nil {
 		return fmt.Errorf("send: %w", err)
 	}
-	streamID, _ := sendOut.(map[string]any)["stream_id"].(string)
-	if streamID == "" {
+	sendResult, ok := sendOut.(brain.SendResult)
+	if !ok || sendResult.StreamID == "" {
 		return fmt.Errorf("send: empty stream_id: %#v", sendOut)
 	}
+	streamID := sendResult.StreamID
 	fmt.Printf("    brain ← stream_id=%s (ReAct 触发, 经 panel exec 调 LLM)\n", streamID)
 
 	fmt.Println("[3] brain → panel exec → DeepSeek LLM (等待 stream chunk/final...)")
@@ -186,11 +188,12 @@ func waitBrainIdle(ctx context.Context, pc panelCaller, sid string, timeout time
 		if err != nil {
 			return fmt.Errorf("brain_status: %w", err)
 		}
-		st, _ := stOut.(map[string]any)
-		state, _ := st["state"].(string)
-		loop, _ := st["loop_count"]
-		fmt.Printf("    brain_status state=%s loop=%v\n", state, loop)
-		if state == "idle" {
+		st, ok := stOut.(brain.BrainStatusResult)
+		if !ok {
+			return fmt.Errorf("brain_status: unexpected type %T", stOut)
+		}
+		fmt.Printf("    brain_status state=%s loop=%d\n", st.State, st.LoopCount)
+		if st.State == "idle" {
 			return nil
 		}
 		select {
@@ -209,18 +212,17 @@ func waitAssistantReply(ctx context.Context, pc panelCaller, sid, userMsg string
 		if err != nil {
 			return "", fmt.Errorf("get_history: %w", err)
 		}
-		hm, _ := histOut.(map[string]any)
-		msgs, _ := hm["messages"].([]any)
+		msgs, ok := histOut.([]brain.HistoryEntry)
+		if !ok {
+			return "", fmt.Errorf("get_history: unexpected type %T", histOut)
+		}
 		foundUser := false
 		for _, item := range msgs {
-			em, _ := item.(map[string]any)
-			role, _ := em["role"].(string)
-			content, _ := em["content"].(string)
-			if role == "user" && strings.Contains(content, userMsg) {
+			if item.Role == "user" && strings.Contains(item.Content, userMsg) {
 				foundUser = true
 			}
-			if foundUser && role == "assistant" && strings.TrimSpace(content) != "" {
-				return content, nil
+			if foundUser && item.Role == "assistant" && strings.TrimSpace(item.Content) != "" {
+				return item.Content, nil
 			}
 		}
 		select {
