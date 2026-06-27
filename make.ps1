@@ -4,7 +4,7 @@ make.ps1 - Hermes Agent 大脑构建与运行 (Windows / PowerShell 版, Makefil
 
 目标:
   .\make.ps1 bin      准备 bin\ 目录骨架 (创建子目录 + 拷贝 .bat 脚本, 不编译产物)
-  .\make.ps1 env      检查并安装本地 SDK (Erlang 29 / Go 1.26 / Node.js / rebar3 / wails3) 到 bin\env\
+  .\make.ps1 env      检查并安装本地 SDK (Erlang 29 / Go 1.26 / Node.js / protoc / rebar3 / protoc-gen-go / wails3) 到 bin\env\
   .\make.ps1 agent    编译 Agent-brains (Erlang/OTP), 产物安装到 bin\erl_bin\
   .\make.ps1 tools    编译 Eion-tools (Go/Eino), 产物安装到 bin\eion_bin\
   .\make.ps1 wails_v3 编译 Wails-v3 (GUI), 产物安装到 bin\wails_v3_bin\
@@ -42,6 +42,8 @@ $SdkErlangVer = "29.0.2"
 $SdkGoVer     = "1.26.4"
 $SdkNodeVer   = "22.22.2"   # Jod LTS
 $SdkNodeMin   = "20.0.0"   # 系统已有 Node 的最低可接受版本
+$SdkProtocVer = "31.1"
+$SdkProtocGenGoPkg = "google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11"
 $SdkWailsPkg  = "github.com/wailsapp/wails/v3/cmd/wails3@latest"
 
 # --- env 辅助函数 ---
@@ -86,6 +88,22 @@ function Get-NodeVersion {
     if (-not (Test-CommandExists "node")) { return $null }
     try {
         $line = (node --version 2>$null) -join ' '
+        if ($line -match 'v?(\d+\.\d+(?:\.\d+)?)') { return $Matches[1] }
+    } catch {}
+    return $null
+}
+function Get-ProtocVersion {
+    if (-not (Test-CommandExists "protoc")) { return $null }
+    try {
+        $line = (protoc --version 2>$null) -join ' '
+        if ($line -match 'libprotoc\s+([^\s]+)') { return $Matches[1] }
+    } catch {}
+    return $null
+}
+function Get-ProtocGenGoVersion {
+    if (-not (Test-CommandExists "protoc-gen-go")) { return $null }
+    try {
+        $line = (protoc-gen-go --version 2>$null) -join ' '
         if ($line -match 'v?(\d+\.\d+(?:\.\d+)?)') { return $Matches[1] }
     } catch {}
     return $null
@@ -169,6 +187,27 @@ function Install-Node {
     return $target   # node.exe / npm.cmd
 }
 
+function Install-Protoc {
+    Write-Host "    下载 protoc $SdkProtocVer ..."
+    $zip = Join-Path $EnvDir "protoc-$SdkProtocVer-win64.zip"
+    $urls = @(
+        "https://github.com/protocolbuffers/protobuf/releases/download/v$SdkProtocVer/protoc-$SdkProtocVer-win64.zip"
+    )
+    Invoke-DownloadFile $urls $zip
+    $target = Join-Path $EnvDir "protoc"
+    if (Test-Path $target) { Remove-Item -Recurse -Force $target }
+    New-Item -ItemType Directory -Force -Path $target | Out-Null
+    Write-Host "    解压到 $target ..."
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($zip, $target)
+    Remove-Item $zip -Force
+    $protocBin = Join-Path $target "bin"
+    if (-not (Test-Path (Join-Path $protocBin "protoc.exe"))) {
+        throw "protoc 安装后未找到 protoc.exe"
+    }
+    return $protocBin
+}
+
 function Install-Rebar3 {
     Write-Host "    下载 rebar3 escript ..."
     $dest = Join-Path $EnvDir "rebar3"
@@ -180,15 +219,23 @@ function Install-Rebar3 {
     return $EnvDir
 }
 
-function Install-Wails3 {
-    Write-Host "    go install wails3 ..."
+function Install-GoTool($package, $label) {
+    Write-Host "    go install $label ..."
     $gopath = Join-Path $EnvDir "gopath"
     New-Item -ItemType Directory -Force -Path (Join-Path $gopath "bin") | Out-Null
     $env:GOPATH = $gopath
     $env:GOPROXY = "https://goproxy.cn,direct"
-    & go install $SdkWailsPkg
-    if ($LASTEXITCODE -ne 0) { throw "go install wails3 失败 (exit $LASTEXITCODE)" }
+    & go install $package
+    if ($LASTEXITCODE -ne 0) { throw "go install $label 失败 (exit $LASTEXITCODE)" }
     return (Join-Path $gopath "bin")   # wails3.exe
+}
+
+function Install-ProtocGenGo {
+    return (Install-GoTool $SdkProtocGenGoPkg "protoc-gen-go")
+}
+
+function Install-Wails3 {
+    return (Install-GoTool $SdkWailsPkg "wails3")
 }
 
 # 生成 activate.ps1 / activate.bat (把 bin\env 下工具前置到 PATH)
@@ -253,6 +300,15 @@ function Invoke-Env {
         $envPaths += (Install-Node)
     }
 
+    # --- protoc ---
+    $protocVer = Get-ProtocVersion
+    if ($protocVer) {
+        Write-Host "  [OK]      protoc $protocVer 已在 PATH"
+    } else {
+        Write-Host "  [缺失]    protoc -> 安装 protoc $SdkProtocVer 到 bin\env"
+        $envPaths += (Install-Protoc)
+    }
+
     # --- rebar3 ---
     if (Test-CommandExists "rebar3") {
         Write-Host "  [OK]      rebar3 已在 PATH"
@@ -260,6 +316,28 @@ function Invoke-Env {
         Write-Host "  [缺失]    rebar3 -> 下载到 bin\env\rebar3"
         Install-Rebar3 | Out-Null
         $envPaths += $EnvDir
+    }
+
+    # --- protoc-gen-go ---
+    $protocGenGoVer = Get-ProtocGenGoVersion
+    if ($protocGenGoVer) {
+        Write-Host "  [OK]      protoc-gen-go v$protocGenGoVer 已在 PATH"
+    } else {
+        Write-Host "  [缺失]    protoc-gen-go -> go install"
+        $savedPath = $env:PATH
+        if ($goRoot) { $env:PATH = (Join-Path $goRoot "bin") + ";" + $env:PATH }
+        if (-not (Test-CommandExists "go")) {
+            Write-Host "  [跳过]    protoc-gen-go 依赖 Go, Go 仍不可用, 请重试 .\make.ps1 env"
+            $env:PATH = $savedPath
+        } else {
+            try {
+                $envPaths += (Install-ProtocGenGo)
+                $goPath = Join-Path $EnvDir "gopath"
+            } catch {
+                Write-Host "  [警告]    protoc-gen-go 安装失败: $($_.Exception.Message)"
+            }
+            $env:PATH = $savedPath
+        }
     }
 
     # --- wails3 ---
@@ -285,7 +363,7 @@ function Invoke-Env {
     }
 
     # --- 生成 activate 脚本 ---
-    Write-ActivateScripts $envPaths $goRoot $goPath
+    Write-ActivateScripts ($envPaths | Select-Object -Unique) $goRoot $goPath
 
     Write-Host "[make] ==> 完成. env 目录:"
     if (Test-Path $EnvDir) {
@@ -296,6 +374,7 @@ function Invoke-Env {
     Write-Host "[make] ==> 已生成激活脚本 (后续 make target 会自动加载 activate.ps1):"
     Write-Host "    PowerShell:  . .\bin\env\activate.ps1"
     Write-Host "    cmd:         call bin\env\activate.bat"
+    Write-Host "[make] ==> 单独跑 protobuf 生成: protoc --version ; protoc-gen-go --version"
     Write-Host "[make] ==> 单独跑 wails 构建: .\make.ps1 wails_v3  (需先 .\make.ps1 env 安装 wails3)"
 }
 
@@ -752,7 +831,7 @@ function Show-Help {
     Write-Host ""
     Write-Host "目标:"
     Write-Host "  bin      准备 bin\ 目录骨架 (创建子目录 + 拷贝 .bat 脚本, 不编译产物)"
-    Write-Host "  env      检查并安装本地 SDK (Erlang 29 / Go 1.26 / Node.js / rebar3 / wails3) 到 bin\env\"
+    Write-Host "  env      检查并安装本地 SDK (Erlang 29 / Go 1.26 / Node.js / protoc / rebar3 / protoc-gen-go / wails3) 到 bin\env\"
     Write-Host "  agent    编译 Agent-brains (Erlang/OTP), 产物安装到 bin\erl_bin\"
     Write-Host "  tools    编译 Eion-tools (Go/Eino), 产物安装到 bin\eion_bin\"
     Write-Host "  wails_v3 编译 Wails-v3 (GUI), 产物安装到 bin\wails_v3_bin\"

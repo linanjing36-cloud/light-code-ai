@@ -20,11 +20,12 @@ Erlang/OTP 编排大脑 + Go/Eino 执行层 + Wails v3 桌面面板的三进程�
 ### 1. 准备环境（首次）
 
 ```powershell
-.\make.ps1 env      # 检测并安装 Erlang 29 / Go 1.26 / Node.js / rebar3 / wails3 到 bin\env\
+.\make.ps1 env      # 检测并安装 Erlang 29 / Go 1.26 / Node.js / protoc / rebar3 / protoc-gen-go / wails3 到 bin\env\
 .\make.ps1 bin      # 创建 bin\ 目录骨架，拷贝启动脚本
 ```
 
 若系统已安装所需工具，可跳过 `env`。后续 `make.ps1` 会自动加载 `bin\env\activate.ps1`（若存在）。
+如果后续需要重新生成 `Wails-v3\proto\gen\panelpb\`，可先用 `protoc --version` 与 `protoc-gen-go --version` 验证代码生成工具是否已就绪。
 
 ### 2. 编译三个组件
 

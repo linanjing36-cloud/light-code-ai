@@ -44,6 +44,7 @@ interface Session {
     msgCount: number;
     toolCalls: number;
     lastHistoryLen: number;
+    history: HistoryEntry[];
 }
 
 // ---- 状态 ----
@@ -73,8 +74,17 @@ declare global {
 interface HistoryEntry {
     role: string;
     content: string;
-    tool_calls_json?: string;
+    tool_calls?: ToolCall[];
     tool_call_id?: string;
+}
+
+interface ToolCall {
+    id: string;
+    type?: string;
+    function?: {
+        name?: string;
+        arguments?: unknown;
+    };
 }
 
 interface PanelStreamEvent {
@@ -224,16 +234,51 @@ function applySessionState(sessionId: string | null | undefined, state: BrainSta
     }
 }
 
+function cloneHistoryEntry(entry: HistoryEntry): HistoryEntry {
+    return {
+        role: entry.role,
+        content: entry.content,
+        tool_calls: entry.tool_calls?.map((toolCall) => ({
+            id: toolCall.id,
+            type: toolCall.type,
+            function: toolCall.function
+                ? {
+                      name: toolCall.function.name,
+                      arguments: toolCall.function.arguments,
+                  }
+                : undefined,
+        })),
+        tool_call_id: entry.tool_call_id,
+    };
+}
+
+function cacheHistoryEntries(sess: Session, entries: HistoryEntry[]): void {
+    sess.history = entries.map(cloneHistoryEntry);
+}
+
+function appendCachedHistoryEntry(sess: Session, entry: HistoryEntry): void {
+    sess.history.push(cloneHistoryEntry(entry));
+}
+
 async function finalizeSessionUI(sessionId: string, finalContent: string): Promise<void> {
     const sess = sessions.get(sessionId);
+    const needsHistoryRefresh = sessionHistoryDirty.has(sessionId) || !finalContent;
     if (sess) {
+        if (!needsHistoryRefresh) {
+            appendCachedHistoryEntry(sess, { role: "assistant", content: finalContent });
+        }
         applySessionState(sessionId, "idle", {
-            historyLen: sess.lastHistoryLen + 1,
+            historyLen: needsHistoryRefresh ? sess.lastHistoryLen + 1 : sess.history.length,
         });
     }
 
     if (sessionId !== currentSessionId) {
-        sessionHistoryDirty.add(sessionId);
+        clearStreamState(sessionId);
+        if (needsHistoryRefresh) {
+            sessionHistoryDirty.add(sessionId);
+        } else {
+            sessionHistoryDirty.delete(sessionId);
+        }
         return;
     }
 
@@ -248,7 +293,7 @@ async function finalizeSessionUI(sessionId: string, finalContent: string): Promi
     removeThinking();
     clearStreamState(sessionId, true);
 
-    if (sessionHistoryDirty.has(sessionId)) {
+    if (needsHistoryRefresh) {
         sessionHistoryDirty.delete(sessionId);
         await refreshHistoryFromBrain(sess);
     }
@@ -415,6 +460,7 @@ async function createNewSession(): Promise<void> {
         msgCount: 0,
         toolCalls: 0,
         lastHistoryLen: 0,
+        history: [],
     };
     sessions.set(pendingId, placeholder);
     currentSessionId = pendingId;
@@ -448,6 +494,7 @@ async function createNewSession(): Promise<void> {
             msgCount: 0,
             toolCalls: 0,
             lastHistoryLen: 0,
+            history: [],
         };
         sessions.set(sess.id, sess);
         currentSessionId = sess.id;
@@ -496,6 +543,7 @@ async function doSend(): Promise<void> {
     appendUserMsg(text);
     const sess = sessions.get(currentSessionId);
     if (sess) {
+        appendCachedHistoryEntry(sess, { role: "user", content: text });
         sess.msgCount += 1;
         sess.lastHistoryLen += 1;
         applySessionState(currentSessionId, "thinking", { historyLen: sess.lastHistoryLen });
@@ -802,7 +850,7 @@ function switchSession(id: string): void {
     if (sess) {
         canvasTitle.textContent = sess.title;
         updateModelBadge(sess.model);
-        if (sessionHistoryDirty.has(id) || sess.msgCount > 0 || sess.toolCalls > 0) {
+        if (sessionHistoryDirty.has(id)) {
             void refreshHistoryFromBrain(sess);
         } else {
             renderConversation(sess);
@@ -823,7 +871,7 @@ function switchSession(id: string): void {
 }
 
 async function refreshHistoryFromBrain(sess?: Session): Promise<void> {
-    const sid = currentSessionId;
+    const sid = sess?.id ?? currentSessionId;
     if (!sid || !brainConnected) return;
     const target = sess ?? sessions.get(sid);
     try {
@@ -850,7 +898,7 @@ function renderHistoryEntries(entries: HistoryEntry[], sess?: Session): void {
             userCount += 1;
         } else if (role === "assistant") {
             if (content) appendAgentMsg(`<p>${escapeHtml(content)}</p>`);
-            if (e.tool_calls_json) toolCount += 1;
+            if ((e.tool_calls?.length ?? 0) > 0) toolCount += e.tool_calls!.length;
         } else if (role === "tool") {
             toolCount += 1;
             const label = e.tool_call_id ? `tool · ${e.tool_call_id}` : "tool";
@@ -861,6 +909,7 @@ function renderHistoryEntries(entries: HistoryEntry[], sess?: Session): void {
         conv.innerHTML = `<div class="empty-state"><div class="glyph">☿</div><div>开始与 Hermes 对话</div></div>`;
     }
     if (sess) {
+        cacheHistoryEntries(sess, entries);
         sess.msgCount = userCount;
         sess.toolCalls = toolCount;
         sess.lastHistoryLen = entries.length;
@@ -874,6 +923,10 @@ function renderHistoryEntries(entries: HistoryEntry[], sess?: Session): void {
 // 渲染: conversation
 // ============================================================
 function renderConversation(sess: Session): void {
+    if (sess.history.length > 0) {
+        renderHistoryEntries(sess.history, sess);
+        return;
+    }
     streamingMsgEl = null;
     streamingMsgText = null;
     conv.innerHTML = "";
@@ -985,8 +1038,10 @@ btnClear.addEventListener("click", () => {
     if (!confirm("清空当前会话消息?")) return;
     const sess = sessions.get(currentSessionId);
     if (sess) {
+        sess.history = [];
         sess.msgCount = 0;
         sess.toolCalls = 0;
+        sess.lastHistoryLen = 0;
         renderConversation(sess);
     }
 });

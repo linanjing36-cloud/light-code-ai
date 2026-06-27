@@ -29,12 +29,12 @@ export class HistoryEntry {
              */
             this["content"] = "";
         }
-        if (!("tool_calls_json" in $$source)) {
+        if (!("tool_calls" in $$source)) {
             /**
              * @member
-             * @type {string}
+             * @type {Array<any>}
              */
-            this["tool_calls_json"] = "";
+            this["tool_calls"] = [];
         }
         if (!("tool_call_id" in $$source)) {
             /**
@@ -202,12 +202,12 @@ export class ToolDesc {
              */
             this["description"] = "";
         }
-        if (!("parameters_json" in $$source)) {
+        if (!("parameters" in $$source)) {
             /**
              * @member
-             * @type {string}
+             * @type {any}
              */
-            this["parameters_json"] = "";
+            this["parameters"] = null;
         }
 
         Object.assign(this, $$source);

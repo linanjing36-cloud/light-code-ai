@@ -133,11 +133,13 @@ func main() {
 }
 
 type toolDesc struct {
-	Name, Description, ParametersJSON string
+	Name, Description string
+	Parameters        any
 }
 
 type historyEntry struct {
-	Role, Content, ToolCallsJSON, ToolCallID string
+	Role, Content, ToolCallID string
+	ToolCalls                 []brain.ToolCall
 }
 
 func (p *panelClient) listTools() ([]toolDesc, error) {
@@ -152,9 +154,9 @@ func (p *panelClient) listTools() ([]toolDesc, error) {
 	tools := make([]toolDesc, 0, len(raw))
 	for _, item := range raw {
 		tools = append(tools, toolDesc{
-			Name:           item.Name,
-			Description:    item.Description,
-			ParametersJSON: item.ParametersJSON,
+			Name:        item.Name,
+			Description: item.Description,
+			Parameters:  item.Parameters,
 		})
 	}
 	return tools, nil
@@ -214,10 +216,10 @@ func (p *panelClient) getHistory(sessionID string) ([]historyEntry, error) {
 	entries := make([]historyEntry, 0, len(raw))
 	for _, item := range raw {
 		entries = append(entries, historyEntry{
-			Role:          item.Role,
-			Content:       item.Content,
-			ToolCallsJSON: item.ToolCallsJSON,
-			ToolCallID:    item.ToolCallID,
+			Role:       item.Role,
+			Content:    item.Content,
+			ToolCalls:  item.ToolCalls,
+			ToolCallID: item.ToolCallID,
 		})
 	}
 	return entries, nil

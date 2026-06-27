@@ -72,12 +72,69 @@ message LlmChunk {
   string reasoning_content = 2;  // 增量推理过程 (v4-pro 等推理模型)
 }
 
+message JsonField {
+  string key = 1;
+  JsonValue value = 2;
+}
+
+message SchemaField {
+  string key = 1;
+  SchemaValue value = 2;
+}
+
+message SchemaValue {
+  enum Kind {
+    NULL = 0;
+    STRING = 1;
+    NUMBER = 2;
+    BOOL = 3;
+    OBJECT = 4;
+    ARRAY = 5;
+  }
+  Kind kind = 1;
+  string string_value = 2;
+  double number_value = 3;
+  bool bool_value = 4;
+  repeated SchemaField object_fields = 5;
+  repeated SchemaValue array_items = 6;
+}
+
+message JsonObject {
+  repeated JsonField fields = 1;
+}
+
+message JsonArray {
+  repeated JsonValue items = 1;
+}
+
+message JsonValue {
+  oneof kind {
+    string string_value = 1;
+    double number_value = 2;
+    bool bool_value = 3;
+    JsonObject object_value = 4;
+    JsonArray array_value = 5;
+    bool null_value = 6;  // true 表示 JSON null
+  }
+}
+
+message ToolFunction {
+  string name = 1;
+  JsonValue arguments = 2;
+}
+
+message ToolCall {
+  string id = 1;
+  string type = 2;
+  ToolFunction function = 3;
+}
+
 // 工具事件: 告知前端当前轮工具执行进度。
 message ToolEvent {
   string tool_call_id = 1;
   string name = 2;
-  string arguments_json = 3;
-  string result_json = 4;   // 完成时填
+  JsonValue arguments = 3;
+  JsonValue result = 4;   // 完成时填
   string error = 5;          // 失败时填
   bool finished = 6;         // true=已结束 (有 result 或 error), false=已开始
 }
@@ -118,7 +175,7 @@ message ListToolsResult {
 message ToolDesc {
   string name = 1;
   string description = 2;
-  string parameters_json = 3;
+  SchemaValue parameters = 3;
 }
 
 message ApproveResult { bool ok = 1; }
@@ -133,7 +190,7 @@ message BrainStatusResult {
 message HistoryEntry {
   string role = 1;
   string content = 2;
-  string tool_calls_json = 3;  // assistant 含 tool_calls 时为 JSON 数组, 否则空
+  repeated ToolCall tool_calls = 3;
   string tool_call_id = 4;     // role=tool 时填
 }
 

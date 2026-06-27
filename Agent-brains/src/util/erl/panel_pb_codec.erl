@@ -76,13 +76,13 @@ pack_stream_chunk(StreamId, ChunkMap) ->
 %% 工具事件帧
 -spec pack_stream_tool_event(binary(), map()) -> binary().
 pack_stream_tool_event(StreamId, EvMap) ->
-    Inner = #{stream_id => StreamId,
-              tool_event => #{tool_call_id => maps:get(tool_call_id, EvMap, <<>>),
-                              name => maps:get(name, EvMap, <<>>),
-                              arguments_json => maps:get(arguments_json, EvMap, <<>>),
-                              result_json => maps:get(result_json, EvMap, <<>>),
-                              error => maps:get(error, EvMap, <<>>),
-                              finished => maps:get(finished, EvMap, false)}},
+    ToolEvent0 = #{tool_call_id => maps:get(tool_call_id, EvMap, <<>>),
+                   name => maps:get(name, EvMap, <<>>),
+                   error => maps:get(error, EvMap, <<>>),
+                   finished => maps:get(finished, EvMap, false)},
+    ToolEvent1 = maybe_put_json_value(arguments, maps:get(arguments_json, EvMap, <<>>), ToolEvent0),
+    ToolEvent2 = maybe_put_json_value(result, maps:get(result_json, EvMap, <<>>), ToolEvent1),
+    Inner = #{stream_id => StreamId, tool_event => ToolEvent2},
     ?PANEL_PB:encode_msg(#{stream => Inner}, 'PanelFrame').
 
 %% 最终答案帧 (终态)
@@ -183,13 +183,13 @@ decode_stream(Stream) ->
             case maps:is_key(tool_event, Stream) of
                 true ->
                     Ev = maps:get(tool_event, Stream),
-                    {stream, StreamId, {tool_event,
-                        #{tool_call_id => maps:get(tool_call_id, Ev, <<>>),
-                          name => maps:get(name, Ev, <<>>),
-                          arguments_json => maps:get(arguments_json, Ev, <<>>),
-                          result_json => maps:get(result_json, Ev, <<>>),
-                          error => maps:get(error, Ev, <<>>),
-                          finished => maps:get(finished, Ev, false)}}};
+                    BaseEv = #{tool_call_id => maps:get(tool_call_id, Ev, <<>>),
+                               name => maps:get(name, Ev, <<>>),
+                               error => maps:get(error, Ev, <<>>),
+                               finished => maps:get(finished, Ev, false)},
+                    WithArgs = maybe_put_json_binary(arguments_json, maps:get(arguments, Ev, undefined), BaseEv),
+                    WithResult = maybe_put_json_binary(result_json, maps:get(result, Ev, undefined), WithArgs),
+                    {stream, StreamId, {tool_event, WithResult}};
                 false ->
                     case maps:is_key(final, Stream) of
                         true ->
@@ -277,9 +277,7 @@ encode_result(<<"start_session">>, #{session_id := SessId}) ->
 encode_result(<<"send">>, #{stream_id := StreamId}) ->
     ?PANEL_PB:encode_msg(#{stream_id => StreamId}, 'SendResult');
 encode_result(<<"list_tools">>, #{tools := Tools}) ->
-    PbTools = [#{name => maps:get(name, T, <<>>),
-                description => maps:get(description, T, <<>>),
-                parameters_json => maps:get(parameters_json, T, <<>>)} || T <- Tools],
+    PbTools = [tool_desc_to_pb(T) || T <- Tools],
     ?PANEL_PB:encode_msg(#{tools => PbTools}, 'ListToolsResult');
 encode_result(<<"approve">>, #{ok := Ok}) ->
     ?PANEL_PB:encode_msg(#{ok => Ok}, 'ApproveResult');
@@ -309,10 +307,7 @@ decode_result(<<"send">>, Bin) ->
     #{stream_id => maps:get(stream_id, M, <<>>)};
 decode_result(<<"list_tools">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'ListToolsResult'),
-    #{tools => [#{name => maps:get(name, T, <<>>),
-                  description => maps:get(description, T, <<>>),
-                  parameters_json => maps:get(parameters_json, T, <<>>)}
-                 || T <- maps:get(tools, M, [])]};
+    #{tools => [tool_desc_from_pb(T) || T <- maps:get(tools, M, [])]};
 decode_result(<<"approve">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'ApproveResult'),
     #{ok => maps:get(ok, M, false)};
@@ -342,27 +337,20 @@ encode_state_bin(_) -> <<>>.
 history_entry_to_pb(M) ->
     Role = ensure_binary(maps:get(role, M, <<>>)),
     Content = ensure_binary(maps:get(content, M, <<>>)),
-    TCJson = case maps:get(tool_calls, M, []) of
-                 [] -> <<>>;
-                 TCs -> encode_tool_calls_json(TCs)
-             end,
+    ToolCalls = [tool_call_to_pb(TC) || TC <- maps:get(tool_calls, M, [])],
     ToolCallId = ensure_binary(maps:get(tool_call_id, M, <<>>)),
     #{role => Role,
       content => Content,
-      tool_calls_json => TCJson,
+      tool_calls => ToolCalls,
       tool_call_id => ToolCallId}.
 
 history_entry_from_pb(E) ->
     Base = #{role => maps:get(role, E, <<>>),
              content => maps:get(content, E, <<>>)},
-    TCJson = maps:get(tool_calls_json, E, <<>>),
-    WithTC = case TCJson of
-                 <<>> -> Base;
-                 _ ->
-                     case decode_tool_calls_json(TCJson) of
-                         {ok, TCs} -> Base#{tool_calls => TCs};
-                         _ -> Base
-                     end
+    ToolCalls = [tool_call_from_pb(TC) || TC <- maps:get(tool_calls, E, [])],
+    WithTC = case ToolCalls of
+                 [] -> Base;
+                 _ -> Base#{tool_calls => ToolCalls}
              end,
     ToolCallId = maps:get(tool_call_id, E, <<>>),
     case ToolCallId of
@@ -370,35 +358,108 @@ history_entry_from_pb(E) ->
         _ -> WithTC#{tool_call_id => ToolCallId}
     end.
 
-encode_tool_calls_json(TCs) when is_list(TCs) ->
-    Items = [tool_call_to_json(TC) || TC <- TCs],
-    json:encode(Items).
+tool_desc_to_pb(T) ->
+    #{name => maps:get(name, T, <<>>),
+      description => maps:get(description, T, <<>>),
+      parameters_json => maps:get(parameters_json, T, <<>>)}.
 
-tool_call_to_json(TC) ->
-    #{
-        <<"id">> => ensure_binary(maps:get(id, TC, <<>>)),
-        <<"type">> => <<"function">>,
-        <<"function">> => #{
-            <<"name">> => ensure_binary(maps:get(name, TC, <<>>)),
-            <<"arguments">> => ensure_binary(maps:get(arguments, TC, <<>>))
-        }
-    }.
+tool_desc_from_pb(T) ->
+    #{name => maps:get(name, T, <<>>),
+      description => maps:get(description, T, <<>>),
+      parameters_json => maps:get(parameters_json, T, <<>>)}.
 
-decode_tool_calls_json(Bin) ->
-    try
-        Decoded = json:decode(Bin),
-        {ok, [tool_call_from_json(J) || J <- Decoded]}
-    catch
-        _:_ -> {error, invalid_json}
+tool_call_to_pb(TC) ->
+    Fun0 = #{name => ensure_binary(maps:get(name, TC, <<>>))},
+    Fun1 = maybe_put_json_value(arguments, maps:get(arguments, TC, <<>>), Fun0),
+    #{id => ensure_binary(maps:get(id, TC, <<>>)),
+      type => ensure_binary(maps:get(type, TC, <<"function">>)),
+      function => Fun1}.
+
+tool_call_from_pb(TC) ->
+    Fun = maps:get(function, TC, #{}),
+    Base = #{id => maps:get(id, TC, <<>>),
+             name => maps:get(name, Fun, <<>>)},
+    maybe_put_json_binary(arguments, maps:get(arguments, Fun, undefined), Base).
+
+maybe_put_json_value(_Key, <<>>, Map) ->
+    Map;
+maybe_put_json_value(_Key, undefined, Map) ->
+    Map;
+maybe_put_json_value(Key, JsonBin, Map) ->
+    case json_value_from_json_binary(JsonBin) of
+        undefined -> Map;
+        JsonValue -> Map#{Key => JsonValue}
     end.
 
-tool_call_from_json(J) when is_map(J) ->
-    Fun = maps:get(<<"function">>, J, #{}),
-    #{
-        id => maps:get(<<"id">>, J, <<>>),
-        name => maps:get(<<"name">>, Fun, <<>>),
-        arguments => maps:get(<<"arguments">>, Fun, <<>>)
-    }.
+maybe_put_json_binary(_Key, undefined, Map) ->
+    Map;
+maybe_put_json_binary(Key, JsonValue, Map) ->
+    case json_value_to_binary_json(JsonValue) of
+        undefined -> Map;
+        JsonBin -> Map#{Key => JsonBin}
+    end.
+
+json_value_from_json_binary(JsonBin) ->
+    try
+        json_value_from_term(json:decode(ensure_binary(JsonBin)))
+    catch
+        _:_ -> undefined
+    end.
+
+json_value_from_term(null) ->
+    #{null_value => true};
+json_value_from_term(V) when is_binary(V) ->
+    #{string_value => V};
+json_value_from_term(V) when is_boolean(V) ->
+    #{bool_value => V};
+json_value_from_term(V) when is_integer(V) ->
+    #{number_value => float(V)};
+json_value_from_term(V) when is_float(V) ->
+    #{number_value => V};
+json_value_from_term(V) when is_map(V) ->
+    Fields = [#{key => ensure_binary(K), value => json_value_from_term(Val)}
+              || {K, Val} <- maps:to_list(V)],
+    #{object_value => #{fields => Fields}};
+json_value_from_term(V) when is_list(V) ->
+    case is_string_list(V) of
+        true ->
+            #{string_value => ensure_binary(V)};
+        false ->
+            #{array_value => #{items => [json_value_from_term(Item) || Item <- V]}}
+    end.
+
+json_value_to_binary_json(undefined) ->
+    undefined;
+json_value_to_binary_json(JsonValue) ->
+    json:encode(json_value_to_term(JsonValue)).
+
+json_value_to_term(#{string_value := V}) ->
+    V;
+json_value_to_term(#{number_value := V}) when is_float(V) ->
+    case trunc(V) of
+        I when I =:= V -> I;
+        _ -> V
+    end;
+json_value_to_term(#{number_value := V}) ->
+    V;
+json_value_to_term(#{bool_value := V}) ->
+    V;
+json_value_to_term(#{null_value := true}) ->
+    null;
+json_value_to_term(#{object_value := #{fields := Fields}}) ->
+    maps:from_list([{maps:get(key, Field, <<>>), json_value_to_term(maps:get(value, Field, #{null_value => true}))}
+                    || Field <- Fields]);
+json_value_to_term(#{array_value := #{items := Items}}) ->
+    [json_value_to_term(Item) || Item <- Items];
+json_value_to_term(_) ->
+    null.
+
+is_string_list([]) ->
+    true;
+is_string_list([H | T]) when is_integer(H), H >= 0, H =< 255 ->
+    is_string_list(T);
+is_string_list(_) ->
+    false.
 
 ensure_binary(V) when is_binary(V) -> V;
 ensure_binary(V) when is_list(V) -> list_to_binary(V);

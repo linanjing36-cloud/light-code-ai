@@ -97,11 +97,44 @@
         reasoning_content       => unicode:chardata() % = 2, optional
        }.
 
+-type 'JsonField'() ::
+      #{key                     => unicode:chardata(), % = 1, optional
+        value                   => 'JsonValue'()    % = 2, optional
+       }.
+
+-type 'JsonObject'() ::
+      #{fields                  => ['JsonField'()]  % = 1, repeated
+       }.
+
+-type 'JsonArray'() ::
+      #{items                   => ['JsonValue'()]  % = 1, repeated
+       }.
+
+-type 'JsonValue'() ::
+      #{string_value            => unicode:chardata(), % = 1, optional
+        number_value            => float() | integer() | infinity | '-infinity' | nan, % = 2, optional
+        bool_value              => boolean() | 0 | 1, % = 3, optional
+        object_value            => 'JsonObject'(),  % = 4, optional
+        array_value             => 'JsonArray'(),   % = 5, optional
+        null_value              => boolean() | 0 | 1 % = 6, optional
+       }.
+
+-type 'ToolFunction'() ::
+      #{name                    => unicode:chardata(), % = 1, optional
+        arguments               => 'JsonValue'()    % = 2, optional
+       }.
+
+-type 'ToolCall'() ::
+      #{id                      => unicode:chardata(), % = 1, optional
+        type                    => unicode:chardata(), % = 2, optional
+        function                => 'ToolFunction'() % = 3, optional
+       }.
+
 -type 'ToolEvent'() ::
       #{tool_call_id            => unicode:chardata(), % = 1, optional
         name                    => unicode:chardata(), % = 2, optional
-        arguments_json          => unicode:chardata(), % = 3, optional
-        result_json             => unicode:chardata(), % = 4, optional
+        arguments               => 'JsonValue'(),   % = 3, optional
+        result                  => 'JsonValue'(),   % = 4, optional
         error                   => unicode:chardata(), % = 5, optional
         finished                => boolean() | 0 | 1 % = 6, optional
        }.
@@ -178,7 +211,7 @@
 -type 'HistoryEntry'() ::
       #{role                    => unicode:chardata(), % = 1, optional
         content                 => unicode:chardata(), % = 2, optional
-        tool_calls_json         => unicode:chardata(), % = 3, optional
+        tool_calls              => ['ToolCall'()],  % = 3, repeated
         tool_call_id            => unicode:chardata() % = 4, optional
        }.
 
@@ -194,9 +227,9 @@
       #{ok                      => boolean() | 0 | 1 % = 1, optional
        }.
 
--export_type(['PanelFrame'/0, 'PanelExec'/0, 'PanelExecResult'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'LlmChunk'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
--type '$msg_name'() :: 'PanelFrame' | 'PanelExec' | 'PanelExecResult' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'LlmChunk' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
--type '$msg'() :: 'PanelFrame'() | 'PanelExec'() | 'PanelExecResult'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'LlmChunk'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
+-export_type(['PanelFrame'/0, 'PanelExec'/0, 'PanelExecResult'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'LlmChunk'/0, 'JsonField'/0, 'JsonObject'/0, 'JsonArray'/0, 'JsonValue'/0, 'ToolFunction'/0, 'ToolCall'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
+-type '$msg_name'() :: 'PanelFrame' | 'PanelExec' | 'PanelExecResult' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'LlmChunk' | 'JsonField' | 'JsonObject' | 'JsonArray' | 'JsonValue' | 'ToolFunction' | 'ToolCall' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
+-type '$msg'() :: 'PanelFrame'() | 'PanelExec'() | 'PanelExecResult'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'LlmChunk'() | 'JsonField'() | 'JsonObject'() | 'JsonArray'() | 'JsonValue'() | 'ToolFunction'() | 'ToolCall'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
 -export_type(['$msg_name'/0, '$msg'/0]).
 
 -if(?OTP_RELEASE >= 24).
@@ -223,6 +256,12 @@ encode_msg(Msg, MsgName, Opts) ->
         'PanelResponse' -> encode_msg_PanelResponse(id(Msg, TrUserData), TrUserData);
         'PanelStream' -> encode_msg_PanelStream(id(Msg, TrUserData), TrUserData);
         'LlmChunk' -> encode_msg_LlmChunk(id(Msg, TrUserData), TrUserData);
+        'JsonField' -> encode_msg_JsonField(id(Msg, TrUserData), TrUserData);
+        'JsonObject' -> encode_msg_JsonObject(id(Msg, TrUserData), TrUserData);
+        'JsonArray' -> encode_msg_JsonArray(id(Msg, TrUserData), TrUserData);
+        'JsonValue' -> encode_msg_JsonValue(id(Msg, TrUserData), TrUserData);
+        'ToolFunction' -> encode_msg_ToolFunction(id(Msg, TrUserData), TrUserData);
+        'ToolCall' -> encode_msg_ToolCall(id(Msg, TrUserData), TrUserData);
         'ToolEvent' -> encode_msg_ToolEvent(id(Msg, TrUserData), TrUserData);
         'FinalAnswer' -> encode_msg_FinalAnswer(id(Msg, TrUserData), TrUserData);
         'StreamError' -> encode_msg_StreamError(id(Msg, TrUserData), TrUserData);
@@ -438,6 +477,135 @@ encode_msg_LlmChunk(#{} = M, Bin, TrUserData) ->
         _ -> B1
     end.
 
+encode_msg_JsonField(Msg, TrUserData) -> encode_msg_JsonField(Msg, <<>>, TrUserData).
+
+
+encode_msg_JsonField(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{key := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    case M of
+        #{value := F2} ->
+            begin
+                TrF2 = id(F2, TrUserData),
+                if TrF2 =:= undefined -> B1;
+                   true -> e_mfield_JsonField_value(TrF2, <<B1/binary, 18>>, TrUserData)
+                end
+            end;
+        _ -> B1
+    end.
+
+encode_msg_JsonObject(Msg, TrUserData) -> encode_msg_JsonObject(Msg, <<>>, TrUserData).
+
+
+encode_msg_JsonObject(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{fields := F1} ->
+            TrF1 = id(F1, TrUserData),
+            if TrF1 == [] -> Bin;
+               true -> e_field_JsonObject_fields(TrF1, Bin, TrUserData)
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_JsonArray(Msg, TrUserData) -> encode_msg_JsonArray(Msg, <<>>, TrUserData).
+
+
+encode_msg_JsonArray(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{items := F1} ->
+            TrF1 = id(F1, TrUserData),
+            if TrF1 == [] -> Bin;
+               true -> e_field_JsonArray_items(TrF1, Bin, TrUserData)
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_JsonValue(Msg, TrUserData) -> encode_msg_JsonValue(Msg, <<>>, TrUserData).
+
+
+encode_msg_JsonValue(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{string_value := OF1} -> id(begin TrOF1 = id(OF1, TrUserData), e_type_string(TrOF1, <<Bin/binary, 10>>, TrUserData) end, TrUserData);
+        #{number_value := OF1} -> id(begin TrOF1 = id(OF1, TrUserData), e_type_double(TrOF1, <<Bin/binary, 17>>, TrUserData) end, TrUserData);
+        #{bool_value := OF1} -> id(begin TrOF1 = id(OF1, TrUserData), e_type_bool(TrOF1, <<Bin/binary, 24>>, TrUserData) end, TrUserData);
+        #{object_value := OF1} -> id(begin TrOF1 = id(OF1, TrUserData), e_mfield_JsonValue_object_value(TrOF1, <<Bin/binary, 34>>, TrUserData) end, TrUserData);
+        #{array_value := OF1} -> id(begin TrOF1 = id(OF1, TrUserData), e_mfield_JsonValue_array_value(TrOF1, <<Bin/binary, 42>>, TrUserData) end, TrUserData);
+        #{null_value := OF1} -> id(begin TrOF1 = id(OF1, TrUserData), e_type_bool(TrOF1, <<Bin/binary, 48>>, TrUserData) end, TrUserData);
+        _ -> Bin
+    end.
+
+encode_msg_ToolFunction(Msg, TrUserData) -> encode_msg_ToolFunction(Msg, <<>>, TrUserData).
+
+
+encode_msg_ToolFunction(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{name := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    case M of
+        #{arguments := F2} ->
+            begin
+                TrF2 = id(F2, TrUserData),
+                if TrF2 =:= undefined -> B1;
+                   true -> e_mfield_ToolFunction_arguments(TrF2, <<B1/binary, 18>>, TrUserData)
+                end
+            end;
+        _ -> B1
+    end.
+
+encode_msg_ToolCall(Msg, TrUserData) -> encode_msg_ToolCall(Msg, <<>>, TrUserData).
+
+
+encode_msg_ToolCall(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{id := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{type := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     case is_empty_string(TrF2) of
+                         true -> B1;
+                         false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    case M of
+        #{function := F3} ->
+            begin
+                TrF3 = id(F3, TrUserData),
+                if TrF3 =:= undefined -> B2;
+                   true -> e_mfield_ToolCall_function(TrF3, <<B2/binary, 26>>, TrUserData)
+                end
+            end;
+        _ -> B2
+    end.
+
 encode_msg_ToolEvent(Msg, TrUserData) -> encode_msg_ToolEvent(Msg, <<>>, TrUserData).
 
 
@@ -465,23 +633,21 @@ encode_msg_ToolEvent(#{} = M, Bin, TrUserData) ->
              _ -> B1
          end,
     B3 = case M of
-             #{arguments_json := F3} ->
+             #{arguments := F3} ->
                  begin
                      TrF3 = id(F3, TrUserData),
-                     case is_empty_string(TrF3) of
-                         true -> B2;
-                         false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                     if TrF3 =:= undefined -> B2;
+                        true -> e_mfield_ToolEvent_arguments(TrF3, <<B2/binary, 26>>, TrUserData)
                      end
                  end;
              _ -> B2
          end,
     B4 = case M of
-             #{result_json := F4} ->
+             #{result := F4} ->
                  begin
                      TrF4 = id(F4, TrUserData),
-                     case is_empty_string(TrF4) of
-                         true -> B3;
-                         false -> e_type_string(TrF4, <<B3/binary, 34>>, TrUserData)
+                     if TrF4 =:= undefined -> B3;
+                        true -> e_mfield_ToolEvent_result(TrF4, <<B3/binary, 34>>, TrUserData)
                      end
                  end;
              _ -> B3
@@ -891,13 +1057,10 @@ encode_msg_HistoryEntry(#{} = M, Bin, TrUserData) ->
              _ -> B1
          end,
     B3 = case M of
-             #{tool_calls_json := F3} ->
-                 begin
-                     TrF3 = id(F3, TrUserData),
-                     case is_empty_string(TrF3) of
-                         true -> B2;
-                         false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
-                     end
+             #{tool_calls := F3} ->
+                 TrF3 = id(F3, TrUserData),
+                 if TrF3 == [] -> B2;
+                    true -> e_field_HistoryEntry_tool_calls(TrF3, B2, TrUserData)
                  end;
              _ -> B2
          end,
@@ -1001,6 +1164,63 @@ e_mfield_PanelStream_error(Msg, Bin, TrUserData) ->
     Bin2 = e_varint(byte_size(SubBin), Bin),
     <<Bin2/binary, SubBin/binary>>.
 
+e_mfield_JsonField_value(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_JsonValue(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_mfield_JsonObject_fields(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_JsonField(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_JsonObject_fields([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 10>>,
+    Bin3 = e_mfield_JsonObject_fields(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_JsonObject_fields(Rest, Bin3, TrUserData);
+e_field_JsonObject_fields([], Bin, _TrUserData) -> Bin.
+
+e_mfield_JsonArray_items(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_JsonValue(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_JsonArray_items([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 10>>,
+    Bin3 = e_mfield_JsonArray_items(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_JsonArray_items(Rest, Bin3, TrUserData);
+e_field_JsonArray_items([], Bin, _TrUserData) -> Bin.
+
+e_mfield_JsonValue_object_value(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_JsonObject(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_mfield_JsonValue_array_value(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_JsonArray(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_mfield_ToolFunction_arguments(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_JsonValue(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_mfield_ToolCall_function(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_ToolFunction(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_mfield_ToolEvent_arguments(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_JsonValue(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_mfield_ToolEvent_result(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_JsonValue(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
 e_mfield_ListToolsResult_tools(Msg, Bin, TrUserData) ->
     SubBin = encode_msg_ToolDesc(Msg, <<>>, TrUserData),
     Bin2 = e_varint(byte_size(SubBin), Bin),
@@ -1011,6 +1231,17 @@ e_field_ListToolsResult_tools([Elem | Rest], Bin, TrUserData) ->
     Bin3 = e_mfield_ListToolsResult_tools(id(Elem, TrUserData), Bin2, TrUserData),
     e_field_ListToolsResult_tools(Rest, Bin3, TrUserData);
 e_field_ListToolsResult_tools([], Bin, _TrUserData) -> Bin.
+
+e_mfield_HistoryEntry_tool_calls(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_ToolCall(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_HistoryEntry_tool_calls([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 26>>,
+    Bin3 = e_mfield_HistoryEntry_tool_calls(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_HistoryEntry_tool_calls(Rest, Bin3, TrUserData);
+e_field_HistoryEntry_tool_calls([], Bin, _TrUserData) -> Bin.
 
 e_mfield_GetHistoryResult_messages(Msg, Bin, TrUserData) ->
     SubBin = encode_msg_HistoryEntry(Msg, <<>>, TrUserData),
@@ -1159,6 +1390,12 @@ decode_msg_2_doit('PanelRequest', Bin, TrUserData) -> id(decode_msg_PanelRequest
 decode_msg_2_doit('PanelResponse', Bin, TrUserData) -> id(decode_msg_PanelResponse(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PanelStream', Bin, TrUserData) -> id(decode_msg_PanelStream(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('LlmChunk', Bin, TrUserData) -> id(decode_msg_LlmChunk(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('JsonField', Bin, TrUserData) -> id(decode_msg_JsonField(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('JsonObject', Bin, TrUserData) -> id(decode_msg_JsonObject(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('JsonArray', Bin, TrUserData) -> id(decode_msg_JsonArray(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('JsonValue', Bin, TrUserData) -> id(decode_msg_JsonValue(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ToolFunction', Bin, TrUserData) -> id(decode_msg_ToolFunction(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ToolCall', Bin, TrUserData) -> id(decode_msg_ToolCall(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ToolEvent', Bin, TrUserData) -> id(decode_msg_ToolEvent(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('FinalAnswer', Bin, TrUserData) -> id(decode_msg_FinalAnswer(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('StreamError', Bin, TrUserData) -> id(decode_msg_StreamError(Bin, TrUserData), TrUserData);
@@ -1729,15 +1966,444 @@ skip_32_LlmChunk(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> df
 
 skip_64_LlmChunk(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_LlmChunk(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
 
-decode_msg_ToolEvent(Bin, TrUserData) -> dfp_read_field_def_ToolEvent(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(false, TrUserData), TrUserData).
+decode_msg_JsonField(Bin, TrUserData) -> dfp_read_field_def_JsonField(Bin, 0, 0, 0, id(<<>>, TrUserData), id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_JsonField(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_JsonField_key(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_JsonField(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_JsonField_value(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_JsonField(<<>>, 0, 0, _, F@_1, F@_2, _) ->
+    S1 = #{key => F@_1},
+    if F@_2 == '$undef' -> S1;
+       true -> S1#{value => F@_2}
+    end;
+dfp_read_field_def_JsonField(Other, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dg_read_field_def_JsonField(Other, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+dg_read_field_def_JsonField(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_JsonField(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+dg_read_field_def_JsonField(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_JsonField_key(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        18 -> d_field_JsonField_value(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_JsonField(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                1 -> skip_64_JsonField(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_JsonField(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                3 -> skip_group_JsonField(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                5 -> skip_32_JsonField(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData)
+            end
+    end;
+dg_read_field_def_JsonField(<<>>, 0, 0, _, F@_1, F@_2, _) ->
+    S1 = #{key => F@_1},
+    if F@_2 == '$undef' -> S1;
+       true -> S1#{value => F@_2}
+    end.
+
+d_field_JsonField_key(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_JsonField_key(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_JsonField_key(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_JsonField(RestF, 0, 0, F, NewFValue, F@_2, TrUserData).
+
+d_field_JsonField_value(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_JsonField_value(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_JsonField_value(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_JsonValue(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_JsonField(RestF,
+                                 0,
+                                 0,
+                                 F,
+                                 F@_1,
+                                 if Prev == '$undef' -> NewFValue;
+                                    true -> merge_msg_JsonValue(Prev, NewFValue, TrUserData)
+                                 end,
+                                 TrUserData).
+
+skip_varint_JsonField(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_JsonField(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+skip_varint_JsonField(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_JsonField(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_JsonField(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_JsonField(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+skip_length_delimited_JsonField(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_JsonField(Rest2, 0, 0, F, F@_1, F@_2, TrUserData).
+
+skip_group_JsonField(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_JsonField(Rest, 0, Z2, FNum, F@_1, F@_2, TrUserData).
+
+skip_32_JsonField(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_JsonField(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_64_JsonField(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_JsonField(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_JsonObject(Bin, TrUserData) -> dfp_read_field_def_JsonObject(Bin, 0, 0, 0, id([], TrUserData), TrUserData).
+
+dfp_read_field_def_JsonObject(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_JsonObject_fields(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_JsonObject(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{fields => lists_reverse(R1, TrUserData)}
+    end;
+dfp_read_field_def_JsonObject(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_JsonObject(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_JsonObject(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_JsonObject(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_JsonObject(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_JsonObject_fields(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_JsonObject(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_JsonObject(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_JsonObject(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_JsonObject(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_JsonObject(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_JsonObject(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{fields => lists_reverse(R1, TrUserData)}
+    end.
+
+d_field_JsonObject_fields(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_JsonObject_fields(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_JsonObject_fields(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_JsonField(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_JsonObject(RestF, 0, 0, F, cons(NewFValue, Prev, TrUserData), TrUserData).
+
+skip_varint_JsonObject(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_JsonObject(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_JsonObject(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_JsonObject(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_JsonObject(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_JsonObject(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_JsonObject(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_JsonObject(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_JsonObject(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_JsonObject(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_JsonObject(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_JsonObject(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_JsonObject(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_JsonObject(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_JsonArray(Bin, TrUserData) -> dfp_read_field_def_JsonArray(Bin, 0, 0, 0, id([], TrUserData), TrUserData).
+
+dfp_read_field_def_JsonArray(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_JsonArray_items(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_JsonArray(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{items => lists_reverse(R1, TrUserData)}
+    end;
+dfp_read_field_def_JsonArray(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_JsonArray(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_JsonArray(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_JsonArray(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_JsonArray(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_JsonArray_items(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_JsonArray(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_JsonArray(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_JsonArray(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_JsonArray(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_JsonArray(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_JsonArray(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{items => lists_reverse(R1, TrUserData)}
+    end.
+
+d_field_JsonArray_items(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_JsonArray_items(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_JsonArray_items(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_JsonValue(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_JsonArray(RestF, 0, 0, F, cons(NewFValue, Prev, TrUserData), TrUserData).
+
+skip_varint_JsonArray(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_JsonArray(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_JsonArray(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_JsonArray(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_JsonArray(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_JsonArray(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_JsonArray(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_JsonArray(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_JsonArray(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_JsonArray(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_JsonArray(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_JsonArray(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_JsonArray(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_JsonArray(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_JsonValue(Bin, TrUserData) -> dfp_read_field_def_JsonValue(Bin, 0, 0, 0, id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_JsonValue(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_JsonValue_string_value(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_JsonValue(<<17, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_JsonValue_number_value(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_JsonValue(<<24, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_JsonValue_bool_value(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_JsonValue(<<34, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_JsonValue_object_value(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_JsonValue(<<42, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_JsonValue_array_value(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_JsonValue(<<48, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_JsonValue_null_value(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_JsonValue(<<>>, 0, 0, _, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true ->
+           {Tagkind, Valuekind} = F@_1,
+           S1#{Tagkind => Valuekind}
+    end;
+dfp_read_field_def_JsonValue(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_JsonValue(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_JsonValue(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_JsonValue(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_JsonValue(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_JsonValue_string_value(Rest, 0, 0, 0, F@_1, TrUserData);
+        17 -> d_field_JsonValue_number_value(Rest, 0, 0, 0, F@_1, TrUserData);
+        24 -> d_field_JsonValue_bool_value(Rest, 0, 0, 0, F@_1, TrUserData);
+        34 -> d_field_JsonValue_object_value(Rest, 0, 0, 0, F@_1, TrUserData);
+        42 -> d_field_JsonValue_array_value(Rest, 0, 0, 0, F@_1, TrUserData);
+        48 -> d_field_JsonValue_null_value(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_JsonValue(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_JsonValue(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_JsonValue(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_JsonValue(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_JsonValue(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_JsonValue(<<>>, 0, 0, _, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true ->
+           {Tagkind, Valuekind} = F@_1,
+           S1#{Tagkind => Valuekind}
+    end.
+
+d_field_JsonValue_string_value(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_JsonValue_string_value(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_JsonValue_string_value(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_JsonValue(RestF, 0, 0, F, id({string_value, NewFValue}, TrUserData), TrUserData).
+
+d_field_JsonValue_number_value(<<0:48, 240, 127, Rest/binary>>, Z1, Z2, F, _, TrUserData) -> dfp_read_field_def_JsonValue(Rest, Z1, Z2, F, id({number_value, id(infinity, TrUserData)}, TrUserData), TrUserData);
+d_field_JsonValue_number_value(<<0:48, 240, 255, Rest/binary>>, Z1, Z2, F, _, TrUserData) -> dfp_read_field_def_JsonValue(Rest, Z1, Z2, F, id({number_value, id('-infinity', TrUserData)}, TrUserData), TrUserData);
+d_field_JsonValue_number_value(<<_:48, 15:4, _:4, _:1, 127:7, Rest/binary>>, Z1, Z2, F, _, TrUserData) -> dfp_read_field_def_JsonValue(Rest, Z1, Z2, F, id({number_value, id(nan, TrUserData)}, TrUserData), TrUserData);
+d_field_JsonValue_number_value(<<Value:64/little-float, Rest/binary>>, Z1, Z2, F, _, TrUserData) -> dfp_read_field_def_JsonValue(Rest, Z1, Z2, F, id({number_value, id(Value, TrUserData)}, TrUserData), TrUserData).
+
+d_field_JsonValue_bool_value(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_JsonValue_bool_value(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_JsonValue_bool_value(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_JsonValue(RestF, 0, 0, F, id({bool_value, NewFValue}, TrUserData), TrUserData).
+
+d_field_JsonValue_object_value(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_JsonValue_object_value(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_JsonValue_object_value(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_JsonObject(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_JsonValue(RestF,
+                                 0,
+                                 0,
+                                 F,
+                                 case Prev of
+                                     '$undef' -> id({object_value, NewFValue}, TrUserData);
+                                     {object_value, MVPrev} -> id({object_value, merge_msg_JsonObject(MVPrev, NewFValue, TrUserData)}, TrUserData);
+                                     _ -> id({object_value, NewFValue}, TrUserData)
+                                 end,
+                                 TrUserData).
+
+d_field_JsonValue_array_value(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_JsonValue_array_value(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_JsonValue_array_value(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_JsonArray(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_JsonValue(RestF,
+                                 0,
+                                 0,
+                                 F,
+                                 case Prev of
+                                     '$undef' -> id({array_value, NewFValue}, TrUserData);
+                                     {array_value, MVPrev} -> id({array_value, merge_msg_JsonArray(MVPrev, NewFValue, TrUserData)}, TrUserData);
+                                     _ -> id({array_value, NewFValue}, TrUserData)
+                                 end,
+                                 TrUserData).
+
+d_field_JsonValue_null_value(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_JsonValue_null_value(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_JsonValue_null_value(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_JsonValue(RestF, 0, 0, F, id({null_value, NewFValue}, TrUserData), TrUserData).
+
+skip_varint_JsonValue(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_JsonValue(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_JsonValue(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_JsonValue(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_JsonValue(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_JsonValue(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_JsonValue(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_JsonValue(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_JsonValue(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_JsonValue(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_JsonValue(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_JsonValue(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_JsonValue(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_JsonValue(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_ToolFunction(Bin, TrUserData) -> dfp_read_field_def_ToolFunction(Bin, 0, 0, 0, id(<<>>, TrUserData), id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_ToolFunction(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_ToolFunction_name(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_ToolFunction(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_ToolFunction_arguments(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_ToolFunction(<<>>, 0, 0, _, F@_1, F@_2, _) ->
+    S1 = #{name => F@_1},
+    if F@_2 == '$undef' -> S1;
+       true -> S1#{arguments => F@_2}
+    end;
+dfp_read_field_def_ToolFunction(Other, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dg_read_field_def_ToolFunction(Other, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+dg_read_field_def_ToolFunction(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_ToolFunction(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+dg_read_field_def_ToolFunction(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_ToolFunction_name(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        18 -> d_field_ToolFunction_arguments(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ToolFunction(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                1 -> skip_64_ToolFunction(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_ToolFunction(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                3 -> skip_group_ToolFunction(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                5 -> skip_32_ToolFunction(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData)
+            end
+    end;
+dg_read_field_def_ToolFunction(<<>>, 0, 0, _, F@_1, F@_2, _) ->
+    S1 = #{name => F@_1},
+    if F@_2 == '$undef' -> S1;
+       true -> S1#{arguments => F@_2}
+    end.
+
+d_field_ToolFunction_name(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_ToolFunction_name(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_ToolFunction_name(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ToolFunction(RestF, 0, 0, F, NewFValue, F@_2, TrUserData).
+
+d_field_ToolFunction_arguments(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_ToolFunction_arguments(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_ToolFunction_arguments(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_JsonValue(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_ToolFunction(RestF,
+                                    0,
+                                    0,
+                                    F,
+                                    F@_1,
+                                    if Prev == '$undef' -> NewFValue;
+                                       true -> merge_msg_JsonValue(Prev, NewFValue, TrUserData)
+                                    end,
+                                    TrUserData).
+
+skip_varint_ToolFunction(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_ToolFunction(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+skip_varint_ToolFunction(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ToolFunction(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_ToolFunction(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_ToolFunction(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+skip_length_delimited_ToolFunction(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ToolFunction(Rest2, 0, 0, F, F@_1, F@_2, TrUserData).
+
+skip_group_ToolFunction(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ToolFunction(Rest, 0, Z2, FNum, F@_1, F@_2, TrUserData).
+
+skip_32_ToolFunction(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ToolFunction(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_64_ToolFunction(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ToolFunction(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_ToolCall(Bin, TrUserData) -> dfp_read_field_def_ToolCall(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_ToolCall(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_ToolCall_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_ToolCall(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_ToolCall_type(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_ToolCall(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_ToolCall_function(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_ToolCall(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) ->
+    S1 = #{id => F@_1, type => F@_2},
+    if F@_3 == '$undef' -> S1;
+       true -> S1#{function => F@_3}
+    end;
+dfp_read_field_def_ToolCall(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_ToolCall(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+dg_read_field_def_ToolCall(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_ToolCall(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+dg_read_field_def_ToolCall(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_ToolCall_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        18 -> d_field_ToolCall_type(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        26 -> d_field_ToolCall_function(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ToolCall(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                1 -> skip_64_ToolCall(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                2 -> skip_length_delimited_ToolCall(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                3 -> skip_group_ToolCall(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                5 -> skip_32_ToolCall(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData)
+            end
+    end;
+dg_read_field_def_ToolCall(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) ->
+    S1 = #{id => F@_1, type => F@_2},
+    if F@_3 == '$undef' -> S1;
+       true -> S1#{function => F@_3}
+    end.
+
+d_field_ToolCall_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_ToolCall_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_ToolCall_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ToolCall(RestF, 0, 0, F, NewFValue, F@_2, F@_3, TrUserData).
+
+d_field_ToolCall_type(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_ToolCall_type(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_ToolCall_type(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ToolCall(RestF, 0, 0, F, F@_1, NewFValue, F@_3, TrUserData).
+
+d_field_ToolCall_function(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_ToolCall_function(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_ToolCall_function(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_ToolFunction(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_ToolCall(RestF,
+                                0,
+                                0,
+                                F,
+                                F@_1,
+                                F@_2,
+                                if Prev == '$undef' -> NewFValue;
+                                   true -> merge_msg_ToolFunction(Prev, NewFValue, TrUserData)
+                                end,
+                                TrUserData).
+
+skip_varint_ToolCall(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_ToolCall(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+skip_varint_ToolCall(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_ToolCall(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_length_delimited_ToolCall(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> skip_length_delimited_ToolCall(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+skip_length_delimited_ToolCall(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ToolCall(Rest2, 0, 0, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_group_ToolCall(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ToolCall(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, TrUserData).
+
+skip_32_ToolCall(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_ToolCall(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_64_ToolCall(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_ToolCall(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+decode_msg_ToolEvent(Bin, TrUserData) -> dfp_read_field_def_ToolEvent(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id('$undef', TrUserData), id('$undef', TrUserData), id(<<>>, TrUserData), id(false, TrUserData), TrUserData).
 
 dfp_read_field_def_ToolEvent(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_ToolEvent_tool_call_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
 dfp_read_field_def_ToolEvent(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_ToolEvent_name(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-dfp_read_field_def_ToolEvent(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_ToolEvent_arguments_json(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-dfp_read_field_def_ToolEvent(<<34, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_ToolEvent_result_json(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_ToolEvent(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_ToolEvent_arguments(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_ToolEvent(<<34, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_ToolEvent_result(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
 dfp_read_field_def_ToolEvent(<<42, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_ToolEvent_error(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
 dfp_read_field_def_ToolEvent(<<48, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_ToolEvent_finished(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-dfp_read_field_def_ToolEvent(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, _) -> #{tool_call_id => F@_1, name => F@_2, arguments_json => F@_3, result_json => F@_4, error => F@_5, finished => F@_6};
+dfp_read_field_def_ToolEvent(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, _) ->
+    S1 = #{tool_call_id => F@_1, name => F@_2, error => F@_5, finished => F@_6},
+    S2 = if F@_3 == '$undef' -> S1;
+            true -> S1#{arguments => F@_3}
+         end,
+    if F@_4 == '$undef' -> S2;
+       true -> S2#{result => F@_4}
+    end;
 dfp_read_field_def_ToolEvent(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> dg_read_field_def_ToolEvent(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
 
 dg_read_field_def_ToolEvent(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 32 - 7 -> dg_read_field_def_ToolEvent(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
@@ -1746,8 +2412,8 @@ dg_read_field_def_ToolEvent(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@
     case Key of
         10 -> d_field_ToolEvent_tool_call_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
         18 -> d_field_ToolEvent_name(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-        26 -> d_field_ToolEvent_arguments_json(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-        34 -> d_field_ToolEvent_result_json(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        26 -> d_field_ToolEvent_arguments(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        34 -> d_field_ToolEvent_result(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
         42 -> d_field_ToolEvent_error(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
         48 -> d_field_ToolEvent_finished(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
         _ ->
@@ -1759,7 +2425,14 @@ dg_read_field_def_ToolEvent(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@
                 5 -> skip_32_ToolEvent(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData)
             end
     end;
-dg_read_field_def_ToolEvent(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, _) -> #{tool_call_id => F@_1, name => F@_2, arguments_json => F@_3, result_json => F@_4, error => F@_5, finished => F@_6}.
+dg_read_field_def_ToolEvent(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, _) ->
+    S1 = #{tool_call_id => F@_1, name => F@_2, error => F@_5, finished => F@_6},
+    S2 = if F@_3 == '$undef' -> S1;
+            true -> S1#{arguments => F@_3}
+         end,
+    if F@_4 == '$undef' -> S2;
+       true -> S2#{result => F@_4}
+    end.
 
 d_field_ToolEvent_tool_call_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_ToolEvent_tool_call_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
 d_field_ToolEvent_tool_call_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
@@ -1771,15 +2444,39 @@ d_field_ToolEvent_name(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, F@_4
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
     dfp_read_field_def_ToolEvent(RestF, 0, 0, F, F@_1, NewFValue, F@_3, F@_4, F@_5, F@_6, TrUserData).
 
-d_field_ToolEvent_arguments_json(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_ToolEvent_arguments_json(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-d_field_ToolEvent_arguments_json(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, F@_4, F@_5, F@_6, TrUserData) ->
-    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
-    dfp_read_field_def_ToolEvent(RestF, 0, 0, F, F@_1, F@_2, NewFValue, F@_4, F@_5, F@_6, TrUserData).
+d_field_ToolEvent_arguments(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_ToolEvent_arguments(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_ToolEvent_arguments(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, Prev, F@_4, F@_5, F@_6, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_JsonValue(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_ToolEvent(RestF,
+                                 0,
+                                 0,
+                                 F,
+                                 F@_1,
+                                 F@_2,
+                                 if Prev == '$undef' -> NewFValue;
+                                    true -> merge_msg_JsonValue(Prev, NewFValue, TrUserData)
+                                 end,
+                                 F@_4,
+                                 F@_5,
+                                 F@_6,
+                                 TrUserData).
 
-d_field_ToolEvent_result_json(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_ToolEvent_result_json(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-d_field_ToolEvent_result_json(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, _, F@_5, F@_6, TrUserData) ->
-    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
-    dfp_read_field_def_ToolEvent(RestF, 0, 0, F, F@_1, F@_2, F@_3, NewFValue, F@_5, F@_6, TrUserData).
+d_field_ToolEvent_result(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_ToolEvent_result(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_ToolEvent_result(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, Prev, F@_5, F@_6, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_JsonValue(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_ToolEvent(RestF,
+                                 0,
+                                 0,
+                                 F,
+                                 F@_1,
+                                 F@_2,
+                                 F@_3,
+                                 if Prev == '$undef' -> NewFValue;
+                                    true -> merge_msg_JsonValue(Prev, NewFValue, TrUserData)
+                                 end,
+                                 F@_5,
+                                 F@_6,
+                                 TrUserData).
 
 d_field_ToolEvent_error(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_ToolEvent_error(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
 d_field_ToolEvent_error(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, _, F@_6, TrUserData) ->
@@ -2523,13 +3220,17 @@ skip_32_BrainStatusResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@
 
 skip_64_BrainStatusResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_BrainStatusResult(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
-decode_msg_HistoryEntry(Bin, TrUserData) -> dfp_read_field_def_HistoryEntry(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
+decode_msg_HistoryEntry(Bin, TrUserData) -> dfp_read_field_def_HistoryEntry(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id([], TrUserData), id(<<>>, TrUserData), TrUserData).
 
 dfp_read_field_def_HistoryEntry(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_HistoryEntry_role(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
 dfp_read_field_def_HistoryEntry(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_HistoryEntry_content(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dfp_read_field_def_HistoryEntry(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_HistoryEntry_tool_calls_json(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_HistoryEntry(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_HistoryEntry_tool_calls(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
 dfp_read_field_def_HistoryEntry(<<34, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_HistoryEntry_tool_call_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dfp_read_field_def_HistoryEntry(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, _) -> #{role => F@_1, content => F@_2, tool_calls_json => F@_3, tool_call_id => F@_4};
+dfp_read_field_def_HistoryEntry(<<>>, 0, 0, _, F@_1, F@_2, R1, F@_4, TrUserData) ->
+    S1 = #{role => F@_1, content => F@_2, tool_call_id => F@_4},
+    if R1 == '$undef' -> S1;
+       true -> S1#{tool_calls => lists_reverse(R1, TrUserData)}
+    end;
 dfp_read_field_def_HistoryEntry(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dg_read_field_def_HistoryEntry(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
 dg_read_field_def_HistoryEntry(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 32 - 7 -> dg_read_field_def_HistoryEntry(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
@@ -2538,7 +3239,7 @@ dg_read_field_def_HistoryEntry(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2,
     case Key of
         10 -> d_field_HistoryEntry_role(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
         18 -> d_field_HistoryEntry_content(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-        26 -> d_field_HistoryEntry_tool_calls_json(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        26 -> d_field_HistoryEntry_tool_calls(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
         34 -> d_field_HistoryEntry_tool_call_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
         _ ->
             case Key band 7 of
@@ -2549,7 +3250,11 @@ dg_read_field_def_HistoryEntry(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2,
                 5 -> skip_32_HistoryEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData)
             end
     end;
-dg_read_field_def_HistoryEntry(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, _) -> #{role => F@_1, content => F@_2, tool_calls_json => F@_3, tool_call_id => F@_4}.
+dg_read_field_def_HistoryEntry(<<>>, 0, 0, _, F@_1, F@_2, R1, F@_4, TrUserData) ->
+    S1 = #{role => F@_1, content => F@_2, tool_call_id => F@_4},
+    if R1 == '$undef' -> S1;
+       true -> S1#{tool_calls => lists_reverse(R1, TrUserData)}
+    end.
 
 d_field_HistoryEntry_role(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_HistoryEntry_role(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
 d_field_HistoryEntry_role(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, TrUserData) ->
@@ -2561,10 +3266,10 @@ d_field_HistoryEntry_content(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
     dfp_read_field_def_HistoryEntry(RestF, 0, 0, F, F@_1, NewFValue, F@_3, F@_4, TrUserData).
 
-d_field_HistoryEntry_tool_calls_json(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_HistoryEntry_tool_calls_json(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
-d_field_HistoryEntry_tool_calls_json(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, F@_4, TrUserData) ->
-    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
-    dfp_read_field_def_HistoryEntry(RestF, 0, 0, F, F@_1, F@_2, NewFValue, F@_4, TrUserData).
+d_field_HistoryEntry_tool_calls(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_HistoryEntry_tool_calls(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_HistoryEntry_tool_calls(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, Prev, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_ToolCall(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_HistoryEntry(RestF, 0, 0, F, F@_1, F@_2, cons(NewFValue, Prev, TrUserData), F@_4, TrUserData).
 
 d_field_HistoryEntry_tool_call_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_HistoryEntry_tool_call_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
 d_field_HistoryEntry_tool_call_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, _, TrUserData) ->
@@ -2798,6 +3503,12 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'PanelResponse' -> merge_msg_PanelResponse(Prev, New, TrUserData);
         'PanelStream' -> merge_msg_PanelStream(Prev, New, TrUserData);
         'LlmChunk' -> merge_msg_LlmChunk(Prev, New, TrUserData);
+        'JsonField' -> merge_msg_JsonField(Prev, New, TrUserData);
+        'JsonObject' -> merge_msg_JsonObject(Prev, New, TrUserData);
+        'JsonArray' -> merge_msg_JsonArray(Prev, New, TrUserData);
+        'JsonValue' -> merge_msg_JsonValue(Prev, New, TrUserData);
+        'ToolFunction' -> merge_msg_ToolFunction(Prev, New, TrUserData);
+        'ToolCall' -> merge_msg_ToolCall(Prev, New, TrUserData);
         'ToolEvent' -> merge_msg_ToolEvent(Prev, New, TrUserData);
         'FinalAnswer' -> merge_msg_FinalAnswer(Prev, New, TrUserData);
         'StreamError' -> merge_msg_StreamError(Prev, New, TrUserData);
@@ -2952,8 +3663,99 @@ merge_msg_LlmChunk(PMsg, NMsg, _) ->
         _ -> S2
     end.
 
+-compile({nowarn_unused_function,merge_msg_JsonField/3}).
+merge_msg_JsonField(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{key := NFkey}} -> S1#{key => NFkey};
+             {#{key := PFkey}, _} -> S1#{key => PFkey};
+             _ -> S1
+         end,
+    case {PMsg, NMsg} of
+        {#{value := PFvalue}, #{value := NFvalue}} -> S2#{value => merge_msg_JsonValue(PFvalue, NFvalue, TrUserData)};
+        {_, #{value := NFvalue}} -> S2#{value => NFvalue};
+        {#{value := PFvalue}, _} -> S2#{value => PFvalue};
+        {_, _} -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_JsonObject/3}).
+merge_msg_JsonObject(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {#{fields := PFfields}, #{fields := NFfields}} -> S1#{fields => 'erlang_++'(PFfields, NFfields, TrUserData)};
+        {_, #{fields := NFfields}} -> S1#{fields => NFfields};
+        {#{fields := PFfields}, _} -> S1#{fields => PFfields};
+        {_, _} -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_JsonArray/3}).
+merge_msg_JsonArray(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {#{items := PFitems}, #{items := NFitems}} -> S1#{items => 'erlang_++'(PFitems, NFitems, TrUserData)};
+        {_, #{items := NFitems}} -> S1#{items => NFitems};
+        {#{items := PFitems}, _} -> S1#{items => PFitems};
+        {_, _} -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_JsonValue/3}).
+merge_msg_JsonValue(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {#{object_value := PFobject_value}, #{object_value := NFobject_value}} -> S1#{object_value => merge_msg_JsonObject(PFobject_value, NFobject_value, TrUserData)};
+        {#{array_value := PFarray_value}, #{array_value := NFarray_value}} -> S1#{array_value => merge_msg_JsonArray(PFarray_value, NFarray_value, TrUserData)};
+        {_, #{string_value := NFstring_value}} -> S1#{string_value => NFstring_value};
+        {_, #{number_value := NFnumber_value}} -> S1#{number_value => NFnumber_value};
+        {_, #{bool_value := NFbool_value}} -> S1#{bool_value => NFbool_value};
+        {_, #{object_value := NFobject_value}} -> S1#{object_value => NFobject_value};
+        {_, #{array_value := NFarray_value}} -> S1#{array_value => NFarray_value};
+        {_, #{null_value := NFnull_value}} -> S1#{null_value => NFnull_value};
+        {#{string_value := PFstring_value}, _} -> S1#{string_value => PFstring_value};
+        {#{number_value := PFnumber_value}, _} -> S1#{number_value => PFnumber_value};
+        {#{bool_value := PFbool_value}, _} -> S1#{bool_value => PFbool_value};
+        {#{object_value := PFobject_value}, _} -> S1#{object_value => PFobject_value};
+        {#{array_value := PFarray_value}, _} -> S1#{array_value => PFarray_value};
+        {#{null_value := PFnull_value}, _} -> S1#{null_value => PFnull_value};
+        _ -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ToolFunction/3}).
+merge_msg_ToolFunction(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{name := NFname}} -> S1#{name => NFname};
+             {#{name := PFname}, _} -> S1#{name => PFname};
+             _ -> S1
+         end,
+    case {PMsg, NMsg} of
+        {#{arguments := PFarguments}, #{arguments := NFarguments}} -> S2#{arguments => merge_msg_JsonValue(PFarguments, NFarguments, TrUserData)};
+        {_, #{arguments := NFarguments}} -> S2#{arguments => NFarguments};
+        {#{arguments := PFarguments}, _} -> S2#{arguments => PFarguments};
+        {_, _} -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ToolCall/3}).
+merge_msg_ToolCall(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{id := NFid}} -> S1#{id => NFid};
+             {#{id := PFid}, _} -> S1#{id => PFid};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{type := NFtype}} -> S2#{type => NFtype};
+             {#{type := PFtype}, _} -> S2#{type => PFtype};
+             _ -> S2
+         end,
+    case {PMsg, NMsg} of
+        {#{function := PFfunction}, #{function := NFfunction}} -> S3#{function => merge_msg_ToolFunction(PFfunction, NFfunction, TrUserData)};
+        {_, #{function := NFfunction}} -> S3#{function => NFfunction};
+        {#{function := PFfunction}, _} -> S3#{function => PFfunction};
+        {_, _} -> S3
+    end.
+
 -compile({nowarn_unused_function,merge_msg_ToolEvent/3}).
-merge_msg_ToolEvent(PMsg, NMsg, _) ->
+merge_msg_ToolEvent(PMsg, NMsg, TrUserData) ->
     S1 = #{},
     S2 = case {PMsg, NMsg} of
              {_, #{tool_call_id := NFtool_call_id}} -> S1#{tool_call_id => NFtool_call_id};
@@ -2966,14 +3768,16 @@ merge_msg_ToolEvent(PMsg, NMsg, _) ->
              _ -> S2
          end,
     S4 = case {PMsg, NMsg} of
-             {_, #{arguments_json := NFarguments_json}} -> S3#{arguments_json => NFarguments_json};
-             {#{arguments_json := PFarguments_json}, _} -> S3#{arguments_json => PFarguments_json};
-             _ -> S3
+             {#{arguments := PFarguments}, #{arguments := NFarguments}} -> S3#{arguments => merge_msg_JsonValue(PFarguments, NFarguments, TrUserData)};
+             {_, #{arguments := NFarguments}} -> S3#{arguments => NFarguments};
+             {#{arguments := PFarguments}, _} -> S3#{arguments => PFarguments};
+             {_, _} -> S3
          end,
     S5 = case {PMsg, NMsg} of
-             {_, #{result_json := NFresult_json}} -> S4#{result_json => NFresult_json};
-             {#{result_json := PFresult_json}, _} -> S4#{result_json => PFresult_json};
-             _ -> S4
+             {#{result := PFresult}, #{result := NFresult}} -> S4#{result => merge_msg_JsonValue(PFresult, NFresult, TrUserData)};
+             {_, #{result := NFresult}} -> S4#{result => NFresult};
+             {#{result := PFresult}, _} -> S4#{result => PFresult};
+             {_, _} -> S4
          end,
     S6 = case {PMsg, NMsg} of
              {_, #{error := NFerror}} -> S5#{error => NFerror};
@@ -3179,7 +3983,7 @@ merge_msg_BrainStatusResult(PMsg, NMsg, _) ->
     end.
 
 -compile({nowarn_unused_function,merge_msg_HistoryEntry/3}).
-merge_msg_HistoryEntry(PMsg, NMsg, _) ->
+merge_msg_HistoryEntry(PMsg, NMsg, TrUserData) ->
     S1 = #{},
     S2 = case {PMsg, NMsg} of
              {_, #{role := NFrole}} -> S1#{role => NFrole};
@@ -3192,9 +3996,10 @@ merge_msg_HistoryEntry(PMsg, NMsg, _) ->
              _ -> S2
          end,
     S4 = case {PMsg, NMsg} of
-             {_, #{tool_calls_json := NFtool_calls_json}} -> S3#{tool_calls_json => NFtool_calls_json};
-             {#{tool_calls_json := PFtool_calls_json}, _} -> S3#{tool_calls_json => PFtool_calls_json};
-             _ -> S3
+             {#{tool_calls := PFtool_calls}, #{tool_calls := NFtool_calls}} -> S3#{tool_calls => 'erlang_++'(PFtool_calls, NFtool_calls, TrUserData)};
+             {_, #{tool_calls := NFtool_calls}} -> S3#{tool_calls => NFtool_calls};
+             {#{tool_calls := PFtool_calls}, _} -> S3#{tool_calls => PFtool_calls};
+             {_, _} -> S3
          end,
     case {PMsg, NMsg} of
         {_, #{tool_call_id := NFtool_call_id}} -> S4#{tool_call_id => NFtool_call_id};
@@ -3243,6 +4048,12 @@ verify_msg(Msg, MsgName, Opts) ->
         'PanelResponse' -> v_msg_PanelResponse(Msg, [MsgName], TrUserData);
         'PanelStream' -> v_msg_PanelStream(Msg, [MsgName], TrUserData);
         'LlmChunk' -> v_msg_LlmChunk(Msg, [MsgName], TrUserData);
+        'JsonField' -> v_msg_JsonField(Msg, [MsgName], TrUserData);
+        'JsonObject' -> v_msg_JsonObject(Msg, [MsgName], TrUserData);
+        'JsonArray' -> v_msg_JsonArray(Msg, [MsgName], TrUserData);
+        'JsonValue' -> v_msg_JsonValue(Msg, [MsgName], TrUserData);
+        'ToolFunction' -> v_msg_ToolFunction(Msg, [MsgName], TrUserData);
+        'ToolCall' -> v_msg_ToolCall(Msg, [MsgName], TrUserData);
         'ToolEvent' -> v_msg_ToolEvent(Msg, [MsgName], TrUserData);
         'FinalAnswer' -> v_msg_FinalAnswer(Msg, [MsgName], TrUserData);
         'StreamError' -> v_msg_StreamError(Msg, [MsgName], TrUserData);
@@ -3511,6 +4322,190 @@ v_msg_LlmChunk(#{} = M, Path, TrUserData) ->
 v_msg_LlmChunk(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'LlmChunk'}, M, Path);
 v_msg_LlmChunk(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'LlmChunk'}, X, Path).
 
+-compile({nowarn_unused_function,v_submsg_JsonField/3}).
+-dialyzer({nowarn_function,v_submsg_JsonField/3}).
+v_submsg_JsonField(Msg, Path, TrUserData) -> v_msg_JsonField(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_JsonField/3}).
+-dialyzer({nowarn_function,v_msg_JsonField/3}).
+v_msg_JsonField(#{} = M, Path, TrUserData) ->
+    case M of
+        #{key := F1} -> v_type_string(F1, [key | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{value := F2} -> v_submsg_JsonValue(F2, [value | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (value) -> ok;
+                      (key) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_JsonField(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'JsonField'}, M, Path);
+v_msg_JsonField(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'JsonField'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_JsonObject/3}).
+-dialyzer({nowarn_function,v_submsg_JsonObject/3}).
+v_submsg_JsonObject(Msg, Path, TrUserData) -> v_msg_JsonObject(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_JsonObject/3}).
+-dialyzer({nowarn_function,v_msg_JsonObject/3}).
+v_msg_JsonObject(#{} = M, Path, TrUserData) ->
+    case M of
+        #{fields := F1} ->
+            if is_list(F1) ->
+                   _ = [v_submsg_JsonField(Elem, [fields | Path], TrUserData) || Elem <- F1],
+                   ok;
+               true -> mk_type_error({invalid_list_of, {msg, 'JsonField'}}, F1, [fields | Path])
+            end;
+        _ -> ok
+    end,
+    lists:foreach(fun (fields) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_JsonObject(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'JsonObject'}, M, Path);
+v_msg_JsonObject(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'JsonObject'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_JsonArray/3}).
+-dialyzer({nowarn_function,v_submsg_JsonArray/3}).
+v_submsg_JsonArray(Msg, Path, TrUserData) -> v_msg_JsonArray(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_JsonArray/3}).
+-dialyzer({nowarn_function,v_msg_JsonArray/3}).
+v_msg_JsonArray(#{} = M, Path, TrUserData) ->
+    case M of
+        #{items := F1} ->
+            if is_list(F1) ->
+                   _ = [v_submsg_JsonValue(Elem, [items | Path], TrUserData) || Elem <- F1],
+                   ok;
+               true -> mk_type_error({invalid_list_of, {msg, 'JsonValue'}}, F1, [items | Path])
+            end;
+        _ -> ok
+    end,
+    lists:foreach(fun (items) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_JsonArray(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'JsonArray'}, M, Path);
+v_msg_JsonArray(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'JsonArray'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_JsonValue/3}).
+-dialyzer({nowarn_function,v_submsg_JsonValue/3}).
+v_submsg_JsonValue(Msg, Path, TrUserData) -> v_msg_JsonValue(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_JsonValue/3}).
+-dialyzer({nowarn_function,v_msg_JsonValue/3}).
+v_msg_JsonValue(#{} = M, Path, TrUserData) ->
+    case M of
+        #{string_value := OF1} ->
+            case maps:keys(maps:with([string_value, number_value, bool_value, object_value, array_value, null_value], M)) of
+                [_] -> ok;
+                OFDupsOF1 -> mk_type_error({multiple_oneof_keys, OFDupsOF1, kind}, M, [kind | Path])
+            end,
+            v_type_string(OF1, [string_value | Path], TrUserData);
+        #{number_value := OF1} ->
+            case maps:keys(maps:with([string_value, number_value, bool_value, object_value, array_value, null_value], M)) of
+                [_] -> ok;
+                OFDupsOF1 -> mk_type_error({multiple_oneof_keys, OFDupsOF1, kind}, M, [kind | Path])
+            end,
+            v_type_double(OF1, [number_value | Path], TrUserData);
+        #{bool_value := OF1} ->
+            case maps:keys(maps:with([string_value, number_value, bool_value, object_value, array_value, null_value], M)) of
+                [_] -> ok;
+                OFDupsOF1 -> mk_type_error({multiple_oneof_keys, OFDupsOF1, kind}, M, [kind | Path])
+            end,
+            v_type_bool(OF1, [bool_value | Path], TrUserData);
+        #{object_value := OF1} ->
+            case maps:keys(maps:with([string_value, number_value, bool_value, object_value, array_value, null_value], M)) of
+                [_] -> ok;
+                OFDupsOF1 -> mk_type_error({multiple_oneof_keys, OFDupsOF1, kind}, M, [kind | Path])
+            end,
+            v_submsg_JsonObject(OF1, [object_value | Path], TrUserData);
+        #{array_value := OF1} ->
+            case maps:keys(maps:with([string_value, number_value, bool_value, object_value, array_value, null_value], M)) of
+                [_] -> ok;
+                OFDupsOF1 -> mk_type_error({multiple_oneof_keys, OFDupsOF1, kind}, M, [kind | Path])
+            end,
+            v_submsg_JsonArray(OF1, [array_value | Path], TrUserData);
+        #{null_value := OF1} ->
+            case maps:keys(maps:with([string_value, number_value, bool_value, object_value, array_value, null_value], M)) of
+                [_] -> ok;
+                OFDupsOF1 -> mk_type_error({multiple_oneof_keys, OFDupsOF1, kind}, M, [kind | Path])
+            end,
+            v_type_bool(OF1, [null_value | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (null_value) -> ok;
+                      (array_value) -> ok;
+                      (object_value) -> ok;
+                      (bool_value) -> ok;
+                      (number_value) -> ok;
+                      (string_value) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_JsonValue(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'JsonValue'}, M, Path);
+v_msg_JsonValue(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'JsonValue'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_ToolFunction/3}).
+-dialyzer({nowarn_function,v_submsg_ToolFunction/3}).
+v_submsg_ToolFunction(Msg, Path, TrUserData) -> v_msg_ToolFunction(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_ToolFunction/3}).
+-dialyzer({nowarn_function,v_msg_ToolFunction/3}).
+v_msg_ToolFunction(#{} = M, Path, TrUserData) ->
+    case M of
+        #{name := F1} -> v_type_string(F1, [name | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{arguments := F2} -> v_submsg_JsonValue(F2, [arguments | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (arguments) -> ok;
+                      (name) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ToolFunction(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ToolFunction'}, M, Path);
+v_msg_ToolFunction(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ToolFunction'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_ToolCall/3}).
+-dialyzer({nowarn_function,v_submsg_ToolCall/3}).
+v_submsg_ToolCall(Msg, Path, TrUserData) -> v_msg_ToolCall(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_ToolCall/3}).
+-dialyzer({nowarn_function,v_msg_ToolCall/3}).
+v_msg_ToolCall(#{} = M, Path, TrUserData) ->
+    case M of
+        #{id := F1} -> v_type_string(F1, [id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{type := F2} -> v_type_string(F2, [type | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{function := F3} -> v_submsg_ToolFunction(F3, [function | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (function) -> ok;
+                      (type) -> ok;
+                      (id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ToolCall(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ToolCall'}, M, Path);
+v_msg_ToolCall(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ToolCall'}, X, Path).
+
 -compile({nowarn_unused_function,v_submsg_ToolEvent/3}).
 -dialyzer({nowarn_function,v_submsg_ToolEvent/3}).
 v_submsg_ToolEvent(Msg, Path, TrUserData) -> v_msg_ToolEvent(Msg, Path, TrUserData).
@@ -3527,11 +4522,11 @@ v_msg_ToolEvent(#{} = M, Path, TrUserData) ->
         _ -> ok
     end,
     case M of
-        #{arguments_json := F3} -> v_type_string(F3, [arguments_json | Path], TrUserData);
+        #{arguments := F3} -> v_submsg_JsonValue(F3, [arguments | Path], TrUserData);
         _ -> ok
     end,
     case M of
-        #{result_json := F4} -> v_type_string(F4, [result_json | Path], TrUserData);
+        #{result := F4} -> v_submsg_JsonValue(F4, [result | Path], TrUserData);
         _ -> ok
     end,
     case M of
@@ -3544,8 +4539,8 @@ v_msg_ToolEvent(#{} = M, Path, TrUserData) ->
     end,
     lists:foreach(fun (finished) -> ok;
                       (error) -> ok;
-                      (result_json) -> ok;
-                      (arguments_json) -> ok;
+                      (result) -> ok;
+                      (arguments) -> ok;
                       (name) -> ok;
                       (tool_call_id) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
@@ -3863,7 +4858,12 @@ v_msg_HistoryEntry(#{} = M, Path, TrUserData) ->
         _ -> ok
     end,
     case M of
-        #{tool_calls_json := F3} -> v_type_string(F3, [tool_calls_json | Path], TrUserData);
+        #{tool_calls := F3} ->
+            if is_list(F3) ->
+                   _ = [v_submsg_ToolCall(Elem, [tool_calls | Path], TrUserData) || Elem <- F3],
+                   ok;
+               true -> mk_type_error({invalid_list_of, {msg, 'ToolCall'}}, F3, [tool_calls | Path])
+            end;
         _ -> ok
     end,
     case M of
@@ -3871,7 +4871,7 @@ v_msg_HistoryEntry(#{} = M, Path, TrUserData) ->
         _ -> ok
     end,
     lists:foreach(fun (tool_call_id) -> ok;
-                      (tool_calls_json) -> ok;
+                      (tool_calls) -> ok;
                       (content) -> ok;
                       (role) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
@@ -3950,6 +4950,15 @@ v_type_bool(true, _Path, _TrUserData) -> ok;
 v_type_bool(0, _Path, _TrUserData) -> ok;
 v_type_bool(1, _Path, _TrUserData) -> ok;
 v_type_bool(X, Path, _TrUserData) -> mk_type_error(bad_boolean_value, X, Path).
+
+-compile({nowarn_unused_function,v_type_double/3}).
+-dialyzer({nowarn_function,v_type_double/3}).
+v_type_double(N, _Path, _TrUserData) when is_float(N) -> ok;
+v_type_double(N, _Path, _TrUserData) when is_integer(N) -> ok;
+v_type_double(infinity, _Path, _TrUserData) -> ok;
+v_type_double('-infinity', _Path, _TrUserData) -> ok;
+v_type_double(nan, _Path, _TrUserData) -> ok;
+v_type_double(X, Path, _TrUserData) -> mk_type_error(bad_double_value, X, Path).
 
 -compile({nowarn_unused_function,v_type_string/3}).
 -dialyzer({nowarn_function,v_type_string/3}).
@@ -4038,11 +5047,29 @@ get_msg_defs() ->
               #{name => error, fnum => 5, rnum => 3, type => {msg, 'StreamError'}, occurrence => optional, opts => []}],
          opts => []}]},
      {{msg, 'LlmChunk'}, [#{name => content, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => reasoning_content, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'JsonField'}, [#{name => key, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => value, fnum => 2, rnum => 3, type => {msg, 'JsonValue'}, occurrence => optional, opts => []}]},
+     {{msg, 'JsonObject'}, [#{name => fields, fnum => 1, rnum => 2, type => {msg, 'JsonField'}, occurrence => repeated, opts => []}]},
+     {{msg, 'JsonArray'}, [#{name => items, fnum => 1, rnum => 2, type => {msg, 'JsonValue'}, occurrence => repeated, opts => []}]},
+     {{msg, 'JsonValue'},
+      [#{name => kind, rnum => 2,
+         fields =>
+             [#{name => string_value, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+              #{name => number_value, fnum => 2, rnum => 2, type => double, occurrence => optional, opts => []},
+              #{name => bool_value, fnum => 3, rnum => 2, type => bool, occurrence => optional, opts => []},
+              #{name => object_value, fnum => 4, rnum => 2, type => {msg, 'JsonObject'}, occurrence => optional, opts => []},
+              #{name => array_value, fnum => 5, rnum => 2, type => {msg, 'JsonArray'}, occurrence => optional, opts => []},
+              #{name => null_value, fnum => 6, rnum => 2, type => bool, occurrence => optional, opts => []}],
+         opts => []}]},
+     {{msg, 'ToolFunction'}, [#{name => name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => arguments, fnum => 2, rnum => 3, type => {msg, 'JsonValue'}, occurrence => optional, opts => []}]},
+     {{msg, 'ToolCall'},
+      [#{name => id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => type, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+       #{name => function, fnum => 3, rnum => 4, type => {msg, 'ToolFunction'}, occurrence => optional, opts => []}]},
      {{msg, 'ToolEvent'},
       [#{name => tool_call_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
        #{name => name, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
-       #{name => arguments_json, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
-       #{name => result_json, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []},
+       #{name => arguments, fnum => 3, rnum => 4, type => {msg, 'JsonValue'}, occurrence => optional, opts => []},
+       #{name => result, fnum => 4, rnum => 5, type => {msg, 'JsonValue'}, occurrence => optional, opts => []},
        #{name => error, fnum => 5, rnum => 6, type => string, occurrence => optional, opts => []},
        #{name => finished, fnum => 6, rnum => 7, type => bool, occurrence => optional, opts => []}]},
      {{msg, 'FinalAnswer'},
@@ -4077,7 +5104,7 @@ get_msg_defs() ->
      {{msg, 'HistoryEntry'},
       [#{name => role, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
        #{name => content, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
-       #{name => tool_calls_json, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+       #{name => tool_calls, fnum => 3, rnum => 4, type => {msg, 'ToolCall'}, occurrence => repeated, opts => []},
        #{name => tool_call_id, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []}]},
      {{msg, 'GetHistoryResult'}, [#{name => messages, fnum => 1, rnum => 2, type => {msg, 'HistoryEntry'}, occurrence => repeated, opts => []}]},
      {{msg, 'StopResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}]},
@@ -4092,6 +5119,12 @@ get_msg_names() ->
      'PanelResponse',
      'PanelStream',
      'LlmChunk',
+     'JsonField',
+     'JsonObject',
+     'JsonArray',
+     'JsonValue',
+     'ToolFunction',
+     'ToolCall',
      'ToolEvent',
      'FinalAnswer',
      'StreamError',
@@ -4124,6 +5157,12 @@ get_msg_or_group_names() ->
      'PanelResponse',
      'PanelStream',
      'LlmChunk',
+     'JsonField',
+     'JsonObject',
+     'JsonArray',
+     'JsonValue',
+     'ToolFunction',
+     'ToolCall',
      'ToolEvent',
      'FinalAnswer',
      'StreamError',
@@ -4191,11 +5230,29 @@ find_msg_def('PanelStream') ->
             #{name => error, fnum => 5, rnum => 3, type => {msg, 'StreamError'}, occurrence => optional, opts => []}],
        opts => []}];
 find_msg_def('LlmChunk') -> [#{name => content, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => reasoning_content, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}];
+find_msg_def('JsonField') -> [#{name => key, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => value, fnum => 2, rnum => 3, type => {msg, 'JsonValue'}, occurrence => optional, opts => []}];
+find_msg_def('JsonObject') -> [#{name => fields, fnum => 1, rnum => 2, type => {msg, 'JsonField'}, occurrence => repeated, opts => []}];
+find_msg_def('JsonArray') -> [#{name => items, fnum => 1, rnum => 2, type => {msg, 'JsonValue'}, occurrence => repeated, opts => []}];
+find_msg_def('JsonValue') ->
+    [#{name => kind, rnum => 2,
+       fields =>
+           [#{name => string_value, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+            #{name => number_value, fnum => 2, rnum => 2, type => double, occurrence => optional, opts => []},
+            #{name => bool_value, fnum => 3, rnum => 2, type => bool, occurrence => optional, opts => []},
+            #{name => object_value, fnum => 4, rnum => 2, type => {msg, 'JsonObject'}, occurrence => optional, opts => []},
+            #{name => array_value, fnum => 5, rnum => 2, type => {msg, 'JsonArray'}, occurrence => optional, opts => []},
+            #{name => null_value, fnum => 6, rnum => 2, type => bool, occurrence => optional, opts => []}],
+       opts => []}];
+find_msg_def('ToolFunction') -> [#{name => name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => arguments, fnum => 2, rnum => 3, type => {msg, 'JsonValue'}, occurrence => optional, opts => []}];
+find_msg_def('ToolCall') ->
+    [#{name => id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => type, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+     #{name => function, fnum => 3, rnum => 4, type => {msg, 'ToolFunction'}, occurrence => optional, opts => []}];
 find_msg_def('ToolEvent') ->
     [#{name => tool_call_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
      #{name => name, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
-     #{name => arguments_json, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
-     #{name => result_json, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []},
+     #{name => arguments, fnum => 3, rnum => 4, type => {msg, 'JsonValue'}, occurrence => optional, opts => []},
+     #{name => result, fnum => 4, rnum => 5, type => {msg, 'JsonValue'}, occurrence => optional, opts => []},
      #{name => error, fnum => 5, rnum => 6, type => string, occurrence => optional, opts => []},
      #{name => finished, fnum => 6, rnum => 7, type => bool, occurrence => optional, opts => []}];
 find_msg_def('FinalAnswer') ->
@@ -4230,7 +5287,7 @@ find_msg_def('BrainStatusResult') ->
 find_msg_def('HistoryEntry') ->
     [#{name => role, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
      #{name => content, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
-     #{name => tool_calls_json, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+     #{name => tool_calls, fnum => 3, rnum => 4, type => {msg, 'ToolCall'}, occurrence => repeated, opts => []},
      #{name => tool_call_id, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []}];
 find_msg_def('GetHistoryResult') -> [#{name => messages, fnum => 1, rnum => 2, type => {msg, 'HistoryEntry'}, occurrence => repeated, opts => []}];
 find_msg_def('StopResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}];
@@ -4300,6 +5357,12 @@ fqbin_to_msg_name(<<"panel.PanelRequest">>) -> 'PanelRequest';
 fqbin_to_msg_name(<<"panel.PanelResponse">>) -> 'PanelResponse';
 fqbin_to_msg_name(<<"panel.PanelStream">>) -> 'PanelStream';
 fqbin_to_msg_name(<<"panel.LlmChunk">>) -> 'LlmChunk';
+fqbin_to_msg_name(<<"panel.JsonField">>) -> 'JsonField';
+fqbin_to_msg_name(<<"panel.JsonObject">>) -> 'JsonObject';
+fqbin_to_msg_name(<<"panel.JsonArray">>) -> 'JsonArray';
+fqbin_to_msg_name(<<"panel.JsonValue">>) -> 'JsonValue';
+fqbin_to_msg_name(<<"panel.ToolFunction">>) -> 'ToolFunction';
+fqbin_to_msg_name(<<"panel.ToolCall">>) -> 'ToolCall';
 fqbin_to_msg_name(<<"panel.ToolEvent">>) -> 'ToolEvent';
 fqbin_to_msg_name(<<"panel.FinalAnswer">>) -> 'FinalAnswer';
 fqbin_to_msg_name(<<"panel.StreamError">>) -> 'StreamError';
@@ -4329,6 +5392,12 @@ msg_name_to_fqbin('PanelRequest') -> <<"panel.PanelRequest">>;
 msg_name_to_fqbin('PanelResponse') -> <<"panel.PanelResponse">>;
 msg_name_to_fqbin('PanelStream') -> <<"panel.PanelStream">>;
 msg_name_to_fqbin('LlmChunk') -> <<"panel.LlmChunk">>;
+msg_name_to_fqbin('JsonField') -> <<"panel.JsonField">>;
+msg_name_to_fqbin('JsonObject') -> <<"panel.JsonObject">>;
+msg_name_to_fqbin('JsonArray') -> <<"panel.JsonArray">>;
+msg_name_to_fqbin('JsonValue') -> <<"panel.JsonValue">>;
+msg_name_to_fqbin('ToolFunction') -> <<"panel.ToolFunction">>;
+msg_name_to_fqbin('ToolCall') -> <<"panel.ToolCall">>;
 msg_name_to_fqbin('ToolEvent') -> <<"panel.ToolEvent">>;
 msg_name_to_fqbin('FinalAnswer') -> <<"panel.FinalAnswer">>;
 msg_name_to_fqbin('StreamError') -> <<"panel.StreamError">>;
@@ -4397,6 +5466,10 @@ get_msg_containment("panel") ->
      'GetHistoryArgs',
      'GetHistoryResult',
      'HistoryEntry',
+     'JsonArray',
+     'JsonField',
+     'JsonObject',
+     'JsonValue',
      'ListToolsResult',
      'LlmChunk',
      'PanelExec',
@@ -4411,8 +5484,10 @@ get_msg_containment("panel") ->
      'StartSessionResult',
      'StopResult',
      'StreamError',
+     'ToolCall',
      'ToolDesc',
-     'ToolEvent'];
+     'ToolEvent',
+     'ToolFunction'];
 get_msg_containment(P) -> error({gpb_error, {badproto, P}}).
 
 
@@ -4439,6 +5514,12 @@ get_proto_by_msg_name_as_fqbin(<<"panel.PanelRequest">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.PanelResponse">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.PanelStream">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.LlmChunk">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonField">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonObject">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonArray">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonValue">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolFunction">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolCall">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ToolEvent">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.FinalAnswer">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.StreamError">>) -> "panel";

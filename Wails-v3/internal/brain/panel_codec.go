@@ -1,7 +1,9 @@
 package brain
 
 import (
+	"encoding/json"
 	"fmt"
+	"math"
 
 	"google.golang.org/protobuf/proto"
 
@@ -17,9 +19,20 @@ type SendResult struct {
 }
 
 type ToolDesc struct {
-	Name           string
-	Description    string
-	ParametersJSON string
+	Name        string
+	Description string
+	Parameters  any
+}
+
+type ToolFunction struct {
+	Name      string
+	Arguments any
+}
+
+type ToolCall struct {
+	ID       string
+	Type     string
+	Function ToolFunction
 }
 
 type ApproveResult struct {
@@ -27,17 +40,17 @@ type ApproveResult struct {
 }
 
 type BrainStatusResult struct {
-	State       string
-	LoopCount   int32
-	MaxLoops    int32
-	HistoryLen  int32
+	State      string
+	LoopCount  int32
+	MaxLoops   int32
+	HistoryLen int32
 }
 
 type HistoryEntry struct {
-	Role          string
-	Content       string
-	ToolCallsJSON string
-	ToolCallID    string
+	Role       string
+	Content    string
+	ToolCalls  []ToolCall
+	ToolCallID string
 }
 
 type DeleteSessionResult struct {
@@ -144,9 +157,9 @@ func decodePanelResult(method string, bin []byte) (any, error) {
 		tools := make([]ToolDesc, 0, len(msg.GetTools()))
 		for _, t := range msg.GetTools() {
 			tools = append(tools, ToolDesc{
-				Name:           t.GetName(),
-				Description:    t.GetDescription(),
-				ParametersJSON: t.GetParametersJson(),
+				Name:        t.GetName(),
+				Description: t.GetDescription(),
+				Parameters:  parseJSONToAny(t.GetParametersJson()),
 			})
 		}
 		return tools, nil
@@ -175,10 +188,10 @@ func decodePanelResult(method string, bin []byte) (any, error) {
 		msgs := make([]HistoryEntry, 0, len(msg.GetMessages()))
 		for _, e := range msg.GetMessages() {
 			msgs = append(msgs, HistoryEntry{
-				Role:          e.GetRole(),
-				Content:       e.GetContent(),
-				ToolCallsJSON: e.GetToolCallsJson(),
-				ToolCallID:    e.GetToolCallId(),
+				Role:       e.GetRole(),
+				Content:    e.GetContent(),
+				ToolCalls:  pbToolCallsToSlice(e.GetToolCalls()),
+				ToolCallID: e.GetToolCallId(),
 			})
 		}
 		return msgs, nil
@@ -243,8 +256,8 @@ func decodePanelStreamEvent(stream *panelpb.PanelStream) StreamEvent {
 		ev.Kind = "tool_event"
 		ev.Payload["tool_call_id"] = te.GetToolCallId()
 		ev.Payload["name"] = te.GetName()
-		ev.Payload["arguments_json"] = te.GetArgumentsJson()
-		ev.Payload["result_json"] = te.GetResultJson()
+		ev.Payload["arguments"] = pbJSONValueToAny(te.GetArguments())
+		ev.Payload["result"] = pbJSONValueToAny(te.GetResult())
 		ev.Payload["error"] = te.GetError()
 		ev.Payload["finished"] = te.GetFinished()
 		return ev
@@ -264,4 +277,78 @@ func decodePanelStreamEvent(stream *panelpb.PanelStream) StreamEvent {
 	}
 	ev.Kind = "unknown"
 	return ev
+}
+
+func pbToolCallsToSlice(toolCalls []*panelpb.ToolCall) []ToolCall {
+	if len(toolCalls) == 0 {
+		return nil
+	}
+	out := make([]ToolCall, 0, len(toolCalls))
+	for _, tc := range toolCalls {
+		out = append(out, pbToolCallToToolCall(tc))
+	}
+	return out
+}
+
+func pbToolCallToToolCall(tc *panelpb.ToolCall) ToolCall {
+	f := tc.GetFunction()
+	return ToolCall{
+		ID:   tc.GetId(),
+		Type: defaultString(tc.GetType(), "function"),
+		Function: ToolFunction{
+			Name:      f.GetName(),
+			Arguments: pbJSONValueToAny(f.GetArguments()),
+		},
+	}
+}
+
+func pbJSONValueToAny(v *panelpb.JsonValue) any {
+	if v == nil {
+		return nil
+	}
+	switch kind := v.GetKind().(type) {
+	case *panelpb.JsonValue_StringValue:
+		return kind.StringValue
+	case *panelpb.JsonValue_NumberValue:
+		if math.Trunc(kind.NumberValue) == kind.NumberValue {
+			return int64(kind.NumberValue)
+		}
+		return kind.NumberValue
+	case *panelpb.JsonValue_BoolValue:
+		return kind.BoolValue
+	case *panelpb.JsonValue_ObjectValue:
+		obj := map[string]any{}
+		for _, field := range kind.ObjectValue.GetFields() {
+			obj[field.GetKey()] = pbJSONValueToAny(field.GetValue())
+		}
+		return obj
+	case *panelpb.JsonValue_ArrayValue:
+		items := make([]any, 0, len(kind.ArrayValue.GetItems()))
+		for _, item := range kind.ArrayValue.GetItems() {
+			items = append(items, pbJSONValueToAny(item))
+		}
+		return items
+	case *panelpb.JsonValue_NullValue:
+		return nil
+	default:
+		return nil
+	}
+}
+
+func defaultString(v, fallback string) string {
+	if v == "" {
+		return fallback
+	}
+	return v
+}
+
+func parseJSONToAny(raw string) any {
+	if raw == "" {
+		return nil
+	}
+	var out any
+	if err := json.Unmarshal([]byte(raw), &out); err != nil {
+		return raw
+	}
+	return out
 }

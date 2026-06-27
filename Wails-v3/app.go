@@ -98,9 +98,20 @@ func (s *HermesService) DeleteSession(sessionID string) (bool, error) {
 // ---- 工具 ----
 
 type ToolDesc struct {
-	Name           string `json:"name"`
-	Description    string `json:"description"`
-	ParametersJSON string `json:"parameters_json"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Parameters  any    `json:"parameters,omitempty"`
+}
+
+type ToolFunction struct {
+	Name      string `json:"name"`
+	Arguments any    `json:"arguments,omitempty"`
+}
+
+type ToolCall struct {
+	ID       string       `json:"id"`
+	Type     string       `json:"type"`
+	Function ToolFunction `json:"function"`
 }
 
 func (s *HermesService) ListTools() ([]ToolDesc, error) {
@@ -115,9 +126,9 @@ func (s *HermesService) ListTools() ([]ToolDesc, error) {
 	tools := make([]ToolDesc, 0, len(raw))
 	for _, item := range raw {
 		tools = append(tools, ToolDesc{
-			Name:           item.Name,
-			Description:    item.Description,
-			ParametersJSON: item.ParametersJSON,
+			Name:        item.Name,
+			Description: item.Description,
+			Parameters:  item.Parameters,
 		})
 	}
 	return tools, nil
@@ -152,10 +163,10 @@ func (s *HermesService) BrainStatus(sessionID string) (map[string]any, error) {
 }
 
 type HistoryEntry struct {
-	Role          string `json:"role"`
-	Content       string `json:"content"`
-	ToolCallsJSON string `json:"tool_calls_json"`
-	ToolCallID    string `json:"tool_call_id"`
+	Role       string     `json:"role"`
+	Content    string     `json:"content"`
+	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
+	ToolCallID string     `json:"tool_call_id"`
 }
 
 func (s *HermesService) GetHistory(sessionID string) ([]HistoryEntry, error) {
@@ -172,13 +183,31 @@ func (s *HermesService) GetHistory(sessionID string) ([]HistoryEntry, error) {
 	entries := make([]HistoryEntry, 0, len(raw))
 	for _, item := range raw {
 		entries = append(entries, HistoryEntry{
-			Role:          item.Role,
-			Content:       item.Content,
-			ToolCallsJSON: item.ToolCallsJSON,
-			ToolCallID:    item.ToolCallID,
+			Role:       item.Role,
+			Content:    item.Content,
+			ToolCalls:  toAppToolCalls(item.ToolCalls),
+			ToolCallID: item.ToolCallID,
 		})
 	}
 	return entries, nil
+}
+
+func toAppToolCalls(raw []brain.ToolCall) []ToolCall {
+	if len(raw) == 0 {
+		return nil
+	}
+	out := make([]ToolCall, 0, len(raw))
+	for _, item := range raw {
+		out = append(out, ToolCall{
+			ID:   item.ID,
+			Type: item.Type,
+			Function: ToolFunction{
+				Name:      item.Function.Name,
+				Arguments: item.Function.Arguments,
+			},
+		})
+	}
+	return out
 }
 
 func (s *HermesService) StopBrain() error {
