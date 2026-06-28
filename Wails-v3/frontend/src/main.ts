@@ -47,6 +47,20 @@ interface Session {
     toolCalls: number;
     lastHistoryLen: number;
     history: HistoryEntry[];
+    toolEvents: ToolEvent[]; // EXEC-P1-005: 执行轨迹 (开始/结束/失败)
+}
+
+// EXEC-P1-005: 工具执行轨迹条目, 由后端 panel:stream tool_event 帧驱动。
+// 同一 tool_call_id 先收到 finished=false (开始), 后收到 finished=true (结束/失败)。
+interface ToolEvent {
+    tool_call_id: string;
+    name: string;            // 工具名 (开始事件携带)
+    arguments_json?: string; // 工具入参 (开始事件携带, JSON 字符串)
+    result_json?: string;    // 工具结果 (结束事件携带, JSON 字符串)
+    error?: string;          // 失败原因 (结束事件携带, 非空表示失败)
+    finished: boolean;       // true=已结束 (有 result 或 error), false=已开始
+    startedAt: number;       // 开始事件时间戳 (ms)
+    finishedAt?: number;     // 结束事件时间戳 (ms)
 }
 
 // ---- 状态 ----
@@ -166,8 +180,10 @@ function handlePanelStream(ev: PanelStreamEvent): void {
                 sessionHistoryDirty.add(targetSessionId);
                 applySessionState(targetSessionId, "acting");
                 sess.toolCalls += 1;
+                handleToolEvent(sess, ev.payload);
                 if (targetSessionId === currentSessionId) {
                     updateCanvasMeta(sess);
+                    renderTracePanel(sess);
                 }
             }
             break;
@@ -583,6 +599,7 @@ async function createNewSession(): Promise<void> {
         toolCalls: 0,
         lastHistoryLen: 0,
         history: [],
+        toolEvents: [],
     };
     sessions.set(pendingId, placeholder);
     currentSessionId = pendingId;
@@ -617,6 +634,7 @@ async function createNewSession(): Promise<void> {
             toolCalls: 0,
             lastHistoryLen: 0,
             history: [],
+            toolEvents: [],
         };
         sessions.set(sess.id, sess);
         currentSessionId = sess.id;
@@ -1043,6 +1061,7 @@ function renderHistoryEntries(entries: HistoryEntry[], sess?: Session): void {
         sess.lastHistoryLen = entries.length;
         updateCanvasMeta(sess);
         updateSessionInList(sess.id);
+        renderTracePanel(sess);
     }
     scrollConvToBottom();
 }
@@ -1063,10 +1082,124 @@ function renderConversation(sess: Session): void {
     }
     canvasTitle.textContent = sess.title;
     updateCanvasMeta(sess);
+    renderTracePanel(sess);
 }
 
 function updateCanvasMeta(sess: Session): void {
     canvasMeta.innerHTML = `<b>${sess.msgCount} 条消息</b> · <b>${sess.toolCalls} 次工具调用</b>`;
+}
+
+// EXEC-P1-005: 处理 tool_event 帧 payload。
+// 同一 tool_call_id 先收到 finished=false (开始), 后收到 finished=true (结束/失败)。
+// 已结束的 trace 不再覆盖, 新 tool_call_id 追加新条目。
+function handleToolEvent(sess: Session, payload: Record<string, unknown>): void {
+    const toolCallId = String(payload.tool_call_id ?? "");
+    const name = String(payload.name ?? "");
+    const finished = Boolean(payload.finished);
+    const argumentsJson = payload.arguments_json !== undefined && payload.arguments_json !== ""
+        ? String(payload.arguments_json) : undefined;
+    const resultJson = payload.result_json !== undefined && payload.result_json !== ""
+        ? String(payload.result_json) : undefined;
+    const error = payload.error !== undefined && payload.error !== ""
+        ? String(payload.error) : undefined;
+
+    if (!toolCallId) return;
+
+    // 结束事件: 按 tool_call_id 找已有开始事件并更新
+    if (finished) {
+        const existing = sess.toolEvents.find((e) => e.tool_call_id === toolCallId && !e.finished);
+        if (existing) {
+            existing.finished = true;
+            existing.finishedAt = Date.now();
+            if (resultJson !== undefined) existing.result_json = resultJson;
+            if (error !== undefined) existing.error = error;
+            return;
+        }
+        // 找不到开始事件: 推一条已结束的条目 (兼容老协议)
+        sess.toolEvents.push({
+            tool_call_id: toolCallId,
+            name,
+            finished: true,
+            finishedAt: Date.now(),
+            startedAt: Date.now(),
+            result_json: resultJson,
+            error,
+        });
+        return;
+    }
+
+    // 开始事件: 追加新条目
+    sess.toolEvents.push({
+        tool_call_id: toolCallId,
+        name,
+        arguments_json: argumentsJson,
+        finished: false,
+        startedAt: Date.now(),
+    });
+}
+
+// EXEC-P1-005: 渲染 trace 面板 (当前会话的工具执行轨迹)。
+// 容器动态创建在 conversation 与 composer 之间, 无 trace 时隐藏。
+function renderTracePanel(sess: Session): void {
+    let panel = document.getElementById("trace-panel");
+    if (!panel) {
+        panel = document.createElement("section");
+        panel.id = "trace-panel";
+        panel.className = "trace-panel";
+        conv.insertAdjacentElement("afterend", panel);
+    }
+    const events = sess.toolEvents;
+    if (events.length === 0) {
+        panel.classList.remove("visible");
+        panel.innerHTML = "";
+        return;
+    }
+    panel.classList.add("visible");
+    const items = events.map((ev) => {
+        const status = ev.finished
+            ? (ev.error ? "failed" : "done")
+            : "running";
+        const statusText = ev.finished
+            ? (ev.error ? "失败" : "完成")
+            : "执行中";
+        const duration = ev.finished && ev.finishedAt
+            ? `${Math.max(ev.finishedAt - ev.startedAt, 0)}ms`
+            : "—";
+        const args = ev.arguments_json ? truncate(ev.arguments_json, 120) : "";
+        const result = ev.result_json ? truncate(ev.result_json, 200) : "";
+        const errText = ev.error ? escapeHtml(ev.error) : "";
+        return `
+            <div class="trace-item trace-${status}">
+                <div class="trace-head">
+                    <span class="trace-status trace-status-${status}">${statusText}</span>
+                    <span class="trace-name">${escapeHtml(ev.name || ev.tool_call_id)}</span>
+                    <span class="trace-id">#${escapeHtml(ev.tool_call_id.slice(0, 8))}</span>
+                    <span class="trace-duration">${duration}</span>
+                </div>
+                ${args ? `<div class="trace-args"><span class="trace-label">入参:</span> <code>${escapeHtml(args)}</code></div>` : ""}
+                ${result ? `<div class="trace-result"><span class="trace-label">结果:</span> <code>${escapeHtml(result)}</code></div>` : ""}
+                ${errText ? `<div class="trace-error"><span class="trace-label">错误:</span> <code>${errText}</code></div>` : ""}
+            </div>
+        `;
+    }).join("");
+    panel.innerHTML = `
+        <div class="trace-header">
+            <span class="trace-title">执行轨迹 (${events.length})</span>
+            <button class="trace-clear" id="trace-clear" title="清空轨迹">×</button>
+        </div>
+        <div class="trace-list">${items}</div>
+    `;
+    const clearBtn = panel.querySelector("#trace-clear") as HTMLButtonElement | null;
+    if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+            sess.toolEvents = [];
+            renderTracePanel(sess);
+        });
+    }
+}
+
+function truncate(s: string, max: number): string {
+    return s.length <= max ? s : s.slice(0, max) + "…";
 }
 
 function appendUserMsg(text: string): void {

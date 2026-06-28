@@ -359,6 +359,8 @@ acting(enter, _OldState, Data) ->
     {SafeCalls, ApprovalCalls} = partition_by_approval(ToolCalls, Data#data.tools),
     %% safe 工具直接并行派发
     bridge_manager:call_tool_batch(self(), SafeCalls),
+    %% EXEC-P1-005: 推送 safe 工具开始事件到前端 trace 面板
+    [push_tool_event_start(Data#data.session_id, TC) || TC <- SafeCalls],
     %% needs_approval 工具注册 approval_store + 推送 approval_required 到前端
     PendingApprovals = register_approvals(ApprovalCalls, Data#data.session_id, Data#data.tools),
     PendingCount = length(SafeCalls) + length(ApprovalCalls),
@@ -367,6 +369,8 @@ acting(enter, _OldState, Data) ->
     {keep_state, Data#data{pending_count = PendingCount,
                            pending_approvals = PendingApprovals}};
 acting(cast, {tool_result, ToolCallId, Resp}, Data) ->
+    %% EXEC-P1-005: 推送工具结束事件到前端 trace 面板
+    push_tool_event_finish(Data#data.session_id, ToolCallId, Resp),
     Results = maps:put(ToolCallId, Resp, Data#data.tool_results),
     lager:debug("tool_result received, tool_call_id=~p, collected=~p/~p",
                 [ToolCallId, map_size(Results), Data#data.pending_count]),
@@ -385,6 +389,8 @@ acting(info, {approval, ReqId, true}, Data) ->
             lager:info("approval approved, req_id=~p, dispatching tool=~s",
                        [ReqId, maps:get(name, ToolCall, <<>>)]),
             bridge_manager:call_tool_batch(self(), [ToolCall]),
+            %% EXEC-P1-005: 推送工具开始事件 (审批通过后)
+            push_tool_event_start(Data#data.session_id, ToolCall),
             {keep_state, Data#data{pending_approvals = Rest}};
         error ->
             %% 未知 req_id (已 resolved / 过期 / 取消), 忽略
@@ -499,6 +505,8 @@ handle_approval_resolved(ReqId, Reason, Data) ->
             lager:info("approval resolved negatively, req_id=~p, reason=~s, tool=~s",
                        [ReqId, Reason, maps:get(name, ToolCall, <<>>)]),
             ErrResp = #{result_json => <<>>, error => Reason},
+            %% EXEC-P1-005: 推送工具失败事件 (审批拒绝/过期)
+            push_tool_event_finish(Data#data.session_id, ReqId, ErrResp),
             Results = maps:put(ReqId, ErrResp, Data#data.tool_results),
             Data1 = Data#data{pending_approvals = Rest, tool_results = Results},
             case map_size(Results) >= Data1#data.pending_count of
@@ -593,6 +601,33 @@ tool_msg(#{id := Id} = _ToolCall, Resp) ->
     end;
 tool_msg(_ToolCall, Resp) ->
     #{role => <<"tool">>, content => maps:get(result_json, Resp, <<>>)}.
+
+%% EXEC-P1-005: 推送工具开始事件 (finished=false, 含 name+arguments_json)
+%% 前端 trace 面板据此追加一条"running"记录, 等待 finished=true 的结束事件。
+push_tool_event_start(SessionId, ToolCall) ->
+    Name = maps:get(name, ToolCall, <<>>),
+    ArgsJson = case maps:get(arguments, ToolCall, <<>>) of
+                   Bin when is_binary(Bin) -> Bin;
+                   Term when is_list(Term) -> unicode:characters_to_binary(Term);
+                   _ -> <<>>
+               end,
+    panel_server:push_tool_event(SessionId, #{
+        tool_call_id => maps:get(id, ToolCall, <<>>),
+        name => Name,
+        arguments_json => ArgsJson,
+        finished => false
+    }).
+
+%% EXEC-P1-005: 推送工具结束事件 (finished=true, 含 result_json 或 error)
+%% 前端按 tool_call_id 匹配开始事件, 更新为 finished/error 状态。
+push_tool_event_finish(SessionId, ToolCallId, Resp) ->
+    panel_server:push_tool_event(SessionId, #{
+        tool_call_id => ToolCallId,
+        name => <<>>,
+        finished => true,
+        result_json => maps:get(result_json, Resp, <<>>),
+        error => maps:get(error, Resp, <<>>)
+    }).
 
 %% 落快照到 ETS (崩溃恢复用): {StateName, #data{}} 供 transient 重启后续跑
 snapshot(StateName, Data) when StateName =:= idle; StateName =:= thinking; StateName =:= acting ->
