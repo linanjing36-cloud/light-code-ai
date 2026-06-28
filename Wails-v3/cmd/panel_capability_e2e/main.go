@@ -147,6 +147,9 @@ func main() {
 		fail("list_capabilities", err)
 	}
 	fmt.Printf("[list_capabilities] count=%d\n", len(caps))
+	for _, c := range caps {
+		fmt.Printf("  - name=%s kind=%s source=%s\n", c.Name, c.Kind, c.Source)
+	}
 
 	for _, item := range cases {
 		if err := runCapabilityCase(pc, caps, item, *timeout); err != nil {

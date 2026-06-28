@@ -2,10 +2,8 @@ package mcp
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -142,33 +140,16 @@ func serveMockMCP() {
 }
 
 func readHelperRPC(r *bufio.Reader) ([]byte, error) {
-	length := 0
-	for {
-		line, err := r.ReadString('\n')
-		if err != nil {
-			return nil, err
-		}
-		line = strings.TrimRight(line, "\r\n")
-		if line == "" {
-			break
-		}
-		if strings.HasPrefix(strings.ToLower(line), "content-length:") {
-			var n int
-			if _, err := fmt.Sscanf(line, "Content-Length: %d", &n); err == nil {
-				length = n
-			} else if _, err := fmt.Sscanf(strings.ToLower(line), "content-length: %d", &n); err == nil {
-				length = n
-			}
-		}
-	}
-	if length <= 0 {
-		return nil, io.EOF
-	}
-	body := make([]byte, length)
-	if _, err := io.ReadFull(r, body); err != nil {
+	// MCP stdio 规范: newline-delimited JSON
+	line, err := r.ReadString('\n')
+	if err != nil && err != io.EOF {
 		return nil, err
 	}
-	return body, nil
+	line = strings.TrimRight(line, "\r\n")
+	if line == "" {
+		return nil, io.EOF
+	}
+	return []byte(line), nil
 }
 
 func writeHelperResp(id int64, result map[string]any) {
@@ -191,8 +172,8 @@ func writeHelperErr(id int64, code int, msg string) {
 }
 
 func writeHelperFrame(v map[string]any) {
+	// MCP stdio 规范: newline-delimited JSON
 	body, _ := json.Marshal(v)
-	header := fmt.Sprintf("Content-Length: %d\r\n\r\n", len(body))
-	_, _ = io.Copy(os.Stdout, bytes.NewBufferString(header))
 	_, _ = os.Stdout.Write(body)
+	_, _ = os.Stdout.Write([]byte("\n"))
 }

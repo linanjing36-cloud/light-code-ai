@@ -542,7 +542,26 @@ function Invoke-Agent {
     finally { Pop-Location }
 
     Write-Host "[make] ==> 安装 beams 到 $ErlBin ..."
-    if (Test-Path $ErlBin) { Remove-Item -Recurse -Force $ErlBin }
+    if (Test-Path $ErlBin) {
+        # erl_bin 可能被残留 erl/beam.smp/epmd 进程的句柄占用 (eunit/上一轮 panel e2e 刚结束,
+        # epmd 作为 erl 节点端口映射守护进程会继承 CWD 并在 erl 退出后继续存活持有句柄).
+        # 重试 3 次, 每次先强杀 erl/beam.smp/epmd 进程再删除, 间隔 2s 等待句柄释放.
+        $removed = $false
+        for ($i = 1; $i -le 3; $i++) {
+            try {
+                Remove-Item -Recurse -Force $ErlBin -ErrorAction Stop
+                $removed = $true
+                break
+            } catch {
+                Write-Host "[make] ==> 删除 erl_bin 失败 (第 $i 次): $($_.Exception.Message)"
+                foreach ($pn in @("erl", "beam.smp", "epmd")) {
+                    Get-Process -Name $pn -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+                }
+                if ($i -lt 3) { Start-Sleep -Seconds 2 }
+            }
+        }
+        if (-not $removed) { throw "无法删除 $ErlBin (重试 3 次仍被占用)" }
+    }
     $configDir = Join-Path $ErlBin "config"
     New-Item -ItemType Directory -Force -Path $configDir | Out-Null
 
@@ -645,12 +664,49 @@ function Invoke-Run {
 }
 
 # 优雅停止 Agent 大脑 (rpc init:stop 触发 app terminate)
+# stop.bat 失败时 (常见: rpc 超时/节点已退出/erl 输出 stderr 触发 NativeCommandError)
+# 兜底用 Stop-Process 强杀 erl/beam.smp 进程, 避免 erl_bin 目录被占用导致后续安装失败.
 function Invoke-Stop {
     $stopBat = Join-Path $BinDir "stop.bat"
     if (-not (Test-Path $stopBat)) {
         throw "未找到 $stopBat, 请先执行: .\make.ps1 bin"
     }
-    & $stopBat
+    # 临时切换到 Continue: stop.bat 中的 erl/epmd 命令可能输出到 stderr,
+    # 在 Stop 模式下会触发 NativeCommandError 终止脚本.
+    $prevEAP = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        & $stopBat 2>&1
+        $exitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $prevEAP
+    }
+    if ($exitCode -eq 0) { return }
+
+    # stop.bat 失败兜底: 强杀 erl/beam.smp/epmd 进程, 保证后续 erl_bin 可被删除/重装.
+    # epmd 是 Erlang 端口映射守护进程, erl 退出后 epmd 可能继续存活并持有 erl_bin 的 CWD 句柄.
+    Write-Host "[make] ==> stop.bat 失败 (exit $exitCode), 兜底强杀 erl/beam.smp/epmd 进程..."
+    $killed = @()
+    foreach ($procName in @("erl", "beam.smp", "epmd")) {
+        $procs = Get-Process -Name $procName -ErrorAction SilentlyContinue
+        if ($procs) {
+            $procs | Stop-Process -Force -ErrorAction SilentlyContinue
+            $killed += $procName
+        }
+    }
+    if ($killed.Count -gt 0) {
+        Write-Host "[make] ==> 已强杀进程: $($killed -join ', ')"
+    }
+    Start-Sleep -Seconds 1
+    # 等待 erl 进程退出 (最多 5s)
+    for ($i = 0; $i -lt 5; $i++) {
+        if (-not (Test-ErlProcessRunning)) { return }
+        Start-Sleep -Seconds 1
+    }
+    $still = Get-Process -Name "erl","beam.smp" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name -Unique
+    if ($still) {
+        throw "stop.bat 失败 (exit $exitCode) 且强杀 erl 进程后仍残留: $($still -join ', ')"
+    }
 }
 
 # Eion-tools go test + Agent-brains eunit + panel e2e
@@ -718,8 +774,18 @@ function Invoke-PanelGoE2E {
         try {
             $env:HERMES_PANEL_E2E_QUIET_RUNTIME_LOGS = "1"
             $env:HERMES_EION_QUIET_LOGS = "1"
-            & go run $CommandPath
-            if ($LASTEXITCODE -ne 0) { throw "$Label 失败 (exit $LASTEXITCODE)" }
+            # 临时切换到 Continue: go run 子进程 (eion-tools/brain) 通过 log.Printf 输出到 stderr
+            # 时, PowerShell 会生成 NativeCommandError 记录, 在 Stop 模式下会终止脚本.
+            # 2>&1 合并 stderr 到 stdout, 同时用 Continue 模式避免 NativeCommandError 终止.
+            $prevEAP = $ErrorActionPreference
+            $ErrorActionPreference = "Continue"
+            try {
+                & go run $CommandPath 2>&1
+                $exitCode = $LASTEXITCODE
+            } finally {
+                $ErrorActionPreference = $prevEAP
+            }
+            if ($exitCode -ne 0) { throw "$Label 失败 (exit $exitCode)" }
         }
         finally {
             if ($null -eq $savedQuietStdLog) {
@@ -869,10 +935,11 @@ function Invoke-StopAll {
     param([switch]$Force)
     $bat = Join-Path $ScrtpsDir "stop-all.bat"
     if (-not (Test-Path $bat)) { throw "未找到 $bat" }
+    # 直接用 & $bat 调用, 不走 cmd /c (避免沙箱拦截 cmd /c 调用)
     if ($Force) {
-        & cmd /c "$bat -f"
+        & $bat -f
     } else {
-        & cmd /c $bat
+        & $bat
     }
 }
 

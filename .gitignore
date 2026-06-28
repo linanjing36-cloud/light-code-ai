@@ -8,6 +8,8 @@ api-key.local.json
 *.secret.json
 .env
 .env.local
+# 本地服务配置 (含 SSH 密码/Redis 密码, 模板 local-services.example.json 入库)
+config/local-services.json
 
 # ---- bin/: 本地部署/运行产物 (编译产物 + start/stop 脚本, 均不入库) ----
 # 包含: erl_bin/ (make agent), eion_bin/, wails_v3_bin/, start.sh, stop.sh 等
@@ -59,6 +61,16 @@ Wails-v3/extract/
 # ---- CodeGraph 本地索引 (assistant 自用, 不入库) ----
 # .codegraph/ 自身已配 .gitignore 忽略内部产物, 这里再确保目录不进 git
 .codegraph/
+
+# ---- 测试日志 (make.ps1 test 产物, 不入库) ----
+test-output*.log
+
+# ---- bat 脚本意外输出残留 (scrtps/*.bat 重定向错误产生的文件, 不入库) ----
+# 注意: /Wails 只匹配根目录下的 Wails 文件, 不会误匹配 Wails-v3/ 目录
+/Wails
+/Starting
+/epmd
+/[force]
 Agent-brains/config/mnesia/LATEST.LOG
 Agent-brains/log/hermes_brains.log
 erl_crash.dump
