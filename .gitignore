@@ -71,10 +71,15 @@ test-output*.log
 /Starting
 /epmd
 /[force]
-Agent-brains/config/mnesia/LATEST.LOG
-Agent-brains/log/hermes_brains.log
+# ---- Erlang 运行时产物 (mnesia 数据 + 日志, 目录级忽略) ----
+Agent-brains/config/mnesia/
+Agent-brains/log/
+
+# ---- 根目录 crash dump ----
 erl_crash.dump
-Agent-brains/config/mnesia/DECISION_TAB.LOG
-Agent-brains/config/mnesia/LATEST.LOG
-Agent-brains/config/mnesia/ets_snapshot.DCD
-Agent-brains/config/mnesia/DECISION_TAB.LOG
+
+# ---- Go 服务运行时地址文件 (pkg/server 启动写入监听地址) ----
+Eion-tools/pkg/server/eion-tools.addr
+
+# ---- 临时 diff 文件 (验收/调试产出, 不入库) ----
+diff-*.txt
