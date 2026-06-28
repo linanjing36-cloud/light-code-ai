@@ -32,7 +32,8 @@ select_keeps_memory_capabilities_for_memory_context_test() ->
     ?assert(lists:member(<<"memory_search">>, Names)),
     ?assert(lists:member(<<"memory_import">>, Names)).
 
-select_blocks_high_risk_capabilities_by_default_test() ->
+select_marks_high_risk_capabilities_with_requires_approval_test() ->
+    %% P0-005 第二阶段: high risk 能力不再被屏蔽, 而是保留并打 requires_approval=true 标记。
     Caps = sample_capabilities() ++ [#{
         name => <<"dangerous_exec">>,
         description => <<"dangerous">>,
@@ -44,7 +45,13 @@ select_blocks_high_risk_capabilities_by_default_test() ->
         history => [#{role => <<"user">>, content => util:u("请执行高风险命令")}]
     }),
     Names = [maps:get(name, Cap) || Cap <- Visible],
-    ?assertNot(lists:member(<<"dangerous_exec">>, Names)).
+    %% dangerous_exec 应保留在可见列表中 (供模型选择), 但带 requires_approval 标记
+    ?assert(lists:member(<<"dangerous_exec">>, Names)),
+    [DangerousCap] = [Cap || Cap <- Visible, maps:get(name, Cap, <<>>) =:= <<"dangerous_exec">>],
+    ?assertEqual(true, maps:get(requires_approval, DangerousCap, false)),
+    %% safe 能力应 requires_approval=false
+    [WeatherCap] = [Cap || Cap <- Visible, maps:get(name, Cap, <<>>) =:= <<"get_weather">>],
+    ?assertEqual(false, maps:get(requires_approval, WeatherCap, true)).
 
 normalize_accepts_capability_shape_test() ->
     Cap = capability_selector:normalize(#{

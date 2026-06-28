@@ -26,6 +26,7 @@
     pack_stream_tool_event/2, %% (StreamId, EventMap) -> binary()
     pack_stream_final/2,      %% (StreamId, FinalMap) -> binary()
     pack_stream_err/2,        %% (StreamId, ErrMsg) -> binary()
+    pack_stream_approval_required/2, %% (StreamId, ApprovalMap) -> binary()  EXEC-P0-005
     pack_exec/2,              %% (Id, AgentReqBin) -> binary()
     %% 解码: binary -> 业务级 tagged tuple
     unpack_frame/1            %% (Bin) -> {request, Id, Method, ArgsMap}
@@ -100,6 +101,20 @@ pack_stream_final(StreamId, FinalMap) ->
 pack_stream_err(StreamId, ErrMsg) ->
     Inner = #{stream_id => StreamId,
               error => #{message => ErrMsg}},
+    ?PANEL_PB:encode_msg(#{stream => Inner}, 'PanelFrame').
+
+%% 审批请求帧 (非终态, EXEC-P0-005): 告知前端某 tool_call 需用户授权。
+%% ApprovalMap: #{req_id, session_id, tool_call_id, tool_name, arguments_json, risk_level, expire_ms}
+-spec pack_stream_approval_required(binary(), map()) -> binary().
+pack_stream_approval_required(StreamId, ApprovalMap) ->
+    Approval = #{req_id => maps:get(req_id, ApprovalMap, <<>>),
+                 session_id => maps:get(session_id, ApprovalMap, <<>>),
+                 tool_call_id => maps:get(tool_call_id, ApprovalMap, <<>>),
+                 tool_name => maps:get(tool_name, ApprovalMap, <<>>),
+                 arguments_json => maps:get(arguments_json, ApprovalMap, <<>>),
+                 risk_level => maps:get(risk_level, ApprovalMap, <<>>),
+                 expire_ms => maps:get(expire_ms, ApprovalMap, 300000)},
+    Inner = #{stream_id => StreamId, approval_required => Approval},
     ?PANEL_PB:encode_msg(#{stream => Inner}, 'PanelFrame').
 
 %% Phase B: Erlang 经 panel 连接让 Wails 进程内执行 hermes AgentRequest
@@ -205,7 +220,20 @@ decode_stream(Stream) ->
                                     Err = maps:get(error, Stream),
                                     {stream, StreamId, {error, #{message => maps:get(message, Err, <<>>)}}};
                                 false ->
-                                    {stream, StreamId, {unknown, #{}}}
+                                    case maps:is_key(approval_required, Stream) of
+                                        true ->
+                                            A = maps:get(approval_required, Stream),
+                                            {stream, StreamId, {approval_required,
+                                                #{req_id => maps:get(req_id, A, <<>>),
+                                                  session_id => maps:get(session_id, A, <<>>),
+                                                  tool_call_id => maps:get(tool_call_id, A, <<>>),
+                                                  tool_name => maps:get(tool_name, A, <<>>),
+                                                  arguments_json => maps:get(arguments_json, A, <<>>),
+                                                  risk_level => maps:get(risk_level, A, <<>>),
+                                                  expire_ms => maps:get(expire_ms, A, 300000)}}};
+                                        false ->
+                                            {stream, StreamId, {unknown, #{}}}
+                                    end
                             end
                     end
             end

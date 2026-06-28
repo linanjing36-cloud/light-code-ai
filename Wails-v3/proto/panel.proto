@@ -63,7 +63,20 @@ message PanelStream {
     ToolEvent tool_event = 3; // 工具事件 (开始/结束, 非终态)
     FinalAnswer final = 4;    // 终态: 最终答案就绪
     StreamError error = 5;    // 终态: 流式错误
+    ApprovalRequired approval_required = 6; // 非终态: 高风险能力需用户审批 (EXEC-P0-005)
   }
+}
+
+// 审批请求 (server -> client): 告知前端某个 tool_call 需要用户授权。
+// 前端弹窗, 用户选择后调 PanelRequest{method="approve", args=ApproveArgs{req_id, allow}}。
+message ApprovalRequired {
+  string req_id = 1;           // 审批请求 ID (approve RPC 的幂等键, 与 ToolExecRequest.req_id 一致)
+  string session_id = 2;       // 会话 ID
+  string tool_call_id = 3;     // 对应的 tool_call.id
+  string tool_name = 4;        // 工具名
+  string arguments_json = 5;   // 工具参数 (JSON 字符串, 供前端展示)
+  string risk_level = 6;       // 风险级别 (review/dangerous/high/critical)
+  int32  expire_ms = 7;        // 过期时间 (毫秒, 默认 300000=5min)
 }
 
 // LLM 流式 chunk: 增量内容, 前端累加渲染。

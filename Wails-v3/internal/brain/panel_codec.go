@@ -314,7 +314,7 @@ func intArg(args map[string]any, key string) int {
 // StreamEvent 是 panel_server 推送到 Wails 前端的流式事件 (经 Wails EmitEvent 广播)。
 type StreamEvent struct {
 	StreamID string         `json:"stream_id"`
-	Kind     string         `json:"kind"` // chunk | tool_event | final | error
+	Kind     string         `json:"kind"` // chunk | tool_event | final | error | approval_required
 	Payload  map[string]any `json:"payload"`
 }
 
@@ -350,6 +350,17 @@ func decodePanelStreamEvent(stream *panelpb.PanelStream) StreamEvent {
 	if err := stream.GetError(); err != nil {
 		ev.Kind = "error"
 		ev.Payload["message"] = err.GetMessage()
+		return ev
+	}
+	if ap := stream.GetApprovalRequired(); ap != nil {
+		ev.Kind = "approval_required"
+		ev.Payload["req_id"] = ap.GetReqId()
+		ev.Payload["session_id"] = ap.GetSessionId()
+		ev.Payload["tool_call_id"] = ap.GetToolCallId()
+		ev.Payload["tool_name"] = ap.GetToolName()
+		ev.Payload["arguments_json"] = ap.GetArgumentsJson()
+		ev.Payload["risk_level"] = ap.GetRiskLevel()
+		ev.Payload["expire_ms"] = ap.GetExpireMs()
 		return ev
 	}
 	ev.Kind = "unknown"

@@ -14,7 +14,8 @@
              prompt_templates,
              bridge_manager, bridge_ping, go_exec, pb_codec, state_store, cache, util, mnesia_store,
              timing_wheel, hermes, panel, panel_server, panel_pb_codec, panel_tools, case_store,
-             memory_summarizer, memory_rag]},
+             memory_summarizer, memory_rag, approval_store,
+             capability_policy, capability_selector]},
   {env, [
       %% Eion-tools 地址发现 (TCP 连接池, exec_via_panel=false 时使用):
       %%   eion_tools_addr_file > eion_tools_addr > 默认 127.0.0.1:7891

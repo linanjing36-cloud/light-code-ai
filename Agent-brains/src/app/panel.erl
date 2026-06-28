@@ -89,7 +89,18 @@
         chunk                   => 'LlmChunk'(),    % = 2, optional
         tool_event              => 'ToolEvent'(),   % = 3, optional
         final                   => 'FinalAnswer'(), % = 4, optional
-        error                   => 'StreamError'()  % = 5, optional
+        error                   => 'StreamError'(), % = 5, optional
+        approval_required       => 'ApprovalRequired'() % = 6, optional
+       }.
+
+-type 'ApprovalRequired'() ::
+      #{req_id                  => unicode:chardata(), % = 1, optional
+        session_id              => unicode:chardata(), % = 2, optional
+        tool_call_id            => unicode:chardata(), % = 3, optional
+        tool_name               => unicode:chardata(), % = 4, optional
+        arguments_json          => unicode:chardata(), % = 5, optional
+        risk_level              => unicode:chardata(), % = 6, optional
+        expire_ms               => integer()        % = 7, optional, 32 bits
        }.
 
 -type 'LlmChunk'() ::
@@ -269,9 +280,9 @@
       #{ok                      => boolean() | 0 | 1 % = 1, optional
        }.
 
--export_type(['PanelFrame'/0, 'PanelExec'/0, 'PanelExecResult'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'LlmChunk'/0, 'JsonField'/0, 'ToolParameter'/0, 'ToolParameters'/0, 'JsonObject'/0, 'JsonArray'/0, 'JsonValue'/0, 'ToolFunction'/0, 'ToolCall'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ListCapabilitiesResult'/0, 'CapabilityDesc'/0, 'DebugCapabilityArgs'/0, 'DebugCapabilityResult'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
--type '$msg_name'() :: 'PanelFrame' | 'PanelExec' | 'PanelExecResult' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'LlmChunk' | 'JsonField' | 'ToolParameter' | 'ToolParameters' | 'JsonObject' | 'JsonArray' | 'JsonValue' | 'ToolFunction' | 'ToolCall' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ListCapabilitiesResult' | 'CapabilityDesc' | 'DebugCapabilityArgs' | 'DebugCapabilityResult' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
--type '$msg'() :: 'PanelFrame'() | 'PanelExec'() | 'PanelExecResult'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'LlmChunk'() | 'JsonField'() | 'ToolParameter'() | 'ToolParameters'() | 'JsonObject'() | 'JsonArray'() | 'JsonValue'() | 'ToolFunction'() | 'ToolCall'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ListCapabilitiesResult'() | 'CapabilityDesc'() | 'DebugCapabilityArgs'() | 'DebugCapabilityResult'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
+-export_type(['PanelFrame'/0, 'PanelExec'/0, 'PanelExecResult'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'ApprovalRequired'/0, 'LlmChunk'/0, 'JsonField'/0, 'ToolParameter'/0, 'ToolParameters'/0, 'JsonObject'/0, 'JsonArray'/0, 'JsonValue'/0, 'ToolFunction'/0, 'ToolCall'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ListCapabilitiesResult'/0, 'CapabilityDesc'/0, 'DebugCapabilityArgs'/0, 'DebugCapabilityResult'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
+-type '$msg_name'() :: 'PanelFrame' | 'PanelExec' | 'PanelExecResult' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'ApprovalRequired' | 'LlmChunk' | 'JsonField' | 'ToolParameter' | 'ToolParameters' | 'JsonObject' | 'JsonArray' | 'JsonValue' | 'ToolFunction' | 'ToolCall' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ListCapabilitiesResult' | 'CapabilityDesc' | 'DebugCapabilityArgs' | 'DebugCapabilityResult' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
+-type '$msg'() :: 'PanelFrame'() | 'PanelExec'() | 'PanelExecResult'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'ApprovalRequired'() | 'LlmChunk'() | 'JsonField'() | 'ToolParameter'() | 'ToolParameters'() | 'JsonObject'() | 'JsonArray'() | 'JsonValue'() | 'ToolFunction'() | 'ToolCall'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ListCapabilitiesResult'() | 'CapabilityDesc'() | 'DebugCapabilityArgs'() | 'DebugCapabilityResult'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
 -export_type(['$msg_name'/0, '$msg'/0]).
 
 -if(?OTP_RELEASE >= 24).
@@ -297,6 +308,7 @@ encode_msg(Msg, MsgName, Opts) ->
         'PanelRequest' -> encode_msg_PanelRequest(id(Msg, TrUserData), TrUserData);
         'PanelResponse' -> encode_msg_PanelResponse(id(Msg, TrUserData), TrUserData);
         'PanelStream' -> encode_msg_PanelStream(id(Msg, TrUserData), TrUserData);
+        'ApprovalRequired' -> encode_msg_ApprovalRequired(id(Msg, TrUserData), TrUserData);
         'LlmChunk' -> encode_msg_LlmChunk(id(Msg, TrUserData), TrUserData);
         'JsonField' -> encode_msg_JsonField(id(Msg, TrUserData), TrUserData);
         'ToolParameter' -> encode_msg_ToolParameter(id(Msg, TrUserData), TrUserData);
@@ -495,7 +507,89 @@ encode_msg_PanelStream(#{} = M, Bin, TrUserData) ->
         #{tool_event := OF2} -> id(begin TrOF2 = id(OF2, TrUserData), e_mfield_PanelStream_tool_event(TrOF2, <<B1/binary, 26>>, TrUserData) end, TrUserData);
         #{final := OF2} -> id(begin TrOF2 = id(OF2, TrUserData), e_mfield_PanelStream_final(TrOF2, <<B1/binary, 34>>, TrUserData) end, TrUserData);
         #{error := OF2} -> id(begin TrOF2 = id(OF2, TrUserData), e_mfield_PanelStream_error(TrOF2, <<B1/binary, 42>>, TrUserData) end, TrUserData);
+        #{approval_required := OF2} -> id(begin TrOF2 = id(OF2, TrUserData), e_mfield_PanelStream_approval_required(TrOF2, <<B1/binary, 50>>, TrUserData) end, TrUserData);
         _ -> B1
+    end.
+
+encode_msg_ApprovalRequired(Msg, TrUserData) -> encode_msg_ApprovalRequired(Msg, <<>>, TrUserData).
+
+
+encode_msg_ApprovalRequired(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{req_id := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{session_id := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     case is_empty_string(TrF2) of
+                         true -> B1;
+                         false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    B3 = case M of
+             #{tool_call_id := F3} ->
+                 begin
+                     TrF3 = id(F3, TrUserData),
+                     case is_empty_string(TrF3) of
+                         true -> B2;
+                         false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                     end
+                 end;
+             _ -> B2
+         end,
+    B4 = case M of
+             #{tool_name := F4} ->
+                 begin
+                     TrF4 = id(F4, TrUserData),
+                     case is_empty_string(TrF4) of
+                         true -> B3;
+                         false -> e_type_string(TrF4, <<B3/binary, 34>>, TrUserData)
+                     end
+                 end;
+             _ -> B3
+         end,
+    B5 = case M of
+             #{arguments_json := F5} ->
+                 begin
+                     TrF5 = id(F5, TrUserData),
+                     case is_empty_string(TrF5) of
+                         true -> B4;
+                         false -> e_type_string(TrF5, <<B4/binary, 42>>, TrUserData)
+                     end
+                 end;
+             _ -> B4
+         end,
+    B6 = case M of
+             #{risk_level := F6} ->
+                 begin
+                     TrF6 = id(F6, TrUserData),
+                     case is_empty_string(TrF6) of
+                         true -> B5;
+                         false -> e_type_string(TrF6, <<B5/binary, 50>>, TrUserData)
+                     end
+                 end;
+             _ -> B5
+         end,
+    case M of
+        #{expire_ms := F7} ->
+            begin
+                TrF7 = id(F7, TrUserData),
+                if TrF7 =:= 0 -> B6;
+                   true -> e_type_int32(TrF7, <<B6/binary, 56>>, TrUserData)
+                end
+            end;
+        _ -> B6
     end.
 
 encode_msg_LlmChunk(Msg, TrUserData) -> encode_msg_LlmChunk(Msg, <<>>, TrUserData).
@@ -1494,6 +1588,11 @@ e_mfield_PanelStream_error(Msg, Bin, TrUserData) ->
     Bin2 = e_varint(byte_size(SubBin), Bin),
     <<Bin2/binary, SubBin/binary>>.
 
+e_mfield_PanelStream_approval_required(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_ApprovalRequired(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
 e_mfield_JsonField_value(Msg, Bin, TrUserData) ->
     SubBin = encode_msg_JsonValue(Msg, <<>>, TrUserData),
     Bin2 = e_varint(byte_size(SubBin), Bin),
@@ -1747,6 +1846,7 @@ decode_msg_2_doit('PanelExecResult', Bin, TrUserData) -> id(decode_msg_PanelExec
 decode_msg_2_doit('PanelRequest', Bin, TrUserData) -> id(decode_msg_PanelRequest(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PanelResponse', Bin, TrUserData) -> id(decode_msg_PanelResponse(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PanelStream', Bin, TrUserData) -> id(decode_msg_PanelStream(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ApprovalRequired', Bin, TrUserData) -> id(decode_msg_ApprovalRequired(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('LlmChunk', Bin, TrUserData) -> id(decode_msg_LlmChunk(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('JsonField', Bin, TrUserData) -> id(decode_msg_JsonField(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ToolParameter', Bin, TrUserData) -> id(decode_msg_ToolParameter(Bin, TrUserData), TrUserData);
@@ -2162,6 +2262,7 @@ dfp_read_field_def_PanelStream(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUse
 dfp_read_field_def_PanelStream(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_PanelStream_tool_event(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
 dfp_read_field_def_PanelStream(<<34, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_PanelStream_final(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
 dfp_read_field_def_PanelStream(<<42, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_PanelStream_error(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_PanelStream(<<50, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_PanelStream_approval_required(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
 dfp_read_field_def_PanelStream(<<>>, 0, 0, _, F@_1, F@_2, _) ->
     S1 = #{stream_id => F@_1},
     if F@_2 == '$undef' -> S1;
@@ -2180,6 +2281,7 @@ dg_read_field_def_PanelStream(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, 
         26 -> d_field_PanelStream_tool_event(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
         34 -> d_field_PanelStream_final(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
         42 -> d_field_PanelStream_error(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        50 -> d_field_PanelStream_approval_required(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
         _ ->
             case Key band 7 of
                 0 -> skip_varint_PanelStream(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
@@ -2262,6 +2364,21 @@ d_field_PanelStream_error(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, Prev, TrUs
                                    end,
                                    TrUserData).
 
+d_field_PanelStream_approval_required(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_PanelStream_approval_required(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_PanelStream_approval_required(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_ApprovalRequired(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_PanelStream(RestF,
+                                   0,
+                                   0,
+                                   F,
+                                   F@_1,
+                                   case Prev of
+                                       '$undef' -> id({approval_required, NewFValue}, TrUserData);
+                                       {approval_required, MVPrev} -> id({approval_required, merge_msg_ApprovalRequired(MVPrev, NewFValue, TrUserData)}, TrUserData);
+                                       _ -> id({approval_required, NewFValue}, TrUserData)
+                                   end,
+                                   TrUserData).
+
 skip_varint_PanelStream(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_PanelStream(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
 skip_varint_PanelStream(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_PanelStream(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
 
@@ -2278,6 +2395,102 @@ skip_group_PanelStream(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
 skip_32_PanelStream(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_PanelStream(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
 
 skip_64_PanelStream(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_PanelStream(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_ApprovalRequired(Bin, TrUserData) ->
+    dfp_read_field_def_ApprovalRequired(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(0, TrUserData), TrUserData).
+
+dfp_read_field_def_ApprovalRequired(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) -> d_field_ApprovalRequired_req_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+dfp_read_field_def_ApprovalRequired(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) -> d_field_ApprovalRequired_session_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+dfp_read_field_def_ApprovalRequired(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) -> d_field_ApprovalRequired_tool_call_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+dfp_read_field_def_ApprovalRequired(<<34, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) -> d_field_ApprovalRequired_tool_name(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+dfp_read_field_def_ApprovalRequired(<<42, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) -> d_field_ApprovalRequired_arguments_json(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+dfp_read_field_def_ApprovalRequired(<<50, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) -> d_field_ApprovalRequired_risk_level(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+dfp_read_field_def_ApprovalRequired(<<56, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) -> d_field_ApprovalRequired_expire_ms(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+dfp_read_field_def_ApprovalRequired(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, _) -> #{req_id => F@_1, session_id => F@_2, tool_call_id => F@_3, tool_name => F@_4, arguments_json => F@_5, risk_level => F@_6, expire_ms => F@_7};
+dfp_read_field_def_ApprovalRequired(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) -> dg_read_field_def_ApprovalRequired(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData).
+
+dg_read_field_def_ApprovalRequired(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) when N < 32 - 7 ->
+    dg_read_field_def_ApprovalRequired(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+dg_read_field_def_ApprovalRequired(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_ApprovalRequired_req_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+        18 -> d_field_ApprovalRequired_session_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+        26 -> d_field_ApprovalRequired_tool_call_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+        34 -> d_field_ApprovalRequired_tool_name(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+        42 -> d_field_ApprovalRequired_arguments_json(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+        50 -> d_field_ApprovalRequired_risk_level(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+        56 -> d_field_ApprovalRequired_expire_ms(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ApprovalRequired(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+                1 -> skip_64_ApprovalRequired(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+                2 -> skip_length_delimited_ApprovalRequired(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+                3 -> skip_group_ApprovalRequired(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+                5 -> skip_32_ApprovalRequired(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData)
+            end
+    end;
+dg_read_field_def_ApprovalRequired(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, _) -> #{req_id => F@_1, session_id => F@_2, tool_call_id => F@_3, tool_name => F@_4, arguments_json => F@_5, risk_level => F@_6, expire_ms => F@_7}.
+
+d_field_ApprovalRequired_req_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) when N < 57 ->
+    d_field_ApprovalRequired_req_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+d_field_ApprovalRequired_req_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ApprovalRequired(RestF, 0, 0, F, NewFValue, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData).
+
+d_field_ApprovalRequired_session_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) when N < 57 ->
+    d_field_ApprovalRequired_session_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+d_field_ApprovalRequired_session_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ApprovalRequired(RestF, 0, 0, F, F@_1, NewFValue, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData).
+
+d_field_ApprovalRequired_tool_call_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) when N < 57 ->
+    d_field_ApprovalRequired_tool_call_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+d_field_ApprovalRequired_tool_call_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, F@_4, F@_5, F@_6, F@_7, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ApprovalRequired(RestF, 0, 0, F, F@_1, F@_2, NewFValue, F@_4, F@_5, F@_6, F@_7, TrUserData).
+
+d_field_ApprovalRequired_tool_name(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) when N < 57 ->
+    d_field_ApprovalRequired_tool_name(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+d_field_ApprovalRequired_tool_name(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, _, F@_5, F@_6, F@_7, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ApprovalRequired(RestF, 0, 0, F, F@_1, F@_2, F@_3, NewFValue, F@_5, F@_6, F@_7, TrUserData).
+
+d_field_ApprovalRequired_arguments_json(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) when N < 57 ->
+    d_field_ApprovalRequired_arguments_json(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+d_field_ApprovalRequired_arguments_json(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, _, F@_6, F@_7, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ApprovalRequired(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, NewFValue, F@_6, F@_7, TrUserData).
+
+d_field_ApprovalRequired_risk_level(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) when N < 57 ->
+    d_field_ApprovalRequired_risk_level(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+d_field_ApprovalRequired_risk_level(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, _, F@_7, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ApprovalRequired(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, NewFValue, F@_7, TrUserData).
+
+d_field_ApprovalRequired_expire_ms(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) when N < 57 ->
+    d_field_ApprovalRequired_expire_ms(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+d_field_ApprovalRequired_expire_ms(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, _, TrUserData) ->
+    {NewFValue, RestF} = {begin <<Res:32/signed-native>> = <<(X bsl N + Acc):32/unsigned-native>>, id(Res, TrUserData) end, Rest},
+    dfp_read_field_def_ApprovalRequired(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, NewFValue, TrUserData).
+
+skip_varint_ApprovalRequired(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) -> skip_varint_ApprovalRequired(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+skip_varint_ApprovalRequired(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) -> dfp_read_field_def_ApprovalRequired(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData).
+
+skip_length_delimited_ApprovalRequired(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) when N < 57 ->
+    skip_length_delimited_ApprovalRequired(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData);
+skip_length_delimited_ApprovalRequired(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ApprovalRequired(Rest2, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData).
+
+skip_group_ApprovalRequired(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ApprovalRequired(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData).
+
+skip_32_ApprovalRequired(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) -> dfp_read_field_def_ApprovalRequired(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData).
+
+skip_64_ApprovalRequired(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) -> dfp_read_field_def_ApprovalRequired(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData).
 
 decode_msg_LlmChunk(Bin, TrUserData) -> dfp_read_field_def_LlmChunk(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
 
@@ -4319,6 +4532,7 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'PanelRequest' -> merge_msg_PanelRequest(Prev, New, TrUserData);
         'PanelResponse' -> merge_msg_PanelResponse(Prev, New, TrUserData);
         'PanelStream' -> merge_msg_PanelStream(Prev, New, TrUserData);
+        'ApprovalRequired' -> merge_msg_ApprovalRequired(Prev, New, TrUserData);
         'LlmChunk' -> merge_msg_LlmChunk(Prev, New, TrUserData);
         'JsonField' -> merge_msg_JsonField(Prev, New, TrUserData);
         'ToolParameter' -> merge_msg_ToolParameter(Prev, New, TrUserData);
@@ -4461,15 +4675,57 @@ merge_msg_PanelStream(PMsg, NMsg, TrUserData) ->
         {#{tool_event := PFtool_event}, #{tool_event := NFtool_event}} -> S2#{tool_event => merge_msg_ToolEvent(PFtool_event, NFtool_event, TrUserData)};
         {#{final := PFfinal}, #{final := NFfinal}} -> S2#{final => merge_msg_FinalAnswer(PFfinal, NFfinal, TrUserData)};
         {#{error := PFerror}, #{error := NFerror}} -> S2#{error => merge_msg_StreamError(PFerror, NFerror, TrUserData)};
+        {#{approval_required := PFapproval_required}, #{approval_required := NFapproval_required}} -> S2#{approval_required => merge_msg_ApprovalRequired(PFapproval_required, NFapproval_required, TrUserData)};
         {_, #{chunk := NFchunk}} -> S2#{chunk => NFchunk};
         {_, #{tool_event := NFtool_event}} -> S2#{tool_event => NFtool_event};
         {_, #{final := NFfinal}} -> S2#{final => NFfinal};
         {_, #{error := NFerror}} -> S2#{error => NFerror};
+        {_, #{approval_required := NFapproval_required}} -> S2#{approval_required => NFapproval_required};
         {#{chunk := PFchunk}, _} -> S2#{chunk => PFchunk};
         {#{tool_event := PFtool_event}, _} -> S2#{tool_event => PFtool_event};
         {#{final := PFfinal}, _} -> S2#{final => PFfinal};
         {#{error := PFerror}, _} -> S2#{error => PFerror};
+        {#{approval_required := PFapproval_required}, _} -> S2#{approval_required => PFapproval_required};
         _ -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ApprovalRequired/3}).
+merge_msg_ApprovalRequired(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{req_id := NFreq_id}} -> S1#{req_id => NFreq_id};
+             {#{req_id := PFreq_id}, _} -> S1#{req_id => PFreq_id};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{session_id := NFsession_id}} -> S2#{session_id => NFsession_id};
+             {#{session_id := PFsession_id}, _} -> S2#{session_id => PFsession_id};
+             _ -> S2
+         end,
+    S4 = case {PMsg, NMsg} of
+             {_, #{tool_call_id := NFtool_call_id}} -> S3#{tool_call_id => NFtool_call_id};
+             {#{tool_call_id := PFtool_call_id}, _} -> S3#{tool_call_id => PFtool_call_id};
+             _ -> S3
+         end,
+    S5 = case {PMsg, NMsg} of
+             {_, #{tool_name := NFtool_name}} -> S4#{tool_name => NFtool_name};
+             {#{tool_name := PFtool_name}, _} -> S4#{tool_name => PFtool_name};
+             _ -> S4
+         end,
+    S6 = case {PMsg, NMsg} of
+             {_, #{arguments_json := NFarguments_json}} -> S5#{arguments_json => NFarguments_json};
+             {#{arguments_json := PFarguments_json}, _} -> S5#{arguments_json => PFarguments_json};
+             _ -> S5
+         end,
+    S7 = case {PMsg, NMsg} of
+             {_, #{risk_level := NFrisk_level}} -> S6#{risk_level => NFrisk_level};
+             {#{risk_level := PFrisk_level}, _} -> S6#{risk_level => PFrisk_level};
+             _ -> S6
+         end,
+    case {PMsg, NMsg} of
+        {_, #{expire_ms := NFexpire_ms}} -> S7#{expire_ms => NFexpire_ms};
+        {#{expire_ms := PFexpire_ms}, _} -> S7#{expire_ms => PFexpire_ms};
+        _ -> S7
     end.
 
 -compile({nowarn_unused_function,merge_msg_LlmChunk/3}).
@@ -5017,6 +5273,7 @@ verify_msg(Msg, MsgName, Opts) ->
         'PanelRequest' -> v_msg_PanelRequest(Msg, [MsgName], TrUserData);
         'PanelResponse' -> v_msg_PanelResponse(Msg, [MsgName], TrUserData);
         'PanelStream' -> v_msg_PanelStream(Msg, [MsgName], TrUserData);
+        'ApprovalRequired' -> v_msg_ApprovalRequired(Msg, [MsgName], TrUserData);
         'LlmChunk' -> v_msg_LlmChunk(Msg, [MsgName], TrUserData);
         'JsonField' -> v_msg_JsonField(Msg, [MsgName], TrUserData);
         'ToolParameter' -> v_msg_ToolParameter(Msg, [MsgName], TrUserData);
@@ -5237,32 +5494,39 @@ v_msg_PanelStream(#{} = M, Path, TrUserData) ->
     end,
     case M of
         #{chunk := OF2} ->
-            case maps:keys(maps:with([chunk, tool_event, final, error], M)) of
+            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required], M)) of
                 [_] -> ok;
                 OFDupsOF2 -> mk_type_error({multiple_oneof_keys, OFDupsOF2, payload}, M, [payload | Path])
             end,
             v_submsg_LlmChunk(OF2, [chunk | Path], TrUserData);
         #{tool_event := OF2} ->
-            case maps:keys(maps:with([chunk, tool_event, final, error], M)) of
+            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required], M)) of
                 [_] -> ok;
                 OFDupsOF2 -> mk_type_error({multiple_oneof_keys, OFDupsOF2, payload}, M, [payload | Path])
             end,
             v_submsg_ToolEvent(OF2, [tool_event | Path], TrUserData);
         #{final := OF2} ->
-            case maps:keys(maps:with([chunk, tool_event, final, error], M)) of
+            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required], M)) of
                 [_] -> ok;
                 OFDupsOF2 -> mk_type_error({multiple_oneof_keys, OFDupsOF2, payload}, M, [payload | Path])
             end,
             v_submsg_FinalAnswer(OF2, [final | Path], TrUserData);
         #{error := OF2} ->
-            case maps:keys(maps:with([chunk, tool_event, final, error], M)) of
+            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required], M)) of
                 [_] -> ok;
                 OFDupsOF2 -> mk_type_error({multiple_oneof_keys, OFDupsOF2, payload}, M, [payload | Path])
             end,
             v_submsg_StreamError(OF2, [error | Path], TrUserData);
+        #{approval_required := OF2} ->
+            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required], M)) of
+                [_] -> ok;
+                OFDupsOF2 -> mk_type_error({multiple_oneof_keys, OFDupsOF2, payload}, M, [payload | Path])
+            end,
+            v_submsg_ApprovalRequired(OF2, [approval_required | Path], TrUserData);
         _ -> ok
     end,
-    lists:foreach(fun (error) -> ok;
+    lists:foreach(fun (approval_required) -> ok;
+                      (error) -> ok;
                       (final) -> ok;
                       (tool_event) -> ok;
                       (chunk) -> ok;
@@ -5273,6 +5537,55 @@ v_msg_PanelStream(#{} = M, Path, TrUserData) ->
     ok;
 v_msg_PanelStream(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PanelStream'}, M, Path);
 v_msg_PanelStream(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PanelStream'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_ApprovalRequired/3}).
+-dialyzer({nowarn_function,v_submsg_ApprovalRequired/3}).
+v_submsg_ApprovalRequired(Msg, Path, TrUserData) -> v_msg_ApprovalRequired(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_ApprovalRequired/3}).
+-dialyzer({nowarn_function,v_msg_ApprovalRequired/3}).
+v_msg_ApprovalRequired(#{} = M, Path, TrUserData) ->
+    case M of
+        #{req_id := F1} -> v_type_string(F1, [req_id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{session_id := F2} -> v_type_string(F2, [session_id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{tool_call_id := F3} -> v_type_string(F3, [tool_call_id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{tool_name := F4} -> v_type_string(F4, [tool_name | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{arguments_json := F5} -> v_type_string(F5, [arguments_json | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{risk_level := F6} -> v_type_string(F6, [risk_level | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{expire_ms := F7} -> v_type_int32(F7, [expire_ms | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (expire_ms) -> ok;
+                      (risk_level) -> ok;
+                      (arguments_json) -> ok;
+                      (tool_name) -> ok;
+                      (tool_call_id) -> ok;
+                      (session_id) -> ok;
+                      (req_id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ApprovalRequired(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ApprovalRequired'}, M, Path);
+v_msg_ApprovalRequired(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ApprovalRequired'}, X, Path).
 
 -compile({nowarn_unused_function,v_submsg_LlmChunk/3}).
 -dialyzer({nowarn_function,v_submsg_LlmChunk/3}).
@@ -6229,8 +6542,17 @@ get_msg_defs() ->
              [#{name => chunk, fnum => 2, rnum => 3, type => {msg, 'LlmChunk'}, occurrence => optional, opts => []},
               #{name => tool_event, fnum => 3, rnum => 3, type => {msg, 'ToolEvent'}, occurrence => optional, opts => []},
               #{name => final, fnum => 4, rnum => 3, type => {msg, 'FinalAnswer'}, occurrence => optional, opts => []},
-              #{name => error, fnum => 5, rnum => 3, type => {msg, 'StreamError'}, occurrence => optional, opts => []}],
+              #{name => error, fnum => 5, rnum => 3, type => {msg, 'StreamError'}, occurrence => optional, opts => []},
+              #{name => approval_required, fnum => 6, rnum => 3, type => {msg, 'ApprovalRequired'}, occurrence => optional, opts => []}],
          opts => []}]},
+     {{msg, 'ApprovalRequired'},
+      [#{name => req_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => session_id, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+       #{name => tool_call_id, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+       #{name => tool_name, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []},
+       #{name => arguments_json, fnum => 5, rnum => 6, type => string, occurrence => optional, opts => []},
+       #{name => risk_level, fnum => 6, rnum => 7, type => string, occurrence => optional, opts => []},
+       #{name => expire_ms, fnum => 7, rnum => 8, type => int32, occurrence => optional, opts => []}]},
      {{msg, 'LlmChunk'}, [#{name => content, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => reasoning_content, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}]},
      {{msg, 'JsonField'}, [#{name => key, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => value, fnum => 2, rnum => 3, type => {msg, 'JsonValue'}, occurrence => optional, opts => []}]},
      {{msg, 'ToolParameter'},
@@ -6330,6 +6652,7 @@ get_msg_names() ->
      'PanelRequest',
      'PanelResponse',
      'PanelStream',
+     'ApprovalRequired',
      'LlmChunk',
      'JsonField',
      'ToolParameter',
@@ -6374,6 +6697,7 @@ get_msg_or_group_names() ->
      'PanelRequest',
      'PanelResponse',
      'PanelStream',
+     'ApprovalRequired',
      'LlmChunk',
      'JsonField',
      'ToolParameter',
@@ -6451,8 +6775,17 @@ find_msg_def('PanelStream') ->
            [#{name => chunk, fnum => 2, rnum => 3, type => {msg, 'LlmChunk'}, occurrence => optional, opts => []},
             #{name => tool_event, fnum => 3, rnum => 3, type => {msg, 'ToolEvent'}, occurrence => optional, opts => []},
             #{name => final, fnum => 4, rnum => 3, type => {msg, 'FinalAnswer'}, occurrence => optional, opts => []},
-            #{name => error, fnum => 5, rnum => 3, type => {msg, 'StreamError'}, occurrence => optional, opts => []}],
+            #{name => error, fnum => 5, rnum => 3, type => {msg, 'StreamError'}, occurrence => optional, opts => []},
+            #{name => approval_required, fnum => 6, rnum => 3, type => {msg, 'ApprovalRequired'}, occurrence => optional, opts => []}],
        opts => []}];
+find_msg_def('ApprovalRequired') ->
+    [#{name => req_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => session_id, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+     #{name => tool_call_id, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+     #{name => tool_name, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []},
+     #{name => arguments_json, fnum => 5, rnum => 6, type => string, occurrence => optional, opts => []},
+     #{name => risk_level, fnum => 6, rnum => 7, type => string, occurrence => optional, opts => []},
+     #{name => expire_ms, fnum => 7, rnum => 8, type => int32, occurrence => optional, opts => []}];
 find_msg_def('LlmChunk') -> [#{name => content, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => reasoning_content, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}];
 find_msg_def('JsonField') -> [#{name => key, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => value, fnum => 2, rnum => 3, type => {msg, 'JsonValue'}, occurrence => optional, opts => []}];
 find_msg_def('ToolParameter') ->
@@ -6607,6 +6940,7 @@ fqbin_to_msg_name(<<"panel.PanelExecResult">>) -> 'PanelExecResult';
 fqbin_to_msg_name(<<"panel.PanelRequest">>) -> 'PanelRequest';
 fqbin_to_msg_name(<<"panel.PanelResponse">>) -> 'PanelResponse';
 fqbin_to_msg_name(<<"panel.PanelStream">>) -> 'PanelStream';
+fqbin_to_msg_name(<<"panel.ApprovalRequired">>) -> 'ApprovalRequired';
 fqbin_to_msg_name(<<"panel.LlmChunk">>) -> 'LlmChunk';
 fqbin_to_msg_name(<<"panel.JsonField">>) -> 'JsonField';
 fqbin_to_msg_name(<<"panel.ToolParameter">>) -> 'ToolParameter';
@@ -6648,6 +6982,7 @@ msg_name_to_fqbin('PanelExecResult') -> <<"panel.PanelExecResult">>;
 msg_name_to_fqbin('PanelRequest') -> <<"panel.PanelRequest">>;
 msg_name_to_fqbin('PanelResponse') -> <<"panel.PanelResponse">>;
 msg_name_to_fqbin('PanelStream') -> <<"panel.PanelStream">>;
+msg_name_to_fqbin('ApprovalRequired') -> <<"panel.ApprovalRequired">>;
 msg_name_to_fqbin('LlmChunk') -> <<"panel.LlmChunk">>;
 msg_name_to_fqbin('JsonField') -> <<"panel.JsonField">>;
 msg_name_to_fqbin('ToolParameter') -> <<"panel.ToolParameter">>;
@@ -6719,7 +7054,8 @@ get_all_proto_names() -> ["panel"].
 
 
 get_msg_containment("panel") ->
-    ['ApproveArgs',
+    ['ApprovalRequired',
+     'ApproveArgs',
      'ApproveResult',
      'BrainStatusArgs',
      'BrainStatusResult',
@@ -6776,44 +7112,45 @@ get_enum_containment("panel") -> [];
 get_enum_containment(P) -> error({gpb_error, {badproto, P}}).
 
 
-get_proto_by_msg_name_as_fqbin(<<"panel.ApproveArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StreamError">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.FinalAnswer">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ListCapabilitiesResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ApproveResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.JsonArray">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelRequest">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolCall">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.DebugCapabilityArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ListToolsResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DebugCapabilityResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ListCapabilitiesResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.LlmChunk">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonObject">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.HistoryEntry">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolDesc">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelStream">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.SendArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelFrame">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelExecResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.SendResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameter">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolFunction">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.DebugCapabilityResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.JsonValue">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.CapabilityDesc">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StopResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ListToolsResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.LlmChunk">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameters">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelResponse">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.JsonField">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.JsonObject">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.FinalAnswer">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ToolEvent">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonValue">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ApprovalRequired">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ApproveArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelExecResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ApproveResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelResponse">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StopResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SendArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameters">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelRequest">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonField">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolCall">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelStream">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolFunction">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolDesc">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.PanelExec">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StreamError">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.CapabilityDesc">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DebugCapabilityArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelFrame">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 
 

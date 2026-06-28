@@ -14,6 +14,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/light-code-ai/eion-tools/internal/broker"
 	"github.com/light-code-ai/eion-tools/internal/logging"
 	"github.com/light-code-ai/eion-tools/internal/model"
 	"github.com/light-code-ai/eion-tools/internal/tool"
@@ -25,17 +26,33 @@ import (
 type Command_Dispatcher struct {
 	modelW *model.Eino_Model_Wrapper
 	toolW  *tool.Eino_Tool_Wrapper
+	broker *broker.Broker
 
 	// 幂等缓存：ReqId -> *hermes.ToolExecResponse。命中即直接返回，避免重复执行副作用工具。
 	idempotency sync.Map
 }
 
-// New 创建一个 Dispatcher，内部装配 model 与 tool 包装器。
+// New 创建一个 Dispatcher，内部装配 model、tool 包装器与默认 broker（EXEC-P0-002）。
 func New() *Command_Dispatcher {
 	return &Command_Dispatcher{
 		modelW: model.New(),
 		toolW:  tool.New(),
+		broker: broker.New(),
 	}
+}
+
+// NewWithBroker 创建一个 Dispatcher 并注入外部 broker（便于测试或自定义超时）。
+func NewWithBroker(b *broker.Broker) *Command_Dispatcher {
+	d := New()
+	if b != nil {
+		d.broker = b
+	}
+	return d
+}
+
+// Broker 返回内部 broker，供外部调用 Cancel / CancelAll / Pending / Stats。
+func (d *Command_Dispatcher) Broker() *broker.Broker {
+	return d.broker
 }
 
 // ToolWrapper 返回内部工具注册表，供外部注册工具。
@@ -189,6 +206,9 @@ func (d *Command_Dispatcher) handleLLM(ctx context.Context, req *hermes.LLMInfer
 }
 
 // handleTool 执行工具，并按 ReqId 做幂等缓存。
+//
+// EXEC-P0-002：所有能力调用经 broker 统一执行出口，获得超时/取消/追踪能力。
+// broker.Execute 不吞 panic（仅清理 pending map），panic 仍由 Dispatch 的 Panic_Guard 捕获。
 func (d *Command_Dispatcher) handleTool(ctx context.Context, req *hermes.ToolExecRequest) *hermes.ToolExecResponse {
 	// 1. 幂等检查：命中即直接返回上次的响应
 	if reqId := req.GetReqId(); reqId != "" {
@@ -209,18 +229,27 @@ func (d *Command_Dispatcher) handleTool(ctx context.Context, req *hermes.ToolExe
 		return resp
 	}
 
-	// 3. 执行工具（InvokableRun）
-	result, err := t.InvokableRun(ctx, req.GetArgumentsJson())
-	if err != nil {
+	// 3. 经 broker 执行工具（统一超时/取消/追踪）
+	toolName := req.GetToolName()
+	args := req.GetArgumentsJson()
+	handler := broker.Handler(func(ctx context.Context, argumentsJSON string) (string, error) {
+		return t.InvokableRun(ctx, argumentsJSON)
+	})
+
+	r := d.broker.Execute(ctx, handler, toolName, args, broker.ExecOptions{
+		ReqId: req.GetReqId(),
+	})
+
+	if r.Error != "" {
 		resp := &hermes.ToolExecResponse{
-			Error: err.Error(),
+			Error: r.Error,
 		}
 		d.cacheIdempotent(req.GetReqId(), resp)
 		return resp
 	}
 
 	resp := &hermes.ToolExecResponse{
-		ResultJson: result,
+		ResultJson: r.ResultJSON,
 	}
 	d.cacheIdempotent(req.GetReqId(), resp)
 	return resp

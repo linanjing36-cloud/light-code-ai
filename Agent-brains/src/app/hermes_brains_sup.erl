@@ -7,16 +7,18 @@
 
 %% 顶层监督者: rest_for_one 策略。
 %%
-%% 子进程顺序: timing_wheel -> mnesia_store -> state_store -> bridge_manager -> agent_sup -> case_store
+%% 子进程顺序: timing_wheel -> mnesia_store -> state_store -> approval_store -> bridge_manager -> agent_sup -> case_store -> memory_summarizer
 %% 选择 rest_for_one 的理由:
 %%   - timing_wheel 崩溃 → 所有周期/一次性事件丢失, mnesia_store 的 snapshot tick
 %%     也来自这里, 所以后续全部要重启重新注册 timer。
 %%   - mnesia_store 崩溃 → 磁盘层失效, state_store 后续的 restore/snapshot 都不可信,
 %%     后续全部重启。
 %%   - state_store 崩溃意味着 ETS 表丢失, 其上所有 FSM 的快照/历史也随之失效,
-%%     因此 bridge_manager / agent_sup 及其下所有 FSM 必须一起重启
+%%     因此 approval_store / bridge_manager / agent_sup 及其下所有 FSM 必须一起重启
 %%     (state_store 重启后会从 mnesia_store 恢复 ETS 快照)。
-%%   - 反之 agent_sup 崩溃不会影响 state_store 的 ETS 表。
+%%   - approval_store 崩溃 → 审批 ETS 丢失, 等待审批的 FSM 失去唤醒源, 后续全部
+%%     重启 (EXEC-P0-005)。approval_store 不持久化 (审批是短期状态)。
+%%   - 反之 agent_sup 崩溃不会影响 state_store / approval_store 的 ETS 表。
 %%   - case_store 置于末尾: 它崩溃仅自重启 (其 Mnesia 表 disc_copies 持久化,
 %%     重启不丢数据), 不影响 agent_sup 下面的 FSM。agent_fsm 查询 case_store
 %%     走防御性匹配 ({error,_} -> 跳过注入), 所以 case_store 短暂不可用不影响 ReAct。
@@ -56,6 +58,16 @@ init([]) ->
                    type => worker,
                    modules => [state_store]},
 
+    %% Approval_Store: 高风险能力调用的审批请求注册表 (EXEC-P0-005)
+    %% 放在 state_store 之后、bridge_manager 之前: 同为 ETS 持有者,
+    %% 崩溃会重启 bridge_manager 及之后所有 FSM (审批条目随 ETS 丢失失效)
+    ApprovalStore = #{id => approval_store,
+                      start => {approval_store, start_link, []},
+                      restart => permanent,
+                      shutdown => 5000,
+                      type => worker,
+                      modules => [approval_store]},
+
     %% Bridge_Manager: 与 Go 侧 Eion-tools 的端口连接管理器
     %% 必须在 agent_sup 之前启动 —— FSM 一旦启动就要 call_llm/call_tool
     BridgeManager = #{id => bridge_manager,
@@ -90,4 +102,4 @@ init([]) ->
                          type => worker,
                          modules => [memory_summarizer]},
 
-    {ok, {SupFlags, [TimingWheel, MnesiaStore, StateStore, BridgeManager, AgentSup, CaseStore, MemorySummarizer]}}.
+    {ok, {SupFlags, [TimingWheel, MnesiaStore, StateStore, ApprovalStore, BridgeManager, AgentSup, CaseStore, MemorySummarizer]}}.

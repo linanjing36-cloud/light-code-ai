@@ -57,6 +57,7 @@
 -export([start_link/0, serve/0, exec_agent/2,
          %% 流式 push API (供 agent_fsm cast)
          push_chunk/2, push_tool_event/2, push_final/2, push_stream_err/2,
+         push_approval_required/2,
          unregister_stream/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
@@ -110,6 +111,11 @@ push_final(SessionId, FinalMap) ->
 
 push_stream_err(SessionId, ErrMsg) ->
     gen_server:cast(?MODULE, {push_stream_err, SessionId, ErrMsg}).
+
+%% 审批请求推送 (EXEC-P0-005): 告知前端某 tool_call 需用户授权。
+%% ApprovalMap: #{req_id, session_id, tool_call_id, tool_name, arguments_json, risk_level, expire_ms}
+push_approval_required(SessionId, ApprovalMap) ->
+    gen_server:cast(?MODULE, {push_approval_required, SessionId, ApprovalMap}).
 
 %% session 结束或 client 断开时清理 stream 注册
 unregister_stream(SessionId) ->
@@ -196,6 +202,12 @@ handle_cast({push_stream_err, SessionId, ErrMsg}, State) ->
         panel_pb_codec:pack_stream_err(StreamId, ErrMsg)
     end),
     ets:delete(?STREAMS_TABLE, SessionId),
+    {noreply, State};
+handle_cast({push_approval_required, SessionId, ApprovalMap}, State) ->
+    %% 审批请求 (非终态): 不清理 stream 注册, FSM 等待 approve RPC 唤醒
+    forward_stream(SessionId, fun(StreamId) ->
+        panel_pb_codec:pack_stream_approval_required(StreamId, ApprovalMap)
+    end),
     {noreply, State};
 handle_cast({unregister_stream, SessionId}, State) ->
     ets:delete(?STREAMS_TABLE, SessionId),
@@ -469,9 +481,36 @@ handle_method(<<"get_history">>, ArgsMap, _ConnPid) ->
             {ok, #{messages => []}}
     end;
 
-%% ---- approve: 工具调用授权 (占位) ----
-handle_method(<<"approve">>, _ArgsMap, _ConnPid) ->
-    {ok, #{ok => true}};
+%% ---- approve: 工具调用授权 (EXEC-P0-005) ----
+%% 解码 {req_id, allow} -> approval_store:resolve -> cast 唤醒 FSM。
+%% 返回结构化结果: #{ok, state, req_id} 供前端判断审批状态。
+handle_method(<<"approve">>, ArgsMap, _ConnPid) ->
+    ReqId = maps:get(req_id, ArgsMap, <<>>),
+    Allow = maps:get(allow, ArgsMap, false),
+    case ReqId of
+        <<>> ->
+            {ok, #{ok => false, error => <<"missing req_id">>, state => <<"invalid">>}};
+        _ ->
+            case approval_store:resolve(ReqId, Allow) of
+                {ok, Entry} ->
+                    %% cast 唤醒等待中的 FSM (FSM 收到 {approval, ReqId, Allow} 后继续派发或回填 error)
+                    FsmPid = maps:get(fsm_pid, Entry, undefined),
+                    case FsmPid of
+                        undefined -> ok;
+                        Pid when is_pid(Pid) ->
+                            try erlang:send(Pid, {approval, ReqId, Allow}) catch _:_ -> ok end
+                    end,
+                    State = case maps:get(status, Entry) of
+                                approved -> <<"approved">>;
+                                rejected -> <<"rejected">>
+                            end,
+                    {ok, #{ok => true, req_id => ReqId, state => State}};
+                not_found ->
+                    {ok, #{ok => false, req_id => ReqId, error => <<"not_found">>, state => <<"not_found">>}};
+                {error, not_pending} ->
+                    {ok, #{ok => false, req_id => ReqId, error => <<"not_pending">>, state => <<"already_resolved">>}}
+            end
+    end;
 
 %% ---- brain_status: 读 FSM 当前状态 ----
 handle_method(<<"brain_status">>, ArgsMap, _ConnPid) ->

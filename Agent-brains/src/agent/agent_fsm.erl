@@ -19,6 +19,15 @@
 %%   acting    —— 解析 tool_calls, 并行派发 ToolExecRequest, 收齐结果后
 %%                将 observation 追加进历史, 计数+1, 判断循环上限
 %%
+%% EXEC-P0-005 第二阶段 (审批链路接入):
+%%   acting(enter) 按 capability.requires_approval 分流:
+%%     - safe 工具: 直接 bridge_manager:call_tool_batch 派发
+%%     - needs_approval 工具: 注册 approval_store + push_approval_required 到前端,
+%%       等待 {approval, ReqId, Allow} (info 事件) 或 {approval_expired, ReqId}。
+%%       Allow=true -> 派发; Allow=false/expired -> 回填 error observation。
+%%   不新增独立 pending_approval 状态, 在 acting 内处理 approval 事件,
+%%   保持 state_enter 语义简单 (acting(enter) 一次性分流, 后续事件驱动)。
+%%
 %% 循环上限: ?MAX_LOOPS (默认 10), 防止 LLM 死循环耗尽资源。
 %%
 %% 失败案例记忆 (Task 1):
@@ -58,10 +67,15 @@
     pending_tool_calls = [] :: [map()],
     %% 当前轮已收工具结果: tool_call.id => ToolExecResponse map
     tool_results = #{} :: #{binary() => map()},
-    %% 本轮期望收到的工具结果数
+    %% 本轮期望收到的工具结果数 (safe 派发数 + needs_approval 数)
     pending_count = 0 :: non_neg_integer(),
     %% LLM 异步请求引用 (匹配响应)
-    llm_ref :: reference() | undefined
+    llm_ref :: reference() | undefined,
+    %% EXEC-P0-005: 等待审批的 tool_calls (req_id => ToolCall map)。
+    %% req_id = tool_call.id, 与 approval_store 条目键一致。
+    %% 收到 {approval, ReqId, true} -> 派发并移除;
+    %% 收到 {approval, ReqId, false} / {approval_expired, ReqId} -> 回填 error 并移除。
+    pending_approvals = #{} :: #{binary() => map()}
 }).
 
 %%%===================================================================
@@ -159,11 +173,17 @@ sanitize_recovered(Saved, Model, Tools, History0, SessionPrompt, ApiKey, ApiBase
         api_key = Key,
         api_base = Base,
         llm_ref = undefined,
-        tool_results = #{}
+        tool_results = #{},
+        %% EXEC-P0-005: approval_store 不持久化, 重启后 ETS 为空,
+        %% 旧的 pending_approvals 全部失效, 必须清空。
+        %% acting(enter) 恢复时会重新按 requires_approval 分流并重新注册。
+        pending_approvals = #{}
     },
     case Saved#data.pending_tool_calls of
         TCs when TCs =/= [], Saved#data.pending_count > 0 ->
-            SavedBase;
+            %% 恢复到 acting: pending_count 重置为 pending_tool_calls 数量,
+            %% acting(enter) 会重新分流 (safe 直接派发, needs_approval 重新注册)
+            SavedBase#data{pending_count = length(TCs)};
         _ ->
             SavedBase#data{pending_tool_calls = [], pending_count = 0}
     end.
@@ -335,12 +355,17 @@ thinking(_EventType, _EventContent, _Data) ->
 acting(enter, _OldState, Data) ->
     ok = snapshot(acting, Data),
     ToolCalls = Data#data.pending_tool_calls,
-    %% 关键节点: 进入 acting 状态, 派发工具调用
-    lager:info("acting(enter) fired, dispatching ~p tools, pending_count=~p",
-                [length(ToolCalls), Data#data.pending_count]),
-    %% 并行派发: bridge_manager 内部对每个 ToolCall spawn 一条异步调用
-    bridge_manager:call_tool_batch(self(), ToolCalls),
-    {keep_state, Data};
+    %% EXEC-P0-005 第二阶段: 按 capability.requires_approval 分流
+    {SafeCalls, ApprovalCalls} = partition_by_approval(ToolCalls, Data#data.tools),
+    %% safe 工具直接并行派发
+    bridge_manager:call_tool_batch(self(), SafeCalls),
+    %% needs_approval 工具注册 approval_store + 推送 approval_required 到前端
+    PendingApprovals = register_approvals(ApprovalCalls, Data#data.session_id, Data#data.tools),
+    PendingCount = length(SafeCalls) + length(ApprovalCalls),
+    lager:info("acting(enter) dispatched ~p safe, ~p needs_approval, pending_count=~p",
+               [length(SafeCalls), length(ApprovalCalls), PendingCount]),
+    {keep_state, Data#data{pending_count = PendingCount,
+                           pending_approvals = PendingApprovals}};
 acting(cast, {tool_result, ToolCallId, Resp}, Data) ->
     Results = maps:put(ToolCallId, Resp, Data#data.tool_results),
     lager:debug("tool_result received, tool_call_id=~p, collected=~p/~p",
@@ -352,6 +377,28 @@ acting(cast, {tool_result, ToolCallId, Resp}, Data) ->
         false ->
             {keep_state, Data#data{tool_results = Results}}
     end;
+%% ---- EXEC-P0-005 第二阶段: 审批事件处理 (info, 来自 approval_store/panel_server) ----
+%% 用户批准: 从 pending_approvals 取出 tool_call, 派发到 bridge_manager
+acting(info, {approval, ReqId, true}, Data) ->
+    case maps:take(ReqId, Data#data.pending_approvals) of
+        {ToolCall, Rest} ->
+            lager:info("approval approved, req_id=~p, dispatching tool=~s",
+                       [ReqId, maps:get(name, ToolCall, <<>>)]),
+            bridge_manager:call_tool_batch(self(), [ToolCall]),
+            {keep_state, Data#data{pending_approvals = Rest}};
+        error ->
+            %% 未知 req_id (已 resolved / 过期 / 取消), 忽略
+            lager:warning("approval approved for unknown req_id=~p, ignoring", [ReqId]),
+            keep_state_and_data
+    end;
+%% 用户拒绝: 回填 error result, 检查是否收齐
+acting(info, {approval, ReqId, false}, Data) ->
+    lager:info("approval rejected, req_id=~p", [ReqId]),
+    handle_approval_resolved(ReqId, <<"approval rejected by user">>, Data);
+%% 审批超时: 回填 error result, 检查是否收齐
+acting(info, {approval_expired, ReqId}, Data) ->
+    lager:info("approval expired, req_id=~p", [ReqId]),
+    handle_approval_resolved(ReqId, <<"approval expired (5min timeout)">>, Data);
 acting(cast, {bridge_disconnect}, Data) ->
     %% 柔性降级 (架构文档 5.3 / Phase 3.2):
     %% Go 侧断连, 本轮工具执行中断。对每个未收结果的 pending_tool_call
@@ -359,6 +406,10 @@ acting(cast, {bridge_disconnect}, Data) ->
     %% 已收的部分结果保留, 未收的标记为 interrupted。
     lager:warning("bridge_disconnect in acting, marking ~p pending tools as interrupted",
                    [length(Data#data.pending_tool_calls) - map_size(Data#data.tool_results)]),
+    %% EXEC-P0-005: 取消所有未 resolved 的审批请求 (避免 approval_store 过期后
+    %% send {approval_expired, ReqId} 到已离开 acting 的 FSM)
+    lists:foreach(fun(ReqId) -> approval_store:cancel(ReqId) end,
+                  maps:keys(Data#data.pending_approvals)),
     Interrupted = [TC || TC <- Data#data.pending_tool_calls,
                          not maps:is_key(maps:get(id, TC, <<>>),
                                          Data#data.tool_results)],
@@ -381,13 +432,86 @@ acting(cast, {bridge_disconnect}, Data) ->
                         Data, FailedMsgs),
     continue_after_observe(Data1#data{pending_tool_calls = [],
                                       tool_results = #{},
-                                      pending_count = 0});
+                                      pending_count = 0,
+                                      pending_approvals = #{}});
 acting(_EventType, _EventContent, _Data) ->
     keep_state_and_data.
 
 %%%===================================================================
 %%% 内部函数
 %%%===================================================================
+
+%% ---- EXEC-P0-005 第二阶段: 审批分流辅助 ----
+
+%% 按 capability.requires_approval 将 tool_calls 分为 {Safe, NeedsApproval}。
+%% 从 Data#data.tools 按 name 查找 capability, 判断 requires_approval 标记。
+partition_by_approval(ToolCalls, Tools) ->
+    CapByName = cap_index_by_name(Tools),
+    lists:foldl(fun(TC, {Safe, Approve}) ->
+        Name = maps:get(name, TC, <<>>),
+        Cap = maps:get(Name, CapByName, #{}),
+        case maps:get(requires_approval, Cap, false) of
+            true -> {Safe, Approve ++ [TC]};
+            false -> {Safe ++ [TC], Approve}
+        end
+    end, {[], []}, ToolCalls).
+
+%% 构建 name => capability 索引 (供 acting 分流快速查找)
+cap_index_by_name(Tools) when is_list(Tools) ->
+    maps:from_list([{maps:get(name, T, <<>>), T} || T <- Tools, is_map(T)]);
+cap_index_by_name(_) ->
+    #{}.
+
+%% 为每个 needs_approval 的 tool_call 注册 approval_store 并推送 approval_required 到前端。
+%% 返回 map(ReqId => ToolCall), ReqId = tool_call.id。
+register_approvals(ApprovalCalls, SessionId, Tools) ->
+    CapByName = cap_index_by_name(Tools),
+    lists:foldl(fun(TC, Acc) ->
+        ReqId = maps:get(id, TC, <<>>),
+        Name = maps:get(name, TC, <<>>),
+        Cap = maps:get(Name, CapByName, #{}),
+        RiskLevel = maps:get(risk_level, Cap, <<"dangerous">>),
+        ArgsJson = case maps:get(arguments, TC, <<>>) of
+                       Bin when is_binary(Bin) -> Bin;
+                       Term when is_list(Term) -> unicode:characters_to_binary(Term);
+                       _ -> <<>>
+                   end,
+        ToolCallForStore = #{id => ReqId, name => Name, arguments => maps:get(arguments, TC, <<>>)},
+        %% 注册到 approval_store (启动 5min 过期定时器)
+        ok = approval_store:register(ReqId, self(), SessionId, ToolCallForStore),
+        %% 推送 approval_required 到前端 (非终态帧)
+        panel_server:push_approval_required(SessionId, #{
+            req_id => ReqId,
+            session_id => SessionId,
+            tool_call_id => ReqId,
+            tool_name => Name,
+            arguments_json => ArgsJson,
+            risk_level => RiskLevel,
+            expire_ms => 300000
+        }),
+        Acc#{ReqId => TC}
+    end, #{}, ApprovalCalls).
+
+%% 处理审批被拒绝/过期: 回填 error result, 检查是否收齐所有结果。
+handle_approval_resolved(ReqId, Reason, Data) ->
+    case maps:take(ReqId, Data#data.pending_approvals) of
+        {ToolCall, Rest} ->
+            lager:info("approval resolved negatively, req_id=~p, reason=~s, tool=~s",
+                       [ReqId, Reason, maps:get(name, ToolCall, <<>>)]),
+            ErrResp = #{result_json => <<>>, error => Reason},
+            Results = maps:put(ReqId, ErrResp, Data#data.tool_results),
+            Data1 = Data#data{pending_approvals = Rest, tool_results = Results},
+            case map_size(Results) >= Data1#data.pending_count of
+                true ->
+                    observe_and_transition(Data1);
+                false ->
+                    {keep_state, Data1}
+            end;
+        error ->
+            %% 未知 req_id (已 resolved / 已派发 / 取消), 忽略
+            lager:warning("approval resolved for unknown req_id=~p, ignoring", [ReqId]),
+            keep_state_and_data
+    end.
 
 %% 观察并决定下一步: 将工具结果追加进历史, 然后调公共的 continue_after_observe。
 %% 由 acting 状态在收齐所有工具结果后调用 (非 enter 回调, 可自由返回 {next_state, ...})。
@@ -417,7 +541,8 @@ observe_and_transition(Data) ->
     Data1 = lists:foldl(fun(M, D) -> append_observation(D, M) end, Data, ToolMsgs),
     continue_after_observe(Data1#data{tool_results = #{},
                                       pending_tool_calls = [],
-                                      pending_count = 0}).
+                                      pending_count = 0,
+                                      pending_approvals = #{}}).
 
 %% 公共: 观察后的循环上限判断与下一步。
 %% 由 observe_and_transition (工具收齐) 和 bridge_disconnect (柔性降级) 共用。

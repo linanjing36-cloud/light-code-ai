@@ -1,11 +1,20 @@
 -module(capability_policy).
 
--export([allow/2, filter/2]).
+-export([allow/2, filter/2, is_high_risk/1, requires_approval/1]).
 
-%% 运行时能力策略:
-%% - 默认屏蔽高风险 capability，审批链路落地前不暴露给模型
+%% 运行时能力策略 (EXEC-P0-005 第二阶段):
+%% - 高风险 capability 不再屏蔽, 而是保留在可见列表中并打 requires_approval 标记
+%%   (agent_fsm acting 时按标记决定是否走审批流程)
 %% - 代码/仓库类 capability 仅在代码相关上下文中暴露
 %% - memory 写入/导入类 capability 仅在明确记忆相关上下文中暴露
+%%
+%% 风险档位 (与 Go 侧 Eion-tools/internal/capability/types.go 对齐):
+%%   safe       — 直接允许, 不需审批
+%%   review     — 需确认 (标记 requires_approval, FSM 挂起等待 approve RPC)
+%%   dangerous  — 必须审批 (标记 requires_approval, FSM 挂起等待 approve RPC)
+%%
+%% 兼容档位 (历史遗留, 等价于 dangerous):
+%%   high / critical — 旧命名, 识别为高风险
 
 -spec filter([map()], map()) -> [map()].
 filter(Capabilities, Ctx) when is_list(Capabilities), is_map(Ctx) ->
@@ -13,21 +22,18 @@ filter(Capabilities, Ctx) when is_list(Capabilities), is_map(Ctx) ->
 
 -spec allow(map(), map()) -> boolean().
 allow(Capability, Ctx) when is_map(Capability), is_map(Ctx) ->
-    case is_high_risk(Capability) of
-        true ->
-            false;
-        false ->
-            Intent = classify_intent(Ctx),
-            case bucket(Capability) of
-                code_intel ->
-                    maps:get(code, Intent, false);
-                memory_write ->
-                    maps:get(memory, Intent, false);
-                memory_read ->
-                    maps:get(memory, Intent, false);
-                generic ->
-                    true
-            end
+    %% P0-005 第二阶段: high risk 不再屏蔽, 与 safe 一样走 intent 分流。
+    %% 是否需要审批由 requires_approval/1 标记, agent_fsm 在 acting 时判定。
+    Intent = classify_intent(Ctx),
+    case bucket(Capability) of
+        code_intel ->
+            maps:get(code, Intent, false);
+        memory_write ->
+            maps:get(memory, Intent, false);
+        memory_read ->
+            maps:get(memory, Intent, false);
+        generic ->
+            true
     end;
 allow(_, _) ->
     false.
@@ -79,7 +85,16 @@ bucket(Capability) ->
 
 is_high_risk(Capability) ->
     Risk = lower_bin(maps:get(risk_level, Capability, <<"safe">>)),
-    lists:member(Risk, [<<"high">>, <<"critical">>, <<"dangerous">>]).
+    %% 与 Go 侧对齐: review/dangerous 需审批; 兼容旧命名 high/critical
+    lists:member(Risk, [<<"review">>, <<"dangerous">>, <<"high">>, <<"critical">>]).
+
+%% requires_approval(Capability) -> boolean()
+%%
+%% 判断 capability 是否需要审批 (P0-005 第二阶段 agent_fsm 集成时使用)。
+%% 当前与 is_high_risk/1 等价, 待 FSM 接入 pending_approval 状态后,
+%% selector 会保留 requires_approval 的能力但打标记, 而非过滤掉。
+requires_approval(Capability) ->
+    is_high_risk(Capability).
 
 has_any_tag(Tags, Expected) ->
     LowerTags = [lower_bin(Tag) || Tag <- Tags, is_binary(Tag)],

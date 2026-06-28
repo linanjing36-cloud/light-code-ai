@@ -19,6 +19,10 @@ dropped(Capabilities, Ctx) when is_list(Capabilities), is_map(Ctx) ->
 
 -spec normalize(map()) -> map().
 normalize(Capability) when is_map(Capability) ->
+    %% P0-005 第二阶段: high risk 能力保留在可见列表, 打 requires_approval 标记。
+    %% agent_fsm acting 时按此标记决定是否走审批流程 (注册 approval_store + push_approval_required)。
+    Risk = maps:get(risk_level, Capability, <<"safe">>),
+    RequiresApproval = capability_policy:requires_approval(#{risk_level => Risk}),
     Capability#{
         name => maps:get(name, Capability, <<>>),
         kind => maps:get(kind, Capability, <<"tool">>),
@@ -27,7 +31,8 @@ normalize(Capability) when is_map(Capability) ->
         description => maps:get(description, Capability, <<>>),
         parameters_json => parameters_json(Capability),
         streaming => maps:get(streaming, Capability, false),
-        risk_level => maps:get(risk_level, Capability, <<"safe">>),
+        risk_level => Risk,
+        requires_approval => RequiresApproval,
         cost_hint => maps:get(cost_hint, Capability, <<"low">>),
         tags => maps:get(tags, Capability, [])
     }.

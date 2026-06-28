@@ -10,6 +10,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/light-code-ai/eion-tools/internal/broker"
 	"github.com/light-code-ai/eion-tools/internal/dispatcher"
 	"github.com/light-code-ai/eion-tools/internal/logging"
 	"github.com/light-code-ai/eion-tools/internal/mcp"
@@ -85,6 +86,14 @@ func (s *Server) Dispatcher() *dispatcher.Command_Dispatcher {
 		return nil
 	}
 	return s.d
+}
+
+// Broker 返回内部执行 broker (EXEC-P0-002)，供外部查询 Pending/Stats 或触发 Cancel/CancelAll。
+func (s *Server) Broker() *broker.Broker {
+	if s == nil || s.d == nil {
+		return nil
+	}
+	return s.d.Broker()
 }
 
 // Start 监听并接受连接；返回实际地址 (已写入 AddrFile)。
@@ -172,6 +181,10 @@ func (s *Server) Stop() error {
 
 	if ln != nil {
 		_ = ln.Close()
+	}
+	// EXEC-P0-002：停服时取消所有正在执行的能力调用，避免悬挂 goroutine。
+	if s.d != nil && s.d.Broker() != nil {
+		s.d.Broker().CancelAll()
 	}
 	if s.mcp != nil {
 		s.mcp.Stop()
