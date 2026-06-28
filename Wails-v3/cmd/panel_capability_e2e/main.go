@@ -102,6 +102,33 @@ func main() {
 				"include_worktree",
 			},
 		},
+		{
+			Name:            "repo_map",
+			ArgsJSON:        mustJSON(map[string]any{"root_path": filepath.ToSlash(root), "max_depth": 3, "max_entries": 30}),
+			ExpectKind:      "plugin",
+			ExpectSource:    "local",
+			ExpectStreaming: false,
+			RequiredPaths: []string{
+				"entries",
+				"root_path",
+				"summary",
+				"top_level_dirs",
+			},
+		},
+		{
+			Name:            "code_search",
+			ArgsJSON:        mustJSON(map[string]any{"query": "plugin", "root_path": filepath.ToSlash(root), "max_results": 10}),
+			ExpectKind:      "plugin",
+			ExpectSource:    "local",
+			ExpectStreaming: false,
+			RequiredPaths: []string{
+				"root_path",
+				"query",
+				"count",
+				"scanned_files",
+				"matches",
+			},
+		},
 	}
 	if strings.TrimSpace(os.Getenv("HERMES_MCP_SERVERS_JSON")) != "" {
 		cases = append(cases, capabilityCase{
