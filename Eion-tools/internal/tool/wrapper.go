@@ -62,6 +62,17 @@ func (w *Eino_Tool_Wrapper) RegisterCapability(desc capability.Desc, h HandlerFu
 	}
 }
 
+// UnregisterCapability 从注册表移除指定 capability (EXEC-P1-002: 供 plugin host disable 使用)。
+func (w *Eino_Tool_Wrapper) UnregisterCapability(name string) {
+	if w == nil {
+		return
+	}
+	delete(w.registry, name)
+	if w.capRegistry != nil {
+		w.capRegistry.Unregister(name)
+	}
+}
+
 // Desc 是对外暴露的工具描述（与 hermes.ToolDesc / panel_tools 对齐）。
 type Desc struct {
 	Name           string

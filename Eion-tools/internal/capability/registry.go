@@ -58,3 +58,13 @@ func (r *Registry) List() []Desc {
 	}
 	return out
 }
+
+// Unregister 从注册表移除指定 capability (EXEC-P1-002: 供 plugin host disable 使用)。
+func (r *Registry) Unregister(name string) {
+	if r == nil {
+		return
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	delete(r.descs, name)
+}

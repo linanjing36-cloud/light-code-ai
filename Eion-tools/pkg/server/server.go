@@ -15,6 +15,7 @@ import (
 	"github.com/light-code-ai/eion-tools/internal/logging"
 	"github.com/light-code-ai/eion-tools/internal/mcp"
 	"github.com/light-code-ai/eion-tools/internal/memory"
+	"github.com/light-code-ai/eion-tools/internal/plugin"
 	"github.com/light-code-ai/eion-tools/internal/skill"
 	"github.com/light-code-ai/eion-tools/internal/tool"
 	codesearch "github.com/light-code-ai/eion-tools/plugins/code_search"
@@ -34,9 +35,10 @@ type Options struct {
 
 // Server Eion-tools 网络服务。
 type Server struct {
-	opts Options
-	d    *dispatcher.Command_Dispatcher
-	mcp  *mcp.Manager
+	opts       Options
+	d          *dispatcher.Command_Dispatcher
+	mcp        *mcp.Manager
+	pluginHost *plugin.Host
 
 	mu     sync.Mutex
 	ln     net.Listener
@@ -50,9 +52,24 @@ func New(opts Options) (*Server, error) {
 	d := dispatcher.New()
 	name, desc, params, handler := tool.GetWeatherHandler()
 	d.ToolWrapper().Register(name, desc, params, handler)
-	repomap.Register(d.ToolWrapper())
-	codesearch.Register(d.ToolWrapper())
-	githubplugin.Register(d.ToolWrapper())
+
+	// EXEC-P1-002: 经 plugin host 统一管理插件生命周期 (install/enable/disable/uninstall)。
+	host := plugin.NewHost(d.ToolWrapper())
+	host.Install(plugin.NewFuncPlugin(plugin.Manifest{
+		Name: "repo_map", Version: "v1", Description: "扫描工作区输出仓库结构摘要",
+		Source: "builtin", Capabilities: []string{"repo_map"}, Builtin: true,
+	}, repomap.Register))
+	host.Install(plugin.NewFuncPlugin(plugin.Manifest{
+		Name: "code_search", Version: "v1", Description: "工作区内按关键字扫描代码",
+		Source: "builtin", Capabilities: []string{"code_search"}, Builtin: true,
+	}, codesearch.Register))
+	host.Install(plugin.NewFuncPlugin(plugin.Manifest{
+		Name: "github", Version: "v1", Description: "GitHub 仓库概览与 diff 摘要节流能力",
+		Source: "builtin", Capabilities: []string{"github_repo_overview", "github_diff_summary"}, Builtin: true,
+	}, githubplugin.Register))
+	if err := host.EnableAll(); err != nil {
+		return nil, fmt.Errorf("enable plugins: %w", err)
+	}
 	if err := skill.RegisterBuiltins(d.ToolWrapper()); err != nil {
 		return nil, err
 	}
@@ -77,7 +94,7 @@ func New(opts Options) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Server{opts: opts, d: d, mcp: mcp.NewManager(cfgs)}, nil
+	return &Server{opts: opts, d: d, mcp: mcp.NewManager(cfgs), pluginHost: host}, nil
 }
 
 // Dispatcher 返回进程内命令分发器 (Phase B: Router 经 Bridge exec 帧 in-process 调用)。
@@ -94,6 +111,14 @@ func (s *Server) Broker() *broker.Broker {
 		return nil
 	}
 	return s.d.Broker()
+}
+
+// PluginHost 返回 plugin host (EXEC-P1-002)，供外部查询/控制插件生命周期 (Enable/Disable/Uninstall/List)。
+func (s *Server) PluginHost() *plugin.Host {
+	if s == nil {
+		return nil
+	}
+	return s.pluginHost
 }
 
 // Start 监听并接受连接；返回实际地址 (已写入 AddrFile)。
