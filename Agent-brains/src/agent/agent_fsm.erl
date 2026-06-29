@@ -210,6 +210,8 @@ idle(cast, start, Data) ->
                 [Data#data.session_id, length(Data#data.history)]),
     History = reload_history(Data#data.session_id, Data#data.history),
     {next_state, thinking, Data#data{history = History}};
+idle(info, {cancel_execution}, _Data) ->
+    keep_state_and_data;
 idle(_EventType, _EventContent, _Data) ->
     %% 其余事件忽略 (容错)
     keep_state_and_data.
@@ -245,7 +247,8 @@ thinking(enter, _OldState, Data) ->
                [[maps:get(name, T, <<>>) || T <- VisibleTools], HiddenTools]),
     maybe_schedule_mid_session_summary(Data#data.session_id, length(Data#data.history)),
     %% EXEC-P2-001: 复杂任务首轮触发 planner/verifier/critic 计划链
-    PlanSection = maybe_build_plan(Data#data.history, VisibleTools, Data#data.loop_count),
+    PlanSection = maybe_build_plan(Data#data.history, VisibleTools, Data#data.loop_count,
+                                   Data#data.session_id),
     Req = context_assembler:build(Data#data.model, #{
         history => Data#data.history,
         tools => VisibleTools,
@@ -349,6 +352,15 @@ thinking(cast, {bridge_disconnect}, Data) ->
                             "Please retry the request or adjust strategy.">>},
     Data1 = append_observation(Data, ObsMsg),
     continue_after_observe(Data1#data{llm_ref = undefined});
+%% ---- EXEC-P2-001: 取消执行 (用户主动终止) ----
+thinking(info, {cancel_execution}, Data) ->
+    lager:info("cancel_execution received in thinking, session_id=~p", [Data#data.session_id]),
+    panel_server:push_stream_err(Data#data.session_id, util:u("执行已被用户取消")),
+    {next_state, idle, Data#data{llm_ref = undefined,
+                                 pending_tool_calls = [],
+                                 tool_results = #{},
+                                 pending_count = 0,
+                                 pending_approvals = #{}}};
 thinking(_EventType, _EventContent, _Data) ->
     keep_state_and_data.
 
@@ -366,19 +378,48 @@ thinking(_EventType, _EventContent, _Data) ->
 acting(enter, _OldState, Data) ->
     ok = snapshot(acting, Data),
     ToolCalls = Data#data.pending_tool_calls,
-    %% EXEC-P0-005 第二阶段: 按 capability.requires_approval 分流
-    {SafeCalls, ApprovalCalls} = partition_by_approval(ToolCalls, Data#data.visible_tools),
-    %% safe 工具直接并行派发
-    bridge_manager:call_tool_batch(self(), SafeCalls),
-    %% EXEC-P1-005: 推送 safe 工具开始事件到前端 trace 面板
-    [push_tool_event_start(Data#data.session_id, TC) || TC <- SafeCalls],
-    %% needs_approval 工具注册 approval_store + 推送 approval_required 到前端
-    PendingApprovals = register_approvals(ApprovalCalls, Data#data.session_id, Data#data.visible_tools),
-    PendingCount = length(SafeCalls) + length(ApprovalCalls),
-    lager:info("acting(enter) dispatched ~p safe, ~p needs_approval, pending_count=~p",
-               [length(SafeCalls), length(ApprovalCalls), PendingCount]),
-    {keep_state, Data#data{pending_count = PendingCount,
-                           pending_approvals = PendingApprovals}};
+    %% EXEC-P0-005 第二阶段 + EXEC-P2-002: 四类分流
+    %% 1. native safe 工具: 直接在 Erlang 侧同步执行
+    %% 2. native needs_approval 工具: 注册审批后本地执行
+    %% 3. go safe 工具: 派发给 bridge_manager
+    %% 4. go needs_approval 工具: 注册审批后派发
+    {NativeSafe, NativeApproval, GoSafe, GoApproval} =
+        partition_by_native_and_approval(ToolCalls, Data#data.visible_tools),
+    %% native safe 工具直接本地执行
+    NativeResults = execute_native_tools(NativeSafe, Data#data.session_id,
+                                         Data#data.visible_tools),
+    Results0 = lists:foldl(fun({Id, Resp}, Acc) ->
+        maps:put(Id, Resp, Acc)
+    end, Data#data.tool_results, NativeResults),
+    [push_tool_event_start(Data#data.session_id, TC) || TC <- NativeSafe],
+    [push_tool_event_finish(Data#data.session_id, Id, Resp) || {Id, Resp} <- NativeResults],
+    %% go safe 工具派发给 bridge_manager
+    bridge_manager:call_tool_batch(self(), GoSafe),
+    [push_tool_event_start(Data#data.session_id, TC) || TC <- GoSafe],
+    %% 需要审批的工具 (native + go) 注册 approval_store + 推送 approval_required
+    PendingApprovals = register_approvals(NativeApproval ++ GoApproval,
+                                          Data#data.session_id,
+                                          Data#data.visible_tools),
+    NativeApprovalCount = length(NativeApproval),
+    NativeSafeCount = length(NativeSafe),
+    GoSafeCount = length(GoSafe),
+    GoApprovalCount = length(GoApproval),
+    PendingCount = NativeSafeCount + NativeApprovalCount + GoSafeCount + GoApprovalCount,
+    lager:info("acting(enter) dispatched native_safe=~p native_approval=~p "
+               "go_safe=~p go_approval=~p pending_count=~p",
+               [NativeSafeCount, NativeApprovalCount, GoSafeCount, GoApprovalCount, PendingCount]),
+    NewData = Data#data{pending_count = PendingCount,
+                        tool_results = Results0,
+                        pending_approvals = PendingApprovals},
+    ok = snapshot(acting, NewData),
+    %% 如果只有 native safe 工具没有其他 pending, 异步触发检查
+    case map_size(Results0) >= PendingCount of
+        true ->
+            gen_statem:cast(self(), {check_all_done});
+        false ->
+            ok
+    end,
+    {keep_state, NewData};
 acting(cast, {tool_result, ToolCallId, Resp}, Data) ->
     %% EXEC-P1-005: 推送工具结束事件到前端 trace 面板
     push_tool_event_finish(Data#data.session_id, ToolCallId, Resp),
@@ -392,17 +433,44 @@ acting(cast, {tool_result, ToolCallId, Resp}, Data) ->
         false ->
             {keep_state, Data#data{tool_results = Results}}
     end;
+acting(cast, {check_all_done}, Data) ->
+    Results = Data#data.tool_results,
+    case map_size(Results) >= Data#data.pending_count of
+        true -> observe_and_transition(Data);
+        false -> {keep_state, Data}
+    end;
 %% ---- EXEC-P0-005 第二阶段: 审批事件处理 (info, 来自 approval_store/panel_server) ----
-%% 用户批准: 从 pending_approvals 取出 tool_call, 派发到 bridge_manager
+%% 用户批准: 从 pending_approvals 取出 tool_call, 判断是 native 还是 go 工具, 执行或派发
 acting(info, {approval, ReqId, true}, Data) ->
     case maps:take(ReqId, Data#data.pending_approvals) of
         {ToolCall, Rest} ->
-            lager:info("approval approved, req_id=~p, dispatching tool=~s",
-                       [ReqId, maps:get(name, ToolCall, <<>>)]),
-            bridge_manager:call_tool_batch(self(), [ToolCall]),
-            %% EXEC-P1-005: 推送工具开始事件 (审批通过后)
-            push_tool_event_start(Data#data.session_id, ToolCall),
-            {keep_state, Data#data{pending_approvals = Rest}};
+            Name = maps:get(name, ToolCall, <<>>),
+            lager:info("approval approved, req_id=~p, tool=~s", [ReqId, Name]),
+            Results0 = Data#data.tool_results,
+            Results1 = case native_tools:is_native_tool(Name) of
+                true ->
+                    %% native 工具: 本地执行
+                    push_tool_event_start(Data#data.session_id, ToolCall),
+                    case native_tools:execute(ToolCall, Data#data.session_id, Data#data.visible_tools) of
+                        {ok, Resp} ->
+                            push_tool_event_finish(Data#data.session_id, ReqId, Resp),
+                            maps:put(ReqId, Resp, Results0);
+                        {error, Reason} ->
+                            ErrResp = #{result_json => <<>>, error => util:u(Reason)},
+                            push_tool_event_finish(Data#data.session_id, ReqId, ErrResp),
+                            maps:put(ReqId, ErrResp, Results0)
+                    end;
+                false ->
+                    %% go 工具: 派发给 bridge_manager
+                    bridge_manager:call_tool_batch(self(), [ToolCall]),
+                    push_tool_event_start(Data#data.session_id, ToolCall),
+                    Results0
+            end,
+            Data1 = Data#data{pending_approvals = Rest, tool_results = Results1},
+            case maps:size(Results1) >= Data1#data.pending_count of
+                true -> observe_and_transition(Data1);
+                false -> {keep_state, Data1}
+            end;
         error ->
             %% 未知 req_id (已 resolved / 过期 / 取消), 忽略
             lager:warning("approval approved for unknown req_id=~p, ignoring", [ReqId]),
@@ -451,6 +519,25 @@ acting(cast, {bridge_disconnect}, Data) ->
                                       tool_results = #{},
                                       pending_count = 0,
                                       pending_approvals = #{}});
+%% ---- EXEC-P2-001: 取消执行 (用户主动终止) ----
+acting(info, {cancel_execution}, Data) ->
+    lager:info("cancel_execution received in acting, session_id=~p, pending_approvals=~p",
+               [Data#data.session_id, map_size(Data#data.pending_approvals)]),
+    lists:foreach(fun(ReqId) -> approval_store:cancel(ReqId) end,
+                  maps:keys(Data#data.pending_approvals)),
+    Interrupted = [TC || TC <- Data#data.pending_tool_calls,
+                         not maps:is_key(maps:get(id, TC, <<>>),
+                                         Data#data.tool_results)],
+    lists:foreach(fun(TC) ->
+        push_tool_event_finish(Data#data.session_id,
+                               maps:get(id, TC, <<>>),
+                               #{result_json => <<>>, error => <<"execution cancelled by user">>})
+    end, Interrupted),
+    panel_server:push_stream_err(Data#data.session_id, util:u("执行已被用户取消")),
+    {next_state, idle, Data#data{pending_tool_calls = [],
+                                 tool_results = #{},
+                                 pending_count = 0,
+                                 pending_approvals = #{}}};
 acting(_EventType, _EventContent, _Data) ->
     keep_state_and_data.
 
@@ -459,6 +546,47 @@ acting(_EventType, _EventContent, _Data) ->
 %%%===================================================================
 
 %% ---- EXEC-P0-005 第二阶段: 审批分流辅助 ----
+
+%% 按 native/non-native + requires_approval 将 tool_calls 分为四类:
+%% {NativeSafe, NativeApproval, GoSafe, GoApproval}
+partition_by_native_and_approval(ToolCalls, Tools) ->
+    CapByName = cap_index_by_name(Tools),
+    lists:foldl(fun(TC, {NS, NA, GS, GA}) ->
+        Name = maps:get(name, TC, <<>>),
+        Cap = maps:get(Name, CapByName, #{}),
+        IsNative = native_tools:is_native_tool(Name),
+        NeedsApproval = case maps:get(requires_approval, Cap, undefined) of
+                            undefined -> maps:get(risk_level, Cap, <<"safe">>) =/= <<"safe">>;
+                            RA -> RA
+                        end,
+        case {IsNative, NeedsApproval} of
+            {true, false} -> {[TC|NS], NA, GS, GA};
+            {true, true} -> {NS, [TC|NA], GS, GA};
+            {false, false} -> {NS, NA, [TC|GS], GA};
+            {false, true} -> {NS, NA, GS, [TC|GA]}
+        end
+    end, {[], [], [], []}, ToolCalls).
+
+%% 同步执行一批 native 工具, 返回 [{ToolCallId, RespMap}]
+execute_native_tools(ToolCalls, SessionId, AvailableTools) ->
+    lists:map(fun(TC) ->
+        Id = maps:get(id, TC, <<>>),
+        case native_tools:execute(TC, SessionId, AvailableTools) of
+            {ok, Resp} -> {Id, Resp};
+            {error, Reason} ->
+                Err = iolist_to_binary([<<"native tool error: ">>, to_iolist(Reason)]),
+                {Id, #{result_json => <<>>, error => Err}}
+        end
+    end, ToolCalls).
+
+to_iolist(A) when is_atom(A) -> atom_to_binary(A, utf8);
+to_iolist(B) when is_binary(B) -> B;
+to_iolist(L) when is_list(L) ->
+    try unicode:characters_to_binary(L)
+    catch _:_ -> iolist_to_binary(io_lib:format("~p", [L]))
+    end;
+to_iolist(Term) ->
+    iolist_to_binary(io_lib:format("~p", [Term])).
 
 %% 按 capability.requires_approval 将 tool_calls 分为 {Safe, NeedsApproval}。
 %% 从 Data#data.tools 按 name 查找 capability, 判断 requires_approval 标记。
@@ -696,7 +824,7 @@ schedule_memory_extract(SessionId, History) ->
     catch _:_ -> ok
     end.
 
-maybe_build_plan(History, VisibleTools, LoopCount) ->
+maybe_build_plan(History, VisibleTools, LoopCount, SessionId) ->
     case last_user_message(History) of
         <<>> -> <<>>;
         UserMsg ->
@@ -705,8 +833,9 @@ maybe_build_plan(History, VisibleTools, LoopCount) ->
                 true ->
                     lager:info("planner_chain triggered for complex task, msg_size=~p",
                                [byte_size(UserMsg)]),
-                    case planner_chain:run(UserMsg, History, VisibleTools) of
-                        {ok, PlanBin} ->
+                    case planner_chain:run_with_plan(UserMsg, History, VisibleTools) of
+                        {ok, PlanBin, PlanMap} ->
+                            panel_server:push_plan_generated(SessionId, PlanMap),
                             PlanBin;
                         {skip, Reason} ->
                             lager:info("planner_chain skipped: ~p", [Reason]),

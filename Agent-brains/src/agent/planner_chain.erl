@@ -18,6 +18,7 @@
 %%====================================================================
 
 -export([run/3,
+         run_with_plan/3,
          should_plan/2]).
 
 -define(CHAIN_TIMEOUT, 20000).
@@ -54,7 +55,33 @@ run(UserMsg, History, AvailableTools) ->
     case call_llm_sync(Messages) of
         {ok, Content} ->
             case parse_and_validate(Content, AvailableTools) of
-                {ok, PlanBin} -> {ok, PlanBin};
+                {ok, PlanBin, _PlanMap} -> {ok, PlanBin};
+                {skip, Reason} -> {skip, Reason};
+                {error, Reason} -> {skip, Reason}
+            end;
+        {error, Reason} ->
+            {skip, Reason}
+    end.
+
+%% 执行计划链, 同时返回格式化文本(用于注入 prompt)和结构化计划(用于前端推送)
+%% 返回 {ok, PlanBinary, PlanMap} | {skip, Reason}
+%% PlanMap = #{goal => binary(), steps => [#{index, description, tool_hint, risk_level}],
+%%            warnings => [binary()], suggestions => [binary()]}
+-spec run_with_plan(binary(), [map()], [map()]) -> {ok, binary(), map()} | {skip, term()}.
+run_with_plan(UserMsg, History, AvailableTools) ->
+    ToolNames = [maps:get(name, T, <<>>) || T <- AvailableTools],
+    ToolList = iolist_to_binary(lists:join(<<", ">>, ToolNames)),
+    UserCtx = recent_user_context(History),
+    SysPrompt = build_system_prompt(ToolList),
+    UserContent = build_user_content(UserMsg, UserCtx),
+    Messages = [
+        #{role => <<"system">>, content => SysPrompt},
+        #{role => <<"user">>, content => UserContent}
+    ],
+    case call_llm_sync(Messages) of
+        {ok, Content} ->
+            case parse_and_validate(Content, AvailableTools) of
+                {ok, PlanBin, PlanMap} -> {ok, PlanBin, PlanMap};
                 {error, Reason} -> {skip, Reason}
             end;
         {error, Reason} ->
@@ -175,7 +202,9 @@ parse_and_validate(Content, AvailableTools) ->
         case is_map(Map) andalso maps:is_key(<<"steps">>, Map) of
             true ->
                 Validated = local_verify(Map, AvailableTools),
-                {ok, format_plan(Validated)};
+                PlanBin = format_plan(Validated),
+                PlanMap = build_plan_map(Validated),
+                {ok, PlanBin, PlanMap};
             false ->
                 {error, invalid_plan}
         end
@@ -310,3 +339,44 @@ truncate(Bin, _Max) when is_binary(Bin) ->
     Bin;
 truncate(Other, _Max) ->
     to_bin(Other).
+
+%%====================================================================
+%% 构建前端推送用的结构化计划
+%%====================================================================
+
+build_plan_map(Plan) ->
+    Goal = to_bin(maps:get(<<"goal">>, Plan, <<>>)),
+    Steps0 = maps:get(<<"steps">>, Plan, []),
+    Steps = [build_step_map(S) || S <- Steps0, is_map(S)],
+    Warnings = [to_bin(W) || W <- maps:get(<<"warnings">>, Plan, []),
+                             W =/= <<>>, W =/= []],
+    Assumptions = [to_bin(A) || A <- maps:get(<<"assumptions">>, Plan, []),
+                                A =/= <<>>, A =/= []],
+    #{goal => Goal,
+      steps => Steps,
+      warnings => Warnings,
+      suggestions => Assumptions}.
+
+build_step_map(Step) ->
+    Idx = maps:get(<<"index">>, Step, 0),
+    Action = to_bin(maps:get(<<"action">>, Step, <<>>)),
+    Tool = to_bin(maps:get(<<"tool">>, Step, <<"none">>)),
+    Risk = to_bin(maps:get(<<"risk">>, Step, <<"低">>)),
+    Expected = to_bin(maps:get(<<"expected">>, Step, <<>>)),
+    Note = to_bin(maps:get(<<"note">>, Step, <<>>)),
+    ToolHint = case Tool of
+                   <<"none">> -> <<>>;
+                   <<>> -> <<>>;
+                   T -> T
+               end,
+    RiskLevel = case Risk of
+                    R when R =:= <<"高">> orelse R =:= <<"high">> -> <<"high">>;
+                    R when R =:= <<"中">> orelse R =:= <<"medium">> -> <<"medium">>;
+                    _ -> <<"low">>
+                end,
+    #{index => Idx,
+      description => Action,
+      tool_hint => ToolHint,
+      risk_level => RiskLevel,
+      expected => Expected,
+      note => Note}.

@@ -90,6 +90,108 @@ type StopResult struct {
 	OK bool
 }
 
+type CancelExecutionResult struct {
+	OK bool
+}
+
+type ProviderConfig struct {
+	ID        string   `json:"id"`
+	Name      string   `json:"name"`
+	APIBase   string   `json:"api_base"`
+	APIKey    string   `json:"api_key,omitempty"`
+	Models    []string `json:"models"`
+	Enabled   bool     `json:"enabled"`
+	IsDefault bool     `json:"is_default"`
+	LatencyMS int64    `json:"latency_ms"`
+}
+
+type ListProvidersResult struct {
+	Providers []ProviderConfig `json:"providers"`
+}
+
+type UpsertProviderResult struct {
+	OK bool   `json:"ok"`
+	ID string `json:"id"`
+}
+
+type DeleteProviderResult struct {
+	OK bool `json:"ok"`
+}
+
+type SetDefaultProviderResult struct {
+	OK bool `json:"ok"`
+}
+
+type TestProviderResult struct {
+	OK        bool   `json:"ok"`
+	LatencyMS int64  `json:"latency_ms"`
+	Error     string `json:"error"`
+}
+
+type RiskPolicy struct {
+	RiskLevel string `json:"risk_level"`
+	Action    string `json:"action"`
+}
+
+type GetRiskPoliciesResult struct {
+	Policies []RiskPolicy `json:"policies"`
+}
+
+type SetRiskPolicyResult struct {
+	OK bool `json:"ok"`
+}
+
+type SetSessionProviderResult struct {
+	OK bool `json:"ok"`
+}
+
+type MemoryEntry struct {
+	Key       string `json:"key"`
+	Tier      string `json:"tier"`
+	Content   string `json:"content"`
+	Source    string `json:"source"`
+	CreatedAt int64  `json:"created_at"`
+	SessionID string `json:"session_id"`
+}
+
+type ListMemoriesResult struct {
+	Memories []MemoryEntry `json:"memories"`
+}
+
+type AddMemoryResult struct {
+	OK  bool   `json:"ok"`
+	Key string `json:"key"`
+}
+
+type DeleteMemoryResult struct {
+	OK bool `json:"ok"`
+}
+
+type ClearMemoriesResult struct {
+	OK    bool  `json:"ok"`
+	Count int32 `json:"count"`
+}
+
+type PlanStep struct {
+	Index       int32  `json:"index"`
+	Description string `json:"description"`
+	ToolHint    string `json:"tool_hint"`
+	RiskLevel   string `json:"risk_level"`
+}
+
+type PlanGenerated struct {
+	Goal        string     `json:"goal"`
+	Steps       []PlanStep `json:"steps"`
+	Warnings    []string   `json:"warnings"`
+	Suggestions []string   `json:"suggestions"`
+}
+
+type PlanStepUpdate struct {
+	StepIndex     int32  `json:"step_index"`
+	Status        string `json:"status"`
+	ResultSummary string `json:"result_summary"`
+}
+
 func encodePanelRequest(id uint64, method string, args map[string]any) ([]byte, error) {
 	argsBytes, err := encodePanelArgs(method, args)
 	if err != nil {
@@ -154,8 +256,73 @@ func encodePanelArgs(method string, args map[string]any) ([]byte, error) {
 			SessionId: stringArg(args, "session_id"),
 		}
 		return proto.Marshal(msg)
-	case "list_tools", "list_capabilities", "list_pending_approvals", "stop":
+	case "cancel_execution":
+		msg := &panelpb.CancelExecutionArgs{
+			SessionId: stringArg(args, "session_id"),
+		}
+		return proto.Marshal(msg)
+	case "list_providers", "get_risk_policies", "list_tools", "list_capabilities", "list_pending_approvals", "stop":
 		return nil, nil
+	case "upsert_provider":
+		prov := mapArg(args, "provider")
+		msg := &panelpb.UpsertProviderArgs{
+			Provider: pbProviderConfigFromMap(prov),
+		}
+		return proto.Marshal(msg)
+	case "delete_provider":
+		msg := &panelpb.DeleteProviderArgs{
+			ProviderId: stringArg(args, "provider_id"),
+		}
+		return proto.Marshal(msg)
+	case "set_default_provider":
+		msg := &panelpb.SetDefaultProviderArgs{
+			ProviderId: stringArg(args, "provider_id"),
+		}
+		return proto.Marshal(msg)
+	case "test_provider":
+		prov := mapArg(args, "provider")
+		msg := &panelpb.TestProviderArgs{
+			Provider: pbProviderConfigFromMap(prov),
+		}
+		return proto.Marshal(msg)
+	case "set_risk_policy":
+		msg := &panelpb.SetRiskPolicyArgs{
+			RiskLevel: stringArg(args, "risk_level"),
+			Action:    stringArg(args, "action"),
+		}
+		return proto.Marshal(msg)
+	case "set_session_provider":
+		msg := &panelpb.SetSessionProviderArgs{
+			SessionId:  stringArg(args, "session_id"),
+			ProviderId: stringArg(args, "provider_id"),
+		}
+		return proto.Marshal(msg)
+	case "list_memories":
+		msg := &panelpb.ListMemoriesArgs{
+			SessionId: stringArg(args, "session_id"),
+			Tier:      pbMemoryTierFromString(stringArg(args, "tier")),
+		}
+		return proto.Marshal(msg)
+	case "add_memory":
+		msg := &panelpb.AddMemoryArgs{
+			SessionId: stringArg(args, "session_id"),
+			Tier:      pbMemoryTierFromString(stringArg(args, "tier")),
+			Content:   stringArg(args, "content"),
+		}
+		return proto.Marshal(msg)
+	case "delete_memory":
+		msg := &panelpb.DeleteMemoryArgs{
+			SessionId: stringArg(args, "session_id"),
+			Tier:      pbMemoryTierFromString(stringArg(args, "tier")),
+			Key:       stringArg(args, "key"),
+		}
+		return proto.Marshal(msg)
+	case "clear_memories":
+		msg := &panelpb.ClearMemoriesArgs{
+			SessionId: stringArg(args, "session_id"),
+			Tier:      pbMemoryTierFromString(stringArg(args, "tier")),
+		}
+		return proto.Marshal(msg)
 	default:
 		return nil, fmt.Errorf("unknown method: %s", method)
 	}
@@ -287,6 +454,115 @@ func decodePanelResult(method string, bin []byte) (any, error) {
 			return nil, err
 		}
 		return DeleteSessionResult{OK: msg.GetOk()}, nil
+	case "cancel_execution":
+		var msg panelpb.CancelExecutionResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		return CancelExecutionResult{OK: msg.GetOk()}, nil
+	case "list_providers":
+		var msg panelpb.ListProvidersResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		providers := make([]ProviderConfig, 0, len(msg.GetProviders()))
+		for _, p := range msg.GetProviders() {
+			providers = append(providers, ProviderConfig{
+				ID:        p.GetId(),
+				Name:      p.GetName(),
+				APIBase:   p.GetApiBase(),
+				APIKey:    p.GetApiKey(),
+				Models:    append([]string(nil), p.GetModels()...),
+				Enabled:   p.GetEnabled(),
+				IsDefault: p.GetIsDefault(),
+				LatencyMS: p.GetLatencyMs(),
+			})
+		}
+		return providers, nil
+	case "upsert_provider":
+		var msg panelpb.UpsertProviderResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		return UpsertProviderResult{OK: msg.GetOk(), ID: msg.GetId()}, nil
+	case "delete_provider":
+		var msg panelpb.DeleteProviderResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		return DeleteProviderResult{OK: msg.GetOk()}, nil
+	case "set_default_provider":
+		var msg panelpb.SetDefaultProviderResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		return SetDefaultProviderResult{OK: msg.GetOk()}, nil
+	case "test_provider":
+		var msg panelpb.TestProviderResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		return TestProviderResult{OK: msg.GetOk(), LatencyMS: msg.GetLatencyMs(), Error: msg.GetError()}, nil
+	case "get_risk_policies":
+		var msg panelpb.GetRiskPoliciesResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		policies := make([]RiskPolicy, 0, len(msg.GetPolicies()))
+		for _, p := range msg.GetPolicies() {
+			policies = append(policies, RiskPolicy{
+				RiskLevel: p.GetRiskLevel(),
+				Action:    p.GetAction(),
+			})
+		}
+		return policies, nil
+	case "set_risk_policy":
+		var msg panelpb.SetRiskPolicyResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		return SetRiskPolicyResult{OK: msg.GetOk()}, nil
+	case "set_session_provider":
+		var msg panelpb.SetSessionProviderResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		return SetSessionProviderResult{OK: msg.GetOk()}, nil
+	case "list_memories":
+		var msg panelpb.ListMemoriesResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		memories := make([]MemoryEntry, 0, len(msg.GetMemories()))
+		for _, m := range msg.GetMemories() {
+			memories = append(memories, MemoryEntry{
+				Key:       m.GetKey(),
+				Tier:      pbMemoryTierToString(m.GetTier()),
+				Content:   m.GetContent(),
+				Source:    m.GetSource(),
+				CreatedAt: m.GetCreatedAt(),
+				SessionID: m.GetSessionId(),
+			})
+		}
+		return memories, nil
+	case "add_memory":
+		var msg panelpb.AddMemoryResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		return AddMemoryResult{OK: msg.GetOk(), Key: msg.GetKey()}, nil
+	case "delete_memory":
+		var msg panelpb.DeleteMemoryResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		return DeleteMemoryResult{OK: msg.GetOk()}, nil
+	case "clear_memories":
+		var msg panelpb.ClearMemoriesResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		return ClearMemoriesResult{OK: msg.GetOk(), Count: msg.GetCount()}, nil
 	case "stop":
 		var msg panelpb.StopResult
 		if err := proto.Unmarshal(bin, &msg); err != nil {
@@ -344,7 +620,7 @@ func intArg(args map[string]any, key string) int {
 // StreamEvent 是 panel_server 推送到 Wails 前端的流式事件 (经 Wails EmitEvent 广播)。
 type StreamEvent struct {
 	StreamID string         `json:"stream_id"`
-	Kind     string         `json:"kind"` // chunk | tool_event | final | error | approval_required
+	Kind     string         `json:"kind"` // chunk | tool_event | final | error | approval_required | plan_generated | plan_step_update
 	Payload  map[string]any `json:"payload"`
 }
 
@@ -391,6 +667,30 @@ func decodePanelStreamEvent(stream *panelpb.PanelStream) StreamEvent {
 		ev.Payload["arguments_json"] = ap.GetArgumentsJson()
 		ev.Payload["risk_level"] = ap.GetRiskLevel()
 		ev.Payload["expire_ms"] = ap.GetExpireMs()
+		return ev
+	}
+	if plan := stream.GetPlanGenerated(); plan != nil {
+		ev.Kind = "plan_generated"
+		steps := make([]any, 0, len(plan.GetSteps()))
+		for _, s := range plan.GetSteps() {
+			steps = append(steps, map[string]any{
+				"index":       s.GetIndex(),
+				"description": s.GetDescription(),
+				"tool_hint":   s.GetToolHint(),
+				"risk_level":  s.GetRiskLevel(),
+			})
+		}
+		ev.Payload["goal"] = plan.GetGoal()
+		ev.Payload["steps"] = steps
+		ev.Payload["warnings"] = append([]string(nil), plan.GetWarnings()...)
+		ev.Payload["suggestions"] = append([]string(nil), plan.GetSuggestions()...)
+		return ev
+	}
+	if upd := stream.GetPlanStepUpdate(); upd != nil {
+		ev.Kind = "plan_step_update"
+		ev.Payload["step_index"] = upd.GetStepIndex()
+		ev.Payload["status"] = pbPlanStatusToString(upd.GetStatus())
+		ev.Payload["result_summary"] = upd.GetResultSummary()
 		return ev
 	}
 	ev.Kind = "unknown"
@@ -498,4 +798,83 @@ func decodeToolParametersPB(bin []byte) any {
 		return nil
 	}
 	return pbToolParametersToAny(&msg)
+}
+
+func mapArg(args map[string]any, key string) map[string]any {
+	v, ok := args[key]
+	if !ok || v == nil {
+		return map[string]any{}
+	}
+	switch m := v.(type) {
+	case map[string]any:
+		return m
+	default:
+		return map[string]any{}
+	}
+}
+
+func pbProviderConfigFromMap(m map[string]any) *panelpb.ProviderConfig {
+	if m == nil {
+		return nil
+	}
+	models := []string{}
+	if rawModels, ok := m["models"]; ok {
+		if modelSlice, ok := rawModels.([]any); ok {
+			for _, model := range modelSlice {
+				models = append(models, fmt.Sprint(model))
+			}
+		}
+	}
+	return &panelpb.ProviderConfig{
+		Id:        stringArg(m, "id"),
+		Name:      stringArg(m, "name"),
+		ApiBase:   stringArg(m, "api_base"),
+		ApiKey:    stringArg(m, "api_key"),
+		Models:    models,
+		Enabled:   boolArg(m, "enabled"),
+		IsDefault: boolArg(m, "is_default"),
+	}
+}
+
+func pbMemoryTierFromString(s string) panelpb.MemoryTier {
+	switch s {
+	case "facts":
+		return panelpb.MemoryTier_MEMORY_TIER_FACTS
+	case "preferences":
+		return panelpb.MemoryTier_MEMORY_TIER_PREFERENCES
+	case "workspace":
+		return panelpb.MemoryTier_MEMORY_TIER_WORKSPACE
+	default:
+		return panelpb.MemoryTier_MEMORY_TIER_UNSPECIFIED
+	}
+}
+
+func pbMemoryTierToString(t panelpb.MemoryTier) string {
+	switch t {
+	case panelpb.MemoryTier_MEMORY_TIER_FACTS:
+		return "facts"
+	case panelpb.MemoryTier_MEMORY_TIER_PREFERENCES:
+		return "preferences"
+	case panelpb.MemoryTier_MEMORY_TIER_WORKSPACE:
+		return "workspace"
+	default:
+		return "unspecified"
+	}
+}
+
+func pbPlanStatusToString(s panelpb.PlanStepStatus) string {
+	switch s {
+	case panelpb.PlanStepStatus_PLAN_STEP_PENDING:
+		return "pending"
+	case panelpb.PlanStepStatus_PLAN_STEP_RUNNING:
+		return "running"
+	case panelpb.PlanStepStatus_PLAN_STEP_DONE:
+		return "done"
+	case panelpb.PlanStepStatus_PLAN_STEP_FAILED:
+		return "failed"
+	case panelpb.PlanStepStatus_PLAN_STEP_SKIPPED:
+		return "skipped"
+	default:
+		return "pending"
+	}
 }

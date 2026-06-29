@@ -76,6 +76,7 @@
           </div>
         </div>
         <div class="canvas-actions">
+          <button class="ghost-btn" id="btn-cancel" style="display:none" title="取消当前执行">取消执行</button>
           <button class="ghost-btn" id="btn-clear">清空</button>
           <button class="ghost-btn danger" id="btn-shutdown">退出大脑</button>
         </div>
@@ -232,6 +233,41 @@
           </label>
           <button class="ghost-btn cfg-save" id="capability-run">执行能力</button>
           <pre class="cap-result" id="capability-result">(结果输出区)</pre>
+        </div>
+      </div>
+
+      <div class="ctx-section">
+        <div class="ctx-label">Provider 配置</div>
+        <div class="providers-toolbar">
+          <button class="ghost-btn cfg-save" id="btn-refresh-providers">刷新</button>
+        </div>
+        <div class="providers-list" id="providers-list">
+          <div class="providers-empty">加载中...</div>
+        </div>
+      </div>
+
+      <div class="ctx-section">
+        <div class="ctx-label">分层记忆</div>
+        <div class="memory-toolbar">
+          <select id="memory-tier-filter">
+            <option value="all">全部</option>
+            <option value="facts">facts</option>
+            <option value="preferences">preferences</option>
+            <option value="workspace">workspace</option>
+          </select>
+          <button class="ghost-btn cfg-save" id="btn-refresh-memories">刷新</button>
+        </div>
+        <div class="memory-add">
+          <select id="memory-add-tier">
+            <option value="facts">facts</option>
+            <option value="preferences">preferences</option>
+            <option value="workspace">workspace</option>
+          </select>
+          <input id="memory-add-content" type="text" placeholder="输入记忆内容..." spellcheck="false" />
+          <button class="ghost-btn cfg-save" id="btn-add-memory">添加</button>
+        </div>
+        <div class="memories-list" id="memories-list">
+          <div class="memories-empty">加载中...</div>
         </div>
       </div>
 

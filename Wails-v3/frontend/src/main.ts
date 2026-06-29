@@ -66,6 +66,7 @@ interface Session {
     history: HistoryEntry[];
     toolEvents: ToolEvent[]; // EXEC-P1-005: 执行轨迹 (开始/结束/失败)
     pendingApprovals: ApprovalRequest[]; // EXEC-P0-005: 等待用户审批的高风险能力
+    currentPlan?: ExecutionPlan; // EXEC-P2-001: 当前执行计划
 }
 
 // EXEC-P1-005: 工具执行轨迹条目, 由后端 panel:stream tool_event 帧驱动。
@@ -114,8 +115,26 @@ interface ToolCall {
 
 interface PanelStreamEvent {
     stream_id: string;
-    kind: "chunk" | "tool_event" | "final" | "error" | "approval_required" | "unknown";
+    kind: "chunk" | "tool_event" | "final" | "error" | "approval_required" | "plan_generated" | "plan_step_update" | "unknown";
     payload: Record<string, unknown>;
+}
+
+interface PlanStep {
+    index: number;
+    description: string;
+    tool_hint?: string;
+    risk_level: string;
+    expected?: string;
+    note?: string;
+    status?: "pending" | "running" | "done" | "failed" | "skipped";
+    result_summary?: string;
+}
+
+interface ExecutionPlan {
+    goal: string;
+    steps: PlanStep[];
+    warnings: string[];
+    suggestions: string[];
 }
 
 interface CapabilityView {
@@ -156,6 +175,9 @@ function handlePanelStream(ev: PanelStreamEvent): void {
         }
         if (ev.kind === "approval_required") {
             handleApprovalRequired(targetSessionId, ev.payload, false);
+        }
+        if (ev.kind === "plan_generated") {
+            handlePlanGenerated(targetSessionId, ev.payload, false);
         }
         if (ev.kind === "final" || ev.kind === "error") {
             const sess = sessions.get(targetSessionId);
@@ -218,6 +240,14 @@ function handlePanelStream(ev: PanelStreamEvent): void {
         }
         case "approval_required": {
             handleApprovalRequired(targetSessionId, ev.payload, true);
+            break;
+        }
+        case "plan_generated": {
+            handlePlanGenerated(targetSessionId, ev.payload, true);
+            break;
+        }
+        case "plan_step_update": {
+            handlePlanStepUpdate(targetSessionId, ev.payload);
             break;
         }
     }
@@ -388,6 +418,7 @@ const capabilityArgs = $("capability-args") as HTMLTextAreaElement;
 const capabilityRun = $("capability-run") as HTMLButtonElement;
 const capabilityResult = $("capability-result") as HTMLElement;
 const btnStop = $("btn-stop") as HTMLButtonElement;
+const btnCancel = $("btn-cancel") as HTMLButtonElement;
 const btnShutdown = $("btn-shutdown") as HTMLButtonElement;
 const btnClear = $("btn-clear") as HTMLButtonElement;
 const sessionList = $("session-list")!;
@@ -404,6 +435,14 @@ const ctxConn = $("ctx-conn")!;
 const approvalCount = $("approval-count")!;
 const approvalScope = $("approval-scope") as HTMLSelectElement;
 const approvalCenter = $("approval-center")!;
+const btnRefreshProviders = $("btn-refresh-providers") as HTMLButtonElement;
+const providersList = $("providers-list")!;
+const btnRefreshMemories = $("btn-refresh-memories") as HTMLButtonElement;
+const memoryTierFilter = $("memory-tier-filter") as HTMLSelectElement;
+const memoryAddTier = $("memory-add-tier") as HTMLSelectElement;
+const memoryAddContent = $("memory-add-content") as HTMLInputElement;
+const btnAddMemory = $("btn-add-memory") as HTMLButtonElement;
+const memoriesList = $("memories-list")!;
 
 // ============================================================
 // 启动: Bridge.ServiceStartup 已由 Wails 自动调用 (连接 panel_server)
@@ -744,6 +783,8 @@ async function checkBrainReady(): Promise<void> {
             await createNewSession();
         }
         void refreshPendingApprovalsFromBrain();
+        void loadProviders();
+        void loadMemories();
         console.log("[hermes] brain connected");
     } catch (e) {
         console.log("[hermes] brain not ready, retry in 1s:", e);
@@ -893,6 +934,8 @@ async function doSend(): Promise<void> {
         appendCachedHistoryEntry(sess, { role: "user", content: text });
         sess.msgCount += 1;
         sess.lastHistoryLen += 1;
+        sess.currentPlan = undefined;
+        renderPlanPanel(sess);
         applySessionState(currentSessionId, "thinking", { historyLen: sess.lastHistoryLen });
         if (sess.msgCount === 1 && sess.title.startsWith("聊天 ")) {
             sess.title = text.length > 24 ? text.slice(0, 24) + "…" : text;
@@ -964,6 +1007,14 @@ function syncStatusPolling(): void {
     } else {
         stopStatusPolling();
     }
+    updateCancelButton();
+}
+
+function updateCancelButton(): void {
+    const sess = currentSessionId ? sessions.get(currentSessionId) : null;
+    const isRunning = isSending || getStreamIdForSession(currentSessionId) !== null ||
+        sess?.lastState === "thinking" || sess?.lastState === "acting";
+    btnCancel.style.display = isRunning ? "" : "none";
 }
 
 function stopStatusPolling(): void {
@@ -1216,6 +1267,7 @@ function switchSession(id: string): void {
         } else {
             renderConversation(sess);
         }
+        renderPlanPanel(sess);
         updateBrainStatusUI(id, {
             state: sess.lastState,
             loop_count: 0,
@@ -1300,6 +1352,7 @@ function renderConversation(sess: Session): void {
     canvasTitle.textContent = sess.title;
     updateCanvasMeta(sess);
     renderTracePanel(sess);
+    renderPlanPanel(sess);
 }
 
 function updateCanvasMeta(sess: Session): void {
@@ -1487,6 +1540,121 @@ function handleApprovalRequired(sessionId: string, payload: Record<string, unkno
     toast(`待审批能力: ${req.tool_name} (${req.risk_level})`);
     void refreshPendingApprovalsFromBrain();
     syncStatusPolling();
+}
+
+function normalizePlanSteps(stepsRaw: unknown): PlanStep[] {
+    if (!Array.isArray(stepsRaw)) return [];
+    return stepsRaw.map((s, idx) => {
+        const step = s as Record<string, unknown>;
+        return {
+            index: Number(step.index ?? idx + 1),
+            description: String(step.description ?? ""),
+            tool_hint: step.tool_hint ? String(step.tool_hint) : undefined,
+            risk_level: String(step.risk_level ?? "low"),
+            expected: step.expected ? String(step.expected) : undefined,
+            note: step.note ? String(step.note) : undefined,
+            status: "pending",
+        };
+    });
+}
+
+function handlePlanGenerated(sessionId: string, payload: Record<string, unknown>, updateCurrentUI: boolean): void {
+    const sess = sessions.get(sessionId);
+    if (!sess) return;
+    const plan: ExecutionPlan = {
+        goal: String(payload.goal ?? ""),
+        steps: normalizePlanSteps(payload.steps),
+        warnings: Array.isArray(payload.warnings) ? payload.warnings.map((w) => String(w)) : [],
+        suggestions: Array.isArray(payload.suggestions) ? payload.suggestions.map((s) => String(s)) : [],
+    };
+    sess.currentPlan = plan;
+    if (updateCurrentUI && sessionId === currentSessionId) {
+        renderPlanPanel(sess);
+        appendAgentMsg(
+            `<p><small>📋 执行计划已生成</small><br><b>目标:</b> ${escapeHtml(plan.goal)}</p>`
+        );
+    }
+}
+
+function handlePlanStepUpdate(sessionId: string, payload: Record<string, unknown>): void {
+    const sess = sessions.get(sessionId);
+    if (!sess?.currentPlan) return;
+    const stepIndex = Number(payload.step_index ?? 0);
+    const status = String(payload.status ?? "pending") as PlanStep["status"];
+    const resultSummary = payload.result_summary ? String(payload.result_summary) : undefined;
+    const step = sess.currentPlan.steps.find((s) => s.index === stepIndex);
+    if (step) {
+        step.status = status;
+        if (resultSummary) step.result_summary = resultSummary;
+    }
+    if (sessionId === currentSessionId) {
+        renderPlanPanel(sess);
+    }
+}
+
+function renderPlanPanel(sess: Session): void {
+    let panel = document.getElementById("plan-panel");
+    if (!panel) {
+        panel = document.createElement("section");
+        panel.id = "plan-panel";
+        panel.className = "plan-panel";
+        const tracePanel = document.getElementById("trace-panel");
+        if (tracePanel) {
+            tracePanel.insertAdjacentElement("beforebegin", panel);
+        } else {
+            conv.insertAdjacentElement("afterend", panel);
+        }
+    }
+    const plan = sess.currentPlan;
+    if (!plan) {
+        panel.classList.remove("visible");
+        panel.innerHTML = "";
+        return;
+    }
+    panel.classList.add("visible");
+    const riskClass = (r: string) => {
+        if (r === "high") return "risk-high";
+        if (r === "medium") return "risk-medium";
+        return "risk-low";
+    };
+    const statusIcon = (status?: string) => {
+        switch (status) {
+            case "running": return "⏳";
+            case "done": return "✅";
+            case "failed": return "❌";
+            case "skipped": return "⏭️";
+            default: return "◻️";
+        }
+    };
+    const stepsHtml = plan.steps.map((step) => `
+        <div class="plan-step ${step.status ?? "pending"}">
+            <div class="plan-step-head">
+                <span class="plan-step-idx">${step.index}</span>
+                <span class="plan-step-status">${statusIcon(step.status)}</span>
+                <span class="plan-step-desc">${escapeHtml(step.description)}</span>
+                ${step.tool_hint ? `<span class="plan-step-tool">${escapeHtml(step.tool_hint)}</span>` : ""}
+                <span class="plan-step-risk ${riskClass(step.risk_level)}">${escapeHtml(step.risk_level)}</span>
+            </div>
+            ${step.expected ? `<div class="plan-step-note">→ ${escapeHtml(step.expected)}</div>` : ""}
+            ${step.note ? `<div class="plan-step-note warning">${escapeHtml(step.note)}</div>` : ""}
+            ${step.result_summary ? `<div class="plan-step-result">${escapeHtml(step.result_summary)}</div>` : ""}
+        </div>
+    `).join("");
+    const warningsHtml = plan.warnings.length > 0
+        ? `<div class="plan-warnings">${plan.warnings.map((w) => `<div class="plan-warning">⚠️ ${escapeHtml(w)}</div>`).join("")}</div>`
+        : "";
+    const suggestionsHtml = plan.suggestions.length > 0
+        ? `<div class="plan-suggestions">${plan.suggestions.map((s) => `<div class="plan-suggestion">📌 ${escapeHtml(s)}</div>`).join("")}</div>`
+        : "";
+    panel.innerHTML = `
+        <div class="plan-header">
+            <span class="plan-title">📋 执行计划 (${plan.steps.length} 步)</span>
+            <span class="plan-goal">目标: ${escapeHtml(truncate(plan.goal, 80))}</span>
+        </div>
+        <div class="plan-steps">${stepsHtml}</div>
+        ${warningsHtml}
+        ${suggestionsHtml}
+    `;
 }
 
 async function resolveApproval(sessionId: string, reqId: string, allow: boolean): Promise<void> {
@@ -1776,6 +1944,19 @@ btnStop.addEventListener("click", async () => {
     }
 });
 
+btnCancel.addEventListener("click", async () => {
+    if (!currentSessionId) return;
+    btnCancel.disabled = true;
+    try {
+        await RouterBinding.CallPanel("cancel_execution", { session_id: currentSessionId });
+        toast("已发送取消指令");
+    } catch (e) {
+        toast("取消失败: " + e);
+    } finally {
+        setTimeout(() => { btnCancel.disabled = false; }, 1000);
+    }
+});
+
 btnShutdown.addEventListener("click", () => btnStop.click());
 
 btnClear.addEventListener("click", () => {
@@ -1788,7 +1969,10 @@ btnClear.addEventListener("click", () => {
         sess.toolCalls = 0;
         sess.lastHistoryLen = 0;
         sess.pendingApprovals = [];
+        sess.toolEvents = [];
+        sess.currentPlan = undefined;
         renderConversation(sess);
+        renderPlanPanel(sess);
         renderApprovalCenter();
         void refreshPendingApprovalsFromBrain();
     }
@@ -1835,3 +2019,161 @@ function toast(msg: string): void {
         if (el) el.style.opacity = "0";
     }, 2500);
 }
+
+// ============================================================
+// Provider 配置面板
+// ============================================================
+
+interface Provider {
+    id: string;
+    name: string;
+    provider_type: string;
+    endpoint?: string;
+    model?: string;
+    is_default?: boolean;
+    is_enabled?: boolean;
+    last_error?: string;
+}
+
+async function loadProviders(): Promise<void> {
+    try {
+        const resp = (await RouterBinding.CallPanel("list_providers", {})) as { providers?: Provider[] };
+        renderProviders(resp.providers || []);
+    } catch (e) {
+        console.warn("[hermes] list_providers failed:", e);
+        providersList.innerHTML = '<div class="providers-empty">加载失败</div>';
+    }
+}
+
+function renderProviders(providers: Provider[]): void {
+    if (!providers || providers.length === 0) {
+        providersList.innerHTML = '<div class="providers-empty">暂无Provider配置</div>';
+        return;
+    }
+    providersList.innerHTML = providers
+        .map((p) => {
+            const status = p.last_error
+                ? `<span class="p-status err">${escapeHtml(p.last_error)}</span>`
+                : p.is_enabled === false
+                  ? '<span class="p-status err">已禁用</span>'
+                  : '<span class="p-status">● 正常</span>';
+            const defBadge = p.is_default ? ' <span class="p-type" style="background:rgba(232,165,64,.12);color:var(--accent)">DEFAULT</span>' : '';
+            return `<div class="provider-card">
+                <div class="p-row">
+                    <span class="p-name">${escapeHtml(p.name || p.id)}${defBadge}</span>
+                    <span class="p-type">${escapeHtml(p.provider_type || 'unknown')}</span>
+                </div>
+                ${p.endpoint ? `<div class="p-endpoint">${escapeHtml(p.endpoint)}</div>` : ''}
+                ${p.model ? `<div class="p-endpoint">model: ${escapeHtml(p.model)}</div>` : ''}
+                <div class="p-row"><span></span>${status}</div>
+            </div>`;
+        })
+        .join("");
+}
+
+btnRefreshProviders.addEventListener("click", () => {
+    void loadProviders();
+});
+
+// ============================================================
+// 分层记忆面板
+// ============================================================
+
+interface MemoryItem {
+    key: string;
+    tier: string;
+    content: string;
+    source?: string;
+    created_at?: number;
+    session_id?: string;
+}
+
+async function loadMemories(): Promise<void> {
+    try {
+        const tierVal = memoryTierFilter.value;
+        const args: Record<string, string> = { session_id: "global" };
+        if (tierVal !== "all") {
+            args.tier = tierVal;
+        }
+        const resp = (await RouterBinding.CallPanel("list_memories", args)) as { memories?: MemoryItem[] };
+        renderMemories(resp.memories || []);
+    } catch (e) {
+        console.warn("[hermes] list_memories failed:", e);
+        memoriesList.innerHTML = '<div class="memories-empty">加载失败</div>';
+    }
+}
+
+function renderMemories(memories: MemoryItem[]): void {
+    if (!memories || memories.length === 0) {
+        memoriesList.innerHTML = '<div class="memories-empty">暂无记忆</div>';
+        return;
+    }
+    const sorted = [...memories].sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+    memoriesList.innerHTML = sorted
+        .map((m) => {
+            const time = m.created_at ? new Date(m.created_at).toLocaleString() : "";
+            const tier = m.tier || "facts";
+            return `<div class="memory-item" data-key="${escapeHtml(m.key)}" data-tier="${escapeHtml(tier)}">
+                <div class="m-tier ${escapeHtml(tier)}">${escapeHtml(tier)}${m.source === 'manual' ? ' · manual' : ''}</div>
+                <div class="m-content">${escapeHtml(m.content || '')}</div>
+                <div class="m-meta">
+                    <span class="m-time">${escapeHtml(time)}</span>
+                    <button class="m-del" title="删除" data-action="del-memory">×</button>
+                </div>
+            </div>`;
+        })
+        .join("");
+}
+
+memoryTierFilter.addEventListener("change", () => {
+    void loadMemories();
+});
+
+btnRefreshMemories.addEventListener("click", () => {
+    void loadMemories();
+});
+
+btnAddMemory.addEventListener("click", async () => {
+    const content = memoryAddContent.value.trim();
+    if (!content) {
+        toast("请输入记忆内容");
+        return;
+    }
+    const tier = memoryAddTier.value;
+    btnAddMemory.disabled = true;
+    try {
+        await RouterBinding.CallPanel("add_memory", {
+            session_id: "global",
+            tier: tier,
+            content: content,
+        });
+        memoryAddContent.value = "";
+        toast("记忆已添加");
+        await loadMemories();
+    } catch (e) {
+        toast("添加失败: " + e);
+    } finally {
+        btnAddMemory.disabled = false;
+    }
+});
+
+memoriesList.addEventListener("click", async (ev) => {
+    const target = ev.target as HTMLElement;
+    if (target.dataset.action !== "del-memory") return;
+    const card = target.closest(".memory-item") as HTMLElement | null;
+    if (!card) return;
+    const key = card.dataset.key || "";
+    const tier = card.dataset.tier || "facts";
+    if (!key) return;
+    try {
+        await RouterBinding.CallPanel("delete_memory", {
+            session_id: "global",
+            tier: tier,
+            key: key,
+        });
+        toast("已删除");
+        await loadMemories();
+    } catch (e) {
+        toast("删除失败: " + e);
+    }
+});

@@ -17,6 +17,8 @@
 -export([find_msg_def/1, fetch_msg_def/1]).
 -export([find_enum_def/1, fetch_enum_def/1]).
 -export([enum_symbol_by_value/2, enum_value_by_symbol/2]).
+-export([enum_symbol_by_value_PlanStepStatus/1, enum_value_by_symbol_PlanStepStatus/1]).
+-export([enum_symbol_by_value_MemoryTier/1, enum_value_by_symbol_MemoryTier/1]).
 -export([get_service_names/0]).
 -export([get_service_def/1]).
 -export([get_rpc_names/1]).
@@ -48,8 +50,9 @@
 
 
 %% enumerated types
-
--export_type([]).
+-type 'PlanStepStatus'() :: 'PLAN_STEP_PENDING' | 'PLAN_STEP_RUNNING' | 'PLAN_STEP_DONE' | 'PLAN_STEP_FAILED' | 'PLAN_STEP_SKIPPED'.
+-type 'MemoryTier'() :: 'MEMORY_TIER_UNSPECIFIED' | 'MEMORY_TIER_FACTS' | 'MEMORY_TIER_PREFERENCES' | 'MEMORY_TIER_WORKSPACE'.
+-export_type(['PlanStepStatus'/0, 'MemoryTier'/0]).
 
 %% message types
 -type 'PanelFrame'() ::
@@ -90,7 +93,9 @@
         tool_event              => 'ToolEvent'(),   % = 3, optional
         final                   => 'FinalAnswer'(), % = 4, optional
         error                   => 'StreamError'(), % = 5, optional
-        approval_required       => 'ApprovalRequired'() % = 6, optional
+        approval_required       => 'ApprovalRequired'(), % = 6, optional
+        plan_generated          => 'PlanGenerated'(), % = 7, optional
+        plan_step_update        => 'PlanStepUpdate'() % = 8, optional
        }.
 
 -type 'ApprovalRequired'() ::
@@ -112,6 +117,166 @@
         risk_level              => unicode:chardata(), % = 6, optional
         expire_ms               => integer(),       % = 7, optional, 32 bits
         registered_at           => integer()        % = 8, optional, 64 bits
+       }.
+
+-type 'PlanStep'() ::
+      #{index                   => integer(),       % = 1, optional, 32 bits
+        description             => unicode:chardata(), % = 2, optional
+        tool_hint               => unicode:chardata(), % = 3, optional
+        risk_level              => unicode:chardata() % = 4, optional
+       }.
+
+-type 'PlanGenerated'() ::
+      #{goal                    => unicode:chardata(), % = 1, optional
+        steps                   => ['PlanStep'()],  % = 2, repeated
+        warnings                => [unicode:chardata()], % = 3, repeated
+        suggestions             => [unicode:chardata()] % = 4, repeated
+       }.
+
+-type 'PlanStepUpdate'() ::
+      #{step_index              => integer(),       % = 1, optional, 32 bits
+        status                  => 'PLAN_STEP_PENDING' | 'PLAN_STEP_RUNNING' | 'PLAN_STEP_DONE' | 'PLAN_STEP_FAILED' | 'PLAN_STEP_SKIPPED' | integer(), % = 2, optional, enum PlanStepStatus
+        result_summary          => unicode:chardata() % = 3, optional
+       }.
+
+-type 'ProviderConfig'() ::
+      #{id                      => unicode:chardata(), % = 1, optional
+        name                    => unicode:chardata(), % = 2, optional
+        api_base                => unicode:chardata(), % = 3, optional
+        api_key                 => unicode:chardata(), % = 4, optional
+        models                  => [unicode:chardata()], % = 5, repeated
+        enabled                 => boolean() | 0 | 1, % = 6, optional
+        is_default              => boolean() | 0 | 1, % = 7, optional
+        latency_ms              => integer()        % = 8, optional, 64 bits
+       }.
+
+-type 'ModelRoute'() ::
+      #{model                   => unicode:chardata(), % = 1, optional
+        provider_id             => unicode:chardata(), % = 2, optional
+        provider_name           => unicode:chardata() % = 3, optional
+       }.
+
+-type 'RiskPolicy'() ::
+      #{risk_level              => unicode:chardata(), % = 1, optional
+        action                  => unicode:chardata() % = 2, optional
+       }.
+
+-type 'ListProvidersResult'() ::
+      #{providers               => ['ProviderConfig'()] % = 1, repeated
+       }.
+
+-type 'UpsertProviderArgs'() ::
+      #{provider                => 'ProviderConfig'() % = 1, optional
+       }.
+
+-type 'UpsertProviderResult'() ::
+      #{ok                      => boolean() | 0 | 1, % = 1, optional
+        id                      => unicode:chardata() % = 2, optional
+       }.
+
+-type 'DeleteProviderArgs'() ::
+      #{provider_id             => unicode:chardata() % = 1, optional
+       }.
+
+-type 'DeleteProviderResult'() ::
+      #{ok                      => boolean() | 0 | 1 % = 1, optional
+       }.
+
+-type 'SetDefaultProviderArgs'() ::
+      #{provider_id             => unicode:chardata() % = 1, optional
+       }.
+
+-type 'SetDefaultProviderResult'() ::
+      #{ok                      => boolean() | 0 | 1 % = 1, optional
+       }.
+
+-type 'TestProviderArgs'() ::
+      #{provider                => 'ProviderConfig'() % = 1, optional
+       }.
+
+-type 'TestProviderResult'() ::
+      #{ok                      => boolean() | 0 | 1, % = 1, optional
+        latency_ms              => integer(),       % = 2, optional, 64 bits
+        error                   => unicode:chardata() % = 3, optional
+       }.
+
+-type 'GetRiskPoliciesResult'() ::
+      #{policies                => ['RiskPolicy'()] % = 1, repeated
+       }.
+
+-type 'SetRiskPolicyArgs'() ::
+      #{risk_level              => unicode:chardata(), % = 1, optional
+        action                  => unicode:chardata() % = 2, optional
+       }.
+
+-type 'SetRiskPolicyResult'() ::
+      #{ok                      => boolean() | 0 | 1 % = 1, optional
+       }.
+
+-type 'SetSessionProviderArgs'() ::
+      #{session_id              => unicode:chardata(), % = 1, optional
+        provider_id             => unicode:chardata() % = 2, optional
+       }.
+
+-type 'SetSessionProviderResult'() ::
+      #{ok                      => boolean() | 0 | 1 % = 1, optional
+       }.
+
+-type 'MemoryEntry'() ::
+      #{key                     => unicode:chardata(), % = 1, optional
+        tier                    => 'MEMORY_TIER_UNSPECIFIED' | 'MEMORY_TIER_FACTS' | 'MEMORY_TIER_PREFERENCES' | 'MEMORY_TIER_WORKSPACE' | integer(), % = 2, optional, enum MemoryTier
+        content                 => unicode:chardata(), % = 3, optional
+        source                  => unicode:chardata(), % = 4, optional
+        created_at              => integer(),       % = 5, optional, 64 bits
+        session_id              => unicode:chardata() % = 6, optional
+       }.
+
+-type 'ListMemoriesArgs'() ::
+      #{session_id              => unicode:chardata(), % = 1, optional
+        tier                    => 'MEMORY_TIER_UNSPECIFIED' | 'MEMORY_TIER_FACTS' | 'MEMORY_TIER_PREFERENCES' | 'MEMORY_TIER_WORKSPACE' | integer() % = 2, optional, enum MemoryTier
+       }.
+
+-type 'ListMemoriesResult'() ::
+      #{memories                => ['MemoryEntry'()] % = 1, repeated
+       }.
+
+-type 'AddMemoryArgs'() ::
+      #{session_id              => unicode:chardata(), % = 1, optional
+        tier                    => 'MEMORY_TIER_UNSPECIFIED' | 'MEMORY_TIER_FACTS' | 'MEMORY_TIER_PREFERENCES' | 'MEMORY_TIER_WORKSPACE' | integer(), % = 2, optional, enum MemoryTier
+        content                 => unicode:chardata() % = 3, optional
+       }.
+
+-type 'AddMemoryResult'() ::
+      #{ok                      => boolean() | 0 | 1, % = 1, optional
+        key                     => unicode:chardata() % = 2, optional
+       }.
+
+-type 'DeleteMemoryArgs'() ::
+      #{session_id              => unicode:chardata(), % = 1, optional
+        tier                    => 'MEMORY_TIER_UNSPECIFIED' | 'MEMORY_TIER_FACTS' | 'MEMORY_TIER_PREFERENCES' | 'MEMORY_TIER_WORKSPACE' | integer(), % = 2, optional, enum MemoryTier
+        key                     => unicode:chardata() % = 3, optional
+       }.
+
+-type 'DeleteMemoryResult'() ::
+      #{ok                      => boolean() | 0 | 1 % = 1, optional
+       }.
+
+-type 'ClearMemoriesArgs'() ::
+      #{session_id              => unicode:chardata(), % = 1, optional
+        tier                    => 'MEMORY_TIER_UNSPECIFIED' | 'MEMORY_TIER_FACTS' | 'MEMORY_TIER_PREFERENCES' | 'MEMORY_TIER_WORKSPACE' | integer() % = 2, optional, enum MemoryTier
+       }.
+
+-type 'ClearMemoriesResult'() ::
+      #{ok                      => boolean() | 0 | 1, % = 1, optional
+        count                   => integer()        % = 2, optional, 32 bits
+       }.
+
+-type 'CancelExecutionArgs'() ::
+      #{session_id              => unicode:chardata() % = 1, optional
+       }.
+
+-type 'CancelExecutionResult'() ::
+      #{ok                      => boolean() | 0 | 1 % = 1, optional
        }.
 
 -type 'LlmChunk'() ::
@@ -295,9 +460,9 @@
       #{ok                      => boolean() | 0 | 1 % = 1, optional
        }.
 
--export_type(['PanelFrame'/0, 'PanelExec'/0, 'PanelExecResult'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'ApprovalRequired'/0, 'PendingApprovalEntry'/0, 'LlmChunk'/0, 'JsonField'/0, 'ToolParameter'/0, 'ToolParameters'/0, 'JsonObject'/0, 'JsonArray'/0, 'JsonValue'/0, 'ToolFunction'/0, 'ToolCall'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ListCapabilitiesResult'/0, 'ListPendingApprovalsResult'/0, 'CapabilityDesc'/0, 'DebugCapabilityArgs'/0, 'DebugCapabilityResult'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
--type '$msg_name'() :: 'PanelFrame' | 'PanelExec' | 'PanelExecResult' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'ApprovalRequired' | 'PendingApprovalEntry' | 'LlmChunk' | 'JsonField' | 'ToolParameter' | 'ToolParameters' | 'JsonObject' | 'JsonArray' | 'JsonValue' | 'ToolFunction' | 'ToolCall' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ListCapabilitiesResult' | 'ListPendingApprovalsResult' | 'CapabilityDesc' | 'DebugCapabilityArgs' | 'DebugCapabilityResult' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
--type '$msg'() :: 'PanelFrame'() | 'PanelExec'() | 'PanelExecResult'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'ApprovalRequired'() | 'PendingApprovalEntry'() | 'LlmChunk'() | 'JsonField'() | 'ToolParameter'() | 'ToolParameters'() | 'JsonObject'() | 'JsonArray'() | 'JsonValue'() | 'ToolFunction'() | 'ToolCall'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ListCapabilitiesResult'() | 'ListPendingApprovalsResult'() | 'CapabilityDesc'() | 'DebugCapabilityArgs'() | 'DebugCapabilityResult'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
+-export_type(['PanelFrame'/0, 'PanelExec'/0, 'PanelExecResult'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'ApprovalRequired'/0, 'PendingApprovalEntry'/0, 'PlanStep'/0, 'PlanGenerated'/0, 'PlanStepUpdate'/0, 'ProviderConfig'/0, 'ModelRoute'/0, 'RiskPolicy'/0, 'ListProvidersResult'/0, 'UpsertProviderArgs'/0, 'UpsertProviderResult'/0, 'DeleteProviderArgs'/0, 'DeleteProviderResult'/0, 'SetDefaultProviderArgs'/0, 'SetDefaultProviderResult'/0, 'TestProviderArgs'/0, 'TestProviderResult'/0, 'GetRiskPoliciesResult'/0, 'SetRiskPolicyArgs'/0, 'SetRiskPolicyResult'/0, 'SetSessionProviderArgs'/0, 'SetSessionProviderResult'/0, 'MemoryEntry'/0, 'ListMemoriesArgs'/0, 'ListMemoriesResult'/0, 'AddMemoryArgs'/0, 'AddMemoryResult'/0, 'DeleteMemoryArgs'/0, 'DeleteMemoryResult'/0, 'ClearMemoriesArgs'/0, 'ClearMemoriesResult'/0, 'CancelExecutionArgs'/0, 'CancelExecutionResult'/0, 'LlmChunk'/0, 'JsonField'/0, 'ToolParameter'/0, 'ToolParameters'/0, 'JsonObject'/0, 'JsonArray'/0, 'JsonValue'/0, 'ToolFunction'/0, 'ToolCall'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ListCapabilitiesResult'/0, 'ListPendingApprovalsResult'/0, 'CapabilityDesc'/0, 'DebugCapabilityArgs'/0, 'DebugCapabilityResult'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
+-type '$msg_name'() :: 'PanelFrame' | 'PanelExec' | 'PanelExecResult' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'ApprovalRequired' | 'PendingApprovalEntry' | 'PlanStep' | 'PlanGenerated' | 'PlanStepUpdate' | 'ProviderConfig' | 'ModelRoute' | 'RiskPolicy' | 'ListProvidersResult' | 'UpsertProviderArgs' | 'UpsertProviderResult' | 'DeleteProviderArgs' | 'DeleteProviderResult' | 'SetDefaultProviderArgs' | 'SetDefaultProviderResult' | 'TestProviderArgs' | 'TestProviderResult' | 'GetRiskPoliciesResult' | 'SetRiskPolicyArgs' | 'SetRiskPolicyResult' | 'SetSessionProviderArgs' | 'SetSessionProviderResult' | 'MemoryEntry' | 'ListMemoriesArgs' | 'ListMemoriesResult' | 'AddMemoryArgs' | 'AddMemoryResult' | 'DeleteMemoryArgs' | 'DeleteMemoryResult' | 'ClearMemoriesArgs' | 'ClearMemoriesResult' | 'CancelExecutionArgs' | 'CancelExecutionResult' | 'LlmChunk' | 'JsonField' | 'ToolParameter' | 'ToolParameters' | 'JsonObject' | 'JsonArray' | 'JsonValue' | 'ToolFunction' | 'ToolCall' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ListCapabilitiesResult' | 'ListPendingApprovalsResult' | 'CapabilityDesc' | 'DebugCapabilityArgs' | 'DebugCapabilityResult' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
+-type '$msg'() :: 'PanelFrame'() | 'PanelExec'() | 'PanelExecResult'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'ApprovalRequired'() | 'PendingApprovalEntry'() | 'PlanStep'() | 'PlanGenerated'() | 'PlanStepUpdate'() | 'ProviderConfig'() | 'ModelRoute'() | 'RiskPolicy'() | 'ListProvidersResult'() | 'UpsertProviderArgs'() | 'UpsertProviderResult'() | 'DeleteProviderArgs'() | 'DeleteProviderResult'() | 'SetDefaultProviderArgs'() | 'SetDefaultProviderResult'() | 'TestProviderArgs'() | 'TestProviderResult'() | 'GetRiskPoliciesResult'() | 'SetRiskPolicyArgs'() | 'SetRiskPolicyResult'() | 'SetSessionProviderArgs'() | 'SetSessionProviderResult'() | 'MemoryEntry'() | 'ListMemoriesArgs'() | 'ListMemoriesResult'() | 'AddMemoryArgs'() | 'AddMemoryResult'() | 'DeleteMemoryArgs'() | 'DeleteMemoryResult'() | 'ClearMemoriesArgs'() | 'ClearMemoriesResult'() | 'CancelExecutionArgs'() | 'CancelExecutionResult'() | 'LlmChunk'() | 'JsonField'() | 'ToolParameter'() | 'ToolParameters'() | 'JsonObject'() | 'JsonArray'() | 'JsonValue'() | 'ToolFunction'() | 'ToolCall'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ListCapabilitiesResult'() | 'ListPendingApprovalsResult'() | 'CapabilityDesc'() | 'DebugCapabilityArgs'() | 'DebugCapabilityResult'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
 -export_type(['$msg_name'/0, '$msg'/0]).
 
 -if(?OTP_RELEASE >= 24).
@@ -325,6 +490,37 @@ encode_msg(Msg, MsgName, Opts) ->
         'PanelStream' -> encode_msg_PanelStream(id(Msg, TrUserData), TrUserData);
         'ApprovalRequired' -> encode_msg_ApprovalRequired(id(Msg, TrUserData), TrUserData);
         'PendingApprovalEntry' -> encode_msg_PendingApprovalEntry(id(Msg, TrUserData), TrUserData);
+        'PlanStep' -> encode_msg_PlanStep(id(Msg, TrUserData), TrUserData);
+        'PlanGenerated' -> encode_msg_PlanGenerated(id(Msg, TrUserData), TrUserData);
+        'PlanStepUpdate' -> encode_msg_PlanStepUpdate(id(Msg, TrUserData), TrUserData);
+        'ProviderConfig' -> encode_msg_ProviderConfig(id(Msg, TrUserData), TrUserData);
+        'ModelRoute' -> encode_msg_ModelRoute(id(Msg, TrUserData), TrUserData);
+        'RiskPolicy' -> encode_msg_RiskPolicy(id(Msg, TrUserData), TrUserData);
+        'ListProvidersResult' -> encode_msg_ListProvidersResult(id(Msg, TrUserData), TrUserData);
+        'UpsertProviderArgs' -> encode_msg_UpsertProviderArgs(id(Msg, TrUserData), TrUserData);
+        'UpsertProviderResult' -> encode_msg_UpsertProviderResult(id(Msg, TrUserData), TrUserData);
+        'DeleteProviderArgs' -> encode_msg_DeleteProviderArgs(id(Msg, TrUserData), TrUserData);
+        'DeleteProviderResult' -> encode_msg_DeleteProviderResult(id(Msg, TrUserData), TrUserData);
+        'SetDefaultProviderArgs' -> encode_msg_SetDefaultProviderArgs(id(Msg, TrUserData), TrUserData);
+        'SetDefaultProviderResult' -> encode_msg_SetDefaultProviderResult(id(Msg, TrUserData), TrUserData);
+        'TestProviderArgs' -> encode_msg_TestProviderArgs(id(Msg, TrUserData), TrUserData);
+        'TestProviderResult' -> encode_msg_TestProviderResult(id(Msg, TrUserData), TrUserData);
+        'GetRiskPoliciesResult' -> encode_msg_GetRiskPoliciesResult(id(Msg, TrUserData), TrUserData);
+        'SetRiskPolicyArgs' -> encode_msg_SetRiskPolicyArgs(id(Msg, TrUserData), TrUserData);
+        'SetRiskPolicyResult' -> encode_msg_SetRiskPolicyResult(id(Msg, TrUserData), TrUserData);
+        'SetSessionProviderArgs' -> encode_msg_SetSessionProviderArgs(id(Msg, TrUserData), TrUserData);
+        'SetSessionProviderResult' -> encode_msg_SetSessionProviderResult(id(Msg, TrUserData), TrUserData);
+        'MemoryEntry' -> encode_msg_MemoryEntry(id(Msg, TrUserData), TrUserData);
+        'ListMemoriesArgs' -> encode_msg_ListMemoriesArgs(id(Msg, TrUserData), TrUserData);
+        'ListMemoriesResult' -> encode_msg_ListMemoriesResult(id(Msg, TrUserData), TrUserData);
+        'AddMemoryArgs' -> encode_msg_AddMemoryArgs(id(Msg, TrUserData), TrUserData);
+        'AddMemoryResult' -> encode_msg_AddMemoryResult(id(Msg, TrUserData), TrUserData);
+        'DeleteMemoryArgs' -> encode_msg_DeleteMemoryArgs(id(Msg, TrUserData), TrUserData);
+        'DeleteMemoryResult' -> encode_msg_DeleteMemoryResult(id(Msg, TrUserData), TrUserData);
+        'ClearMemoriesArgs' -> encode_msg_ClearMemoriesArgs(id(Msg, TrUserData), TrUserData);
+        'ClearMemoriesResult' -> encode_msg_ClearMemoriesResult(id(Msg, TrUserData), TrUserData);
+        'CancelExecutionArgs' -> encode_msg_CancelExecutionArgs(id(Msg, TrUserData), TrUserData);
+        'CancelExecutionResult' -> encode_msg_CancelExecutionResult(id(Msg, TrUserData), TrUserData);
         'LlmChunk' -> encode_msg_LlmChunk(id(Msg, TrUserData), TrUserData);
         'JsonField' -> encode_msg_JsonField(id(Msg, TrUserData), TrUserData);
         'ToolParameter' -> encode_msg_ToolParameter(id(Msg, TrUserData), TrUserData);
@@ -525,6 +721,8 @@ encode_msg_PanelStream(#{} = M, Bin, TrUserData) ->
         #{final := OF2} -> id(begin TrOF2 = id(OF2, TrUserData), e_mfield_PanelStream_final(TrOF2, <<B1/binary, 34>>, TrUserData) end, TrUserData);
         #{error := OF2} -> id(begin TrOF2 = id(OF2, TrUserData), e_mfield_PanelStream_error(TrOF2, <<B1/binary, 42>>, TrUserData) end, TrUserData);
         #{approval_required := OF2} -> id(begin TrOF2 = id(OF2, TrUserData), e_mfield_PanelStream_approval_required(TrOF2, <<B1/binary, 50>>, TrUserData) end, TrUserData);
+        #{plan_generated := OF2} -> id(begin TrOF2 = id(OF2, TrUserData), e_mfield_PanelStream_plan_generated(TrOF2, <<B1/binary, 58>>, TrUserData) end, TrUserData);
+        #{plan_step_update := OF2} -> id(begin TrOF2 = id(OF2, TrUserData), e_mfield_PanelStream_plan_step_update(TrOF2, <<B1/binary, 66>>, TrUserData) end, TrUserData);
         _ -> B1
     end.
 
@@ -698,6 +896,851 @@ encode_msg_PendingApprovalEntry(#{} = M, Bin, TrUserData) ->
                 end
             end;
         _ -> B7
+    end.
+
+encode_msg_PlanStep(Msg, TrUserData) -> encode_msg_PlanStep(Msg, <<>>, TrUserData).
+
+
+encode_msg_PlanStep(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{index := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     if TrF1 =:= 0 -> Bin;
+                        true -> e_type_int32(TrF1, <<Bin/binary, 8>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{description := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     case is_empty_string(TrF2) of
+                         true -> B1;
+                         false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    B3 = case M of
+             #{tool_hint := F3} ->
+                 begin
+                     TrF3 = id(F3, TrUserData),
+                     case is_empty_string(TrF3) of
+                         true -> B2;
+                         false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                     end
+                 end;
+             _ -> B2
+         end,
+    case M of
+        #{risk_level := F4} ->
+            begin
+                TrF4 = id(F4, TrUserData),
+                case is_empty_string(TrF4) of
+                    true -> B3;
+                    false -> e_type_string(TrF4, <<B3/binary, 34>>, TrUserData)
+                end
+            end;
+        _ -> B3
+    end.
+
+encode_msg_PlanGenerated(Msg, TrUserData) -> encode_msg_PlanGenerated(Msg, <<>>, TrUserData).
+
+
+encode_msg_PlanGenerated(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{goal := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{steps := F2} ->
+                 TrF2 = id(F2, TrUserData),
+                 if TrF2 == [] -> B1;
+                    true -> e_field_PlanGenerated_steps(TrF2, B1, TrUserData)
+                 end;
+             _ -> B1
+         end,
+    B3 = case M of
+             #{warnings := F3} ->
+                 TrF3 = id(F3, TrUserData),
+                 if TrF3 == [] -> B2;
+                    true -> e_field_PlanGenerated_warnings(TrF3, B2, TrUserData)
+                 end;
+             _ -> B2
+         end,
+    case M of
+        #{suggestions := F4} ->
+            TrF4 = id(F4, TrUserData),
+            if TrF4 == [] -> B3;
+               true -> e_field_PlanGenerated_suggestions(TrF4, B3, TrUserData)
+            end;
+        _ -> B3
+    end.
+
+encode_msg_PlanStepUpdate(Msg, TrUserData) -> encode_msg_PlanStepUpdate(Msg, <<>>, TrUserData).
+
+
+encode_msg_PlanStepUpdate(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{step_index := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     if TrF1 =:= 0 -> Bin;
+                        true -> e_type_int32(TrF1, <<Bin/binary, 8>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{status := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     if TrF2 =:= 'PLAN_STEP_PENDING'; TrF2 =:= 0 -> B1;
+                        true -> e_enum_PlanStepStatus(TrF2, <<B1/binary, 16>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    case M of
+        #{result_summary := F3} ->
+            begin
+                TrF3 = id(F3, TrUserData),
+                case is_empty_string(TrF3) of
+                    true -> B2;
+                    false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                end
+            end;
+        _ -> B2
+    end.
+
+encode_msg_ProviderConfig(Msg, TrUserData) -> encode_msg_ProviderConfig(Msg, <<>>, TrUserData).
+
+
+encode_msg_ProviderConfig(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{id := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{name := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     case is_empty_string(TrF2) of
+                         true -> B1;
+                         false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    B3 = case M of
+             #{api_base := F3} ->
+                 begin
+                     TrF3 = id(F3, TrUserData),
+                     case is_empty_string(TrF3) of
+                         true -> B2;
+                         false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                     end
+                 end;
+             _ -> B2
+         end,
+    B4 = case M of
+             #{api_key := F4} ->
+                 begin
+                     TrF4 = id(F4, TrUserData),
+                     case is_empty_string(TrF4) of
+                         true -> B3;
+                         false -> e_type_string(TrF4, <<B3/binary, 34>>, TrUserData)
+                     end
+                 end;
+             _ -> B3
+         end,
+    B5 = case M of
+             #{models := F5} ->
+                 TrF5 = id(F5, TrUserData),
+                 if TrF5 == [] -> B4;
+                    true -> e_field_ProviderConfig_models(TrF5, B4, TrUserData)
+                 end;
+             _ -> B4
+         end,
+    B6 = case M of
+             #{enabled := F6} ->
+                 begin
+                     TrF6 = id(F6, TrUserData),
+                     if TrF6 =:= false -> B5;
+                        true -> e_type_bool(TrF6, <<B5/binary, 48>>, TrUserData)
+                     end
+                 end;
+             _ -> B5
+         end,
+    B7 = case M of
+             #{is_default := F7} ->
+                 begin
+                     TrF7 = id(F7, TrUserData),
+                     if TrF7 =:= false -> B6;
+                        true -> e_type_bool(TrF7, <<B6/binary, 56>>, TrUserData)
+                     end
+                 end;
+             _ -> B6
+         end,
+    case M of
+        #{latency_ms := F8} ->
+            begin
+                TrF8 = id(F8, TrUserData),
+                if TrF8 =:= 0 -> B7;
+                   true -> e_type_int64(TrF8, <<B7/binary, 64>>, TrUserData)
+                end
+            end;
+        _ -> B7
+    end.
+
+encode_msg_ModelRoute(Msg, TrUserData) -> encode_msg_ModelRoute(Msg, <<>>, TrUserData).
+
+
+encode_msg_ModelRoute(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{model := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{provider_id := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     case is_empty_string(TrF2) of
+                         true -> B1;
+                         false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    case M of
+        #{provider_name := F3} ->
+            begin
+                TrF3 = id(F3, TrUserData),
+                case is_empty_string(TrF3) of
+                    true -> B2;
+                    false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                end
+            end;
+        _ -> B2
+    end.
+
+encode_msg_RiskPolicy(Msg, TrUserData) -> encode_msg_RiskPolicy(Msg, <<>>, TrUserData).
+
+
+encode_msg_RiskPolicy(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{risk_level := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    case M of
+        #{action := F2} ->
+            begin
+                TrF2 = id(F2, TrUserData),
+                case is_empty_string(TrF2) of
+                    true -> B1;
+                    false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                end
+            end;
+        _ -> B1
+    end.
+
+encode_msg_ListProvidersResult(Msg, TrUserData) -> encode_msg_ListProvidersResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_ListProvidersResult(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{providers := F1} ->
+            TrF1 = id(F1, TrUserData),
+            if TrF1 == [] -> Bin;
+               true -> e_field_ListProvidersResult_providers(TrF1, Bin, TrUserData)
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_UpsertProviderArgs(Msg, TrUserData) -> encode_msg_UpsertProviderArgs(Msg, <<>>, TrUserData).
+
+
+encode_msg_UpsertProviderArgs(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{provider := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                if TrF1 =:= undefined -> Bin;
+                   true -> e_mfield_UpsertProviderArgs_provider(TrF1, <<Bin/binary, 10>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_UpsertProviderResult(Msg, TrUserData) -> encode_msg_UpsertProviderResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_UpsertProviderResult(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{ok := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     if TrF1 =:= false -> Bin;
+                        true -> e_type_bool(TrF1, <<Bin/binary, 8>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    case M of
+        #{id := F2} ->
+            begin
+                TrF2 = id(F2, TrUserData),
+                case is_empty_string(TrF2) of
+                    true -> B1;
+                    false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                end
+            end;
+        _ -> B1
+    end.
+
+encode_msg_DeleteProviderArgs(Msg, TrUserData) -> encode_msg_DeleteProviderArgs(Msg, <<>>, TrUserData).
+
+
+encode_msg_DeleteProviderArgs(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{provider_id := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                case is_empty_string(TrF1) of
+                    true -> Bin;
+                    false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_DeleteProviderResult(Msg, TrUserData) -> encode_msg_DeleteProviderResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_DeleteProviderResult(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{ok := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                if TrF1 =:= false -> Bin;
+                   true -> e_type_bool(TrF1, <<Bin/binary, 8>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_SetDefaultProviderArgs(Msg, TrUserData) -> encode_msg_SetDefaultProviderArgs(Msg, <<>>, TrUserData).
+
+
+encode_msg_SetDefaultProviderArgs(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{provider_id := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                case is_empty_string(TrF1) of
+                    true -> Bin;
+                    false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_SetDefaultProviderResult(Msg, TrUserData) -> encode_msg_SetDefaultProviderResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_SetDefaultProviderResult(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{ok := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                if TrF1 =:= false -> Bin;
+                   true -> e_type_bool(TrF1, <<Bin/binary, 8>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_TestProviderArgs(Msg, TrUserData) -> encode_msg_TestProviderArgs(Msg, <<>>, TrUserData).
+
+
+encode_msg_TestProviderArgs(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{provider := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                if TrF1 =:= undefined -> Bin;
+                   true -> e_mfield_TestProviderArgs_provider(TrF1, <<Bin/binary, 10>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_TestProviderResult(Msg, TrUserData) -> encode_msg_TestProviderResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_TestProviderResult(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{ok := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     if TrF1 =:= false -> Bin;
+                        true -> e_type_bool(TrF1, <<Bin/binary, 8>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{latency_ms := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     if TrF2 =:= 0 -> B1;
+                        true -> e_type_int64(TrF2, <<B1/binary, 16>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    case M of
+        #{error := F3} ->
+            begin
+                TrF3 = id(F3, TrUserData),
+                case is_empty_string(TrF3) of
+                    true -> B2;
+                    false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                end
+            end;
+        _ -> B2
+    end.
+
+encode_msg_GetRiskPoliciesResult(Msg, TrUserData) -> encode_msg_GetRiskPoliciesResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_GetRiskPoliciesResult(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{policies := F1} ->
+            TrF1 = id(F1, TrUserData),
+            if TrF1 == [] -> Bin;
+               true -> e_field_GetRiskPoliciesResult_policies(TrF1, Bin, TrUserData)
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_SetRiskPolicyArgs(Msg, TrUserData) -> encode_msg_SetRiskPolicyArgs(Msg, <<>>, TrUserData).
+
+
+encode_msg_SetRiskPolicyArgs(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{risk_level := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    case M of
+        #{action := F2} ->
+            begin
+                TrF2 = id(F2, TrUserData),
+                case is_empty_string(TrF2) of
+                    true -> B1;
+                    false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                end
+            end;
+        _ -> B1
+    end.
+
+encode_msg_SetRiskPolicyResult(Msg, TrUserData) -> encode_msg_SetRiskPolicyResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_SetRiskPolicyResult(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{ok := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                if TrF1 =:= false -> Bin;
+                   true -> e_type_bool(TrF1, <<Bin/binary, 8>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_SetSessionProviderArgs(Msg, TrUserData) -> encode_msg_SetSessionProviderArgs(Msg, <<>>, TrUserData).
+
+
+encode_msg_SetSessionProviderArgs(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{session_id := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    case M of
+        #{provider_id := F2} ->
+            begin
+                TrF2 = id(F2, TrUserData),
+                case is_empty_string(TrF2) of
+                    true -> B1;
+                    false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                end
+            end;
+        _ -> B1
+    end.
+
+encode_msg_SetSessionProviderResult(Msg, TrUserData) -> encode_msg_SetSessionProviderResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_SetSessionProviderResult(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{ok := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                if TrF1 =:= false -> Bin;
+                   true -> e_type_bool(TrF1, <<Bin/binary, 8>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_MemoryEntry(Msg, TrUserData) -> encode_msg_MemoryEntry(Msg, <<>>, TrUserData).
+
+
+encode_msg_MemoryEntry(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{key := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{tier := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     if TrF2 =:= 'MEMORY_TIER_UNSPECIFIED'; TrF2 =:= 0 -> B1;
+                        true -> e_enum_MemoryTier(TrF2, <<B1/binary, 16>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    B3 = case M of
+             #{content := F3} ->
+                 begin
+                     TrF3 = id(F3, TrUserData),
+                     case is_empty_string(TrF3) of
+                         true -> B2;
+                         false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                     end
+                 end;
+             _ -> B2
+         end,
+    B4 = case M of
+             #{source := F4} ->
+                 begin
+                     TrF4 = id(F4, TrUserData),
+                     case is_empty_string(TrF4) of
+                         true -> B3;
+                         false -> e_type_string(TrF4, <<B3/binary, 34>>, TrUserData)
+                     end
+                 end;
+             _ -> B3
+         end,
+    B5 = case M of
+             #{created_at := F5} ->
+                 begin
+                     TrF5 = id(F5, TrUserData),
+                     if TrF5 =:= 0 -> B4;
+                        true -> e_type_int64(TrF5, <<B4/binary, 40>>, TrUserData)
+                     end
+                 end;
+             _ -> B4
+         end,
+    case M of
+        #{session_id := F6} ->
+            begin
+                TrF6 = id(F6, TrUserData),
+                case is_empty_string(TrF6) of
+                    true -> B5;
+                    false -> e_type_string(TrF6, <<B5/binary, 50>>, TrUserData)
+                end
+            end;
+        _ -> B5
+    end.
+
+encode_msg_ListMemoriesArgs(Msg, TrUserData) -> encode_msg_ListMemoriesArgs(Msg, <<>>, TrUserData).
+
+
+encode_msg_ListMemoriesArgs(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{session_id := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    case M of
+        #{tier := F2} ->
+            begin
+                TrF2 = id(F2, TrUserData),
+                if TrF2 =:= 'MEMORY_TIER_UNSPECIFIED'; TrF2 =:= 0 -> B1;
+                   true -> e_enum_MemoryTier(TrF2, <<B1/binary, 16>>, TrUserData)
+                end
+            end;
+        _ -> B1
+    end.
+
+encode_msg_ListMemoriesResult(Msg, TrUserData) -> encode_msg_ListMemoriesResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_ListMemoriesResult(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{memories := F1} ->
+            TrF1 = id(F1, TrUserData),
+            if TrF1 == [] -> Bin;
+               true -> e_field_ListMemoriesResult_memories(TrF1, Bin, TrUserData)
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_AddMemoryArgs(Msg, TrUserData) -> encode_msg_AddMemoryArgs(Msg, <<>>, TrUserData).
+
+
+encode_msg_AddMemoryArgs(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{session_id := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{tier := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     if TrF2 =:= 'MEMORY_TIER_UNSPECIFIED'; TrF2 =:= 0 -> B1;
+                        true -> e_enum_MemoryTier(TrF2, <<B1/binary, 16>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    case M of
+        #{content := F3} ->
+            begin
+                TrF3 = id(F3, TrUserData),
+                case is_empty_string(TrF3) of
+                    true -> B2;
+                    false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                end
+            end;
+        _ -> B2
+    end.
+
+encode_msg_AddMemoryResult(Msg, TrUserData) -> encode_msg_AddMemoryResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_AddMemoryResult(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{ok := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     if TrF1 =:= false -> Bin;
+                        true -> e_type_bool(TrF1, <<Bin/binary, 8>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    case M of
+        #{key := F2} ->
+            begin
+                TrF2 = id(F2, TrUserData),
+                case is_empty_string(TrF2) of
+                    true -> B1;
+                    false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                end
+            end;
+        _ -> B1
+    end.
+
+encode_msg_DeleteMemoryArgs(Msg, TrUserData) -> encode_msg_DeleteMemoryArgs(Msg, <<>>, TrUserData).
+
+
+encode_msg_DeleteMemoryArgs(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{session_id := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{tier := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     if TrF2 =:= 'MEMORY_TIER_UNSPECIFIED'; TrF2 =:= 0 -> B1;
+                        true -> e_enum_MemoryTier(TrF2, <<B1/binary, 16>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    case M of
+        #{key := F3} ->
+            begin
+                TrF3 = id(F3, TrUserData),
+                case is_empty_string(TrF3) of
+                    true -> B2;
+                    false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                end
+            end;
+        _ -> B2
+    end.
+
+encode_msg_DeleteMemoryResult(Msg, TrUserData) -> encode_msg_DeleteMemoryResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_DeleteMemoryResult(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{ok := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                if TrF1 =:= false -> Bin;
+                   true -> e_type_bool(TrF1, <<Bin/binary, 8>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_ClearMemoriesArgs(Msg, TrUserData) -> encode_msg_ClearMemoriesArgs(Msg, <<>>, TrUserData).
+
+
+encode_msg_ClearMemoriesArgs(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{session_id := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    case M of
+        #{tier := F2} ->
+            begin
+                TrF2 = id(F2, TrUserData),
+                if TrF2 =:= 'MEMORY_TIER_UNSPECIFIED'; TrF2 =:= 0 -> B1;
+                   true -> e_enum_MemoryTier(TrF2, <<B1/binary, 16>>, TrUserData)
+                end
+            end;
+        _ -> B1
+    end.
+
+encode_msg_ClearMemoriesResult(Msg, TrUserData) -> encode_msg_ClearMemoriesResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_ClearMemoriesResult(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{ok := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     if TrF1 =:= false -> Bin;
+                        true -> e_type_bool(TrF1, <<Bin/binary, 8>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    case M of
+        #{count := F2} ->
+            begin
+                TrF2 = id(F2, TrUserData),
+                if TrF2 =:= 0 -> B1;
+                   true -> e_type_int32(TrF2, <<B1/binary, 16>>, TrUserData)
+                end
+            end;
+        _ -> B1
+    end.
+
+encode_msg_CancelExecutionArgs(Msg, TrUserData) -> encode_msg_CancelExecutionArgs(Msg, <<>>, TrUserData).
+
+
+encode_msg_CancelExecutionArgs(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{session_id := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                case is_empty_string(TrF1) of
+                    true -> Bin;
+                    false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_CancelExecutionResult(Msg, TrUserData) -> encode_msg_CancelExecutionResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_CancelExecutionResult(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{ok := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                if TrF1 =:= false -> Bin;
+                   true -> e_type_bool(TrF1, <<Bin/binary, 8>>, TrUserData)
+                end
+            end;
+        _ -> Bin
     end.
 
 encode_msg_LlmChunk(Msg, TrUserData) -> encode_msg_LlmChunk(Msg, <<>>, TrUserData).
@@ -1714,6 +2757,88 @@ e_mfield_PanelStream_approval_required(Msg, Bin, TrUserData) ->
     Bin2 = e_varint(byte_size(SubBin), Bin),
     <<Bin2/binary, SubBin/binary>>.
 
+e_mfield_PanelStream_plan_generated(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_PlanGenerated(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_mfield_PanelStream_plan_step_update(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_PlanStepUpdate(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_mfield_PlanGenerated_steps(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_PlanStep(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_PlanGenerated_steps([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 18>>,
+    Bin3 = e_mfield_PlanGenerated_steps(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_PlanGenerated_steps(Rest, Bin3, TrUserData);
+e_field_PlanGenerated_steps([], Bin, _TrUserData) -> Bin.
+
+e_field_PlanGenerated_warnings([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 26>>,
+    Bin3 = e_type_string(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_PlanGenerated_warnings(Rest, Bin3, TrUserData);
+e_field_PlanGenerated_warnings([], Bin, _TrUserData) -> Bin.
+
+e_field_PlanGenerated_suggestions([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 34>>,
+    Bin3 = e_type_string(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_PlanGenerated_suggestions(Rest, Bin3, TrUserData);
+e_field_PlanGenerated_suggestions([], Bin, _TrUserData) -> Bin.
+
+e_field_ProviderConfig_models([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 42>>,
+    Bin3 = e_type_string(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_ProviderConfig_models(Rest, Bin3, TrUserData);
+e_field_ProviderConfig_models([], Bin, _TrUserData) -> Bin.
+
+e_mfield_ListProvidersResult_providers(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_ProviderConfig(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_ListProvidersResult_providers([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 10>>,
+    Bin3 = e_mfield_ListProvidersResult_providers(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_ListProvidersResult_providers(Rest, Bin3, TrUserData);
+e_field_ListProvidersResult_providers([], Bin, _TrUserData) -> Bin.
+
+e_mfield_UpsertProviderArgs_provider(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_ProviderConfig(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_mfield_TestProviderArgs_provider(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_ProviderConfig(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_mfield_GetRiskPoliciesResult_policies(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_RiskPolicy(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_GetRiskPoliciesResult_policies([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 10>>,
+    Bin3 = e_mfield_GetRiskPoliciesResult_policies(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_GetRiskPoliciesResult_policies(Rest, Bin3, TrUserData);
+e_field_GetRiskPoliciesResult_policies([], Bin, _TrUserData) -> Bin.
+
+e_mfield_ListMemoriesResult_memories(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_MemoryEntry(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_ListMemoriesResult_memories([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 10>>,
+    Bin3 = e_mfield_ListMemoriesResult_memories(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_ListMemoriesResult_memories(Rest, Bin3, TrUserData);
+e_field_ListMemoriesResult_memories([], Bin, _TrUserData) -> Bin.
+
 e_mfield_JsonField_value(Msg, Bin, TrUserData) ->
     SubBin = encode_msg_JsonValue(Msg, <<>>, TrUserData),
     Bin2 = e_varint(byte_size(SubBin), Bin),
@@ -1842,6 +2967,19 @@ e_field_GetHistoryResult_messages([Elem | Rest], Bin, TrUserData) ->
     Bin3 = e_mfield_GetHistoryResult_messages(id(Elem, TrUserData), Bin2, TrUserData),
     e_field_GetHistoryResult_messages(Rest, Bin3, TrUserData);
 e_field_GetHistoryResult_messages([], Bin, _TrUserData) -> Bin.
+
+e_enum_PlanStepStatus('PLAN_STEP_PENDING', Bin, _TrUserData) -> <<Bin/binary, 0>>;
+e_enum_PlanStepStatus('PLAN_STEP_RUNNING', Bin, _TrUserData) -> <<Bin/binary, 1>>;
+e_enum_PlanStepStatus('PLAN_STEP_DONE', Bin, _TrUserData) -> <<Bin/binary, 2>>;
+e_enum_PlanStepStatus('PLAN_STEP_FAILED', Bin, _TrUserData) -> <<Bin/binary, 3>>;
+e_enum_PlanStepStatus('PLAN_STEP_SKIPPED', Bin, _TrUserData) -> <<Bin/binary, 4>>;
+e_enum_PlanStepStatus(V, Bin, _TrUserData) -> e_varint(V, Bin).
+
+e_enum_MemoryTier('MEMORY_TIER_UNSPECIFIED', Bin, _TrUserData) -> <<Bin/binary, 0>>;
+e_enum_MemoryTier('MEMORY_TIER_FACTS', Bin, _TrUserData) -> <<Bin/binary, 1>>;
+e_enum_MemoryTier('MEMORY_TIER_PREFERENCES', Bin, _TrUserData) -> <<Bin/binary, 2>>;
+e_enum_MemoryTier('MEMORY_TIER_WORKSPACE', Bin, _TrUserData) -> <<Bin/binary, 3>>;
+e_enum_MemoryTier(V, Bin, _TrUserData) -> e_varint(V, Bin).
 
 -compile({nowarn_unused_function,e_type_sint/3}).
 e_type_sint(Value, Bin, _TrUserData) when Value >= 0 -> e_varint(Value * 2, Bin);
@@ -1980,6 +3118,37 @@ decode_msg_2_doit('PanelResponse', Bin, TrUserData) -> id(decode_msg_PanelRespon
 decode_msg_2_doit('PanelStream', Bin, TrUserData) -> id(decode_msg_PanelStream(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ApprovalRequired', Bin, TrUserData) -> id(decode_msg_ApprovalRequired(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PendingApprovalEntry', Bin, TrUserData) -> id(decode_msg_PendingApprovalEntry(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('PlanStep', Bin, TrUserData) -> id(decode_msg_PlanStep(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('PlanGenerated', Bin, TrUserData) -> id(decode_msg_PlanGenerated(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('PlanStepUpdate', Bin, TrUserData) -> id(decode_msg_PlanStepUpdate(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ProviderConfig', Bin, TrUserData) -> id(decode_msg_ProviderConfig(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ModelRoute', Bin, TrUserData) -> id(decode_msg_ModelRoute(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('RiskPolicy', Bin, TrUserData) -> id(decode_msg_RiskPolicy(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ListProvidersResult', Bin, TrUserData) -> id(decode_msg_ListProvidersResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('UpsertProviderArgs', Bin, TrUserData) -> id(decode_msg_UpsertProviderArgs(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('UpsertProviderResult', Bin, TrUserData) -> id(decode_msg_UpsertProviderResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('DeleteProviderArgs', Bin, TrUserData) -> id(decode_msg_DeleteProviderArgs(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('DeleteProviderResult', Bin, TrUserData) -> id(decode_msg_DeleteProviderResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('SetDefaultProviderArgs', Bin, TrUserData) -> id(decode_msg_SetDefaultProviderArgs(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('SetDefaultProviderResult', Bin, TrUserData) -> id(decode_msg_SetDefaultProviderResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('TestProviderArgs', Bin, TrUserData) -> id(decode_msg_TestProviderArgs(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('TestProviderResult', Bin, TrUserData) -> id(decode_msg_TestProviderResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('GetRiskPoliciesResult', Bin, TrUserData) -> id(decode_msg_GetRiskPoliciesResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('SetRiskPolicyArgs', Bin, TrUserData) -> id(decode_msg_SetRiskPolicyArgs(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('SetRiskPolicyResult', Bin, TrUserData) -> id(decode_msg_SetRiskPolicyResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('SetSessionProviderArgs', Bin, TrUserData) -> id(decode_msg_SetSessionProviderArgs(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('SetSessionProviderResult', Bin, TrUserData) -> id(decode_msg_SetSessionProviderResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('MemoryEntry', Bin, TrUserData) -> id(decode_msg_MemoryEntry(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ListMemoriesArgs', Bin, TrUserData) -> id(decode_msg_ListMemoriesArgs(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ListMemoriesResult', Bin, TrUserData) -> id(decode_msg_ListMemoriesResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('AddMemoryArgs', Bin, TrUserData) -> id(decode_msg_AddMemoryArgs(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('AddMemoryResult', Bin, TrUserData) -> id(decode_msg_AddMemoryResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('DeleteMemoryArgs', Bin, TrUserData) -> id(decode_msg_DeleteMemoryArgs(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('DeleteMemoryResult', Bin, TrUserData) -> id(decode_msg_DeleteMemoryResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ClearMemoriesArgs', Bin, TrUserData) -> id(decode_msg_ClearMemoriesArgs(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ClearMemoriesResult', Bin, TrUserData) -> id(decode_msg_ClearMemoriesResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('CancelExecutionArgs', Bin, TrUserData) -> id(decode_msg_CancelExecutionArgs(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('CancelExecutionResult', Bin, TrUserData) -> id(decode_msg_CancelExecutionResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('LlmChunk', Bin, TrUserData) -> id(decode_msg_LlmChunk(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('JsonField', Bin, TrUserData) -> id(decode_msg_JsonField(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ToolParameter', Bin, TrUserData) -> id(decode_msg_ToolParameter(Bin, TrUserData), TrUserData);
@@ -2397,6 +3566,8 @@ dfp_read_field_def_PanelStream(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUse
 dfp_read_field_def_PanelStream(<<34, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_PanelStream_final(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
 dfp_read_field_def_PanelStream(<<42, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_PanelStream_error(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
 dfp_read_field_def_PanelStream(<<50, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_PanelStream_approval_required(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_PanelStream(<<58, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_PanelStream_plan_generated(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_PanelStream(<<66, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_PanelStream_plan_step_update(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
 dfp_read_field_def_PanelStream(<<>>, 0, 0, _, F@_1, F@_2, _) ->
     S1 = #{stream_id => F@_1},
     if F@_2 == '$undef' -> S1;
@@ -2416,6 +3587,8 @@ dg_read_field_def_PanelStream(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, 
         34 -> d_field_PanelStream_final(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
         42 -> d_field_PanelStream_error(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
         50 -> d_field_PanelStream_approval_required(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        58 -> d_field_PanelStream_plan_generated(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        66 -> d_field_PanelStream_plan_step_update(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
         _ ->
             case Key band 7 of
                 0 -> skip_varint_PanelStream(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
@@ -2510,6 +3683,36 @@ d_field_PanelStream_approval_required(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1
                                        '$undef' -> id({approval_required, NewFValue}, TrUserData);
                                        {approval_required, MVPrev} -> id({approval_required, merge_msg_ApprovalRequired(MVPrev, NewFValue, TrUserData)}, TrUserData);
                                        _ -> id({approval_required, NewFValue}, TrUserData)
+                                   end,
+                                   TrUserData).
+
+d_field_PanelStream_plan_generated(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_PanelStream_plan_generated(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_PanelStream_plan_generated(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_PlanGenerated(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_PanelStream(RestF,
+                                   0,
+                                   0,
+                                   F,
+                                   F@_1,
+                                   case Prev of
+                                       '$undef' -> id({plan_generated, NewFValue}, TrUserData);
+                                       {plan_generated, MVPrev} -> id({plan_generated, merge_msg_PlanGenerated(MVPrev, NewFValue, TrUserData)}, TrUserData);
+                                       _ -> id({plan_generated, NewFValue}, TrUserData)
+                                   end,
+                                   TrUserData).
+
+d_field_PanelStream_plan_step_update(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_PanelStream_plan_step_update(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_PanelStream_plan_step_update(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_PlanStepUpdate(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_PanelStream(RestF,
+                                   0,
+                                   0,
+                                   F,
+                                   F@_1,
+                                   case Prev of
+                                       '$undef' -> id({plan_step_update, NewFValue}, TrUserData);
+                                       {plan_step_update, MVPrev} -> id({plan_step_update, merge_msg_PlanStepUpdate(MVPrev, NewFValue, TrUserData)}, TrUserData);
+                                       _ -> id({plan_step_update, NewFValue}, TrUserData)
                                    end,
                                    TrUserData).
 
@@ -2739,6 +3942,1697 @@ skip_group_PendingApprovalEntry(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, 
 skip_32_PendingApprovalEntry(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> dfp_read_field_def_PendingApprovalEntry(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
 
 skip_64_PendingApprovalEntry(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> dfp_read_field_def_PendingApprovalEntry(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+decode_msg_PlanStep(Bin, TrUserData) -> dfp_read_field_def_PlanStep(Bin, 0, 0, 0, id(0, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_PlanStep(<<8, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_PlanStep_index(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_PlanStep(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_PlanStep_description(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_PlanStep(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_PlanStep_tool_hint(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_PlanStep(<<34, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_PlanStep_risk_level(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_PlanStep(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, _) -> #{index => F@_1, description => F@_2, tool_hint => F@_3, risk_level => F@_4};
+dfp_read_field_def_PlanStep(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dg_read_field_def_PlanStep(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+dg_read_field_def_PlanStep(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 32 - 7 -> dg_read_field_def_PlanStep(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dg_read_field_def_PlanStep(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_PlanStep_index(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        18 -> d_field_PlanStep_description(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        26 -> d_field_PlanStep_tool_hint(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        34 -> d_field_PlanStep_risk_level(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_PlanStep(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                1 -> skip_64_PlanStep(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                2 -> skip_length_delimited_PlanStep(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                3 -> skip_group_PlanStep(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                5 -> skip_32_PlanStep(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData)
+            end
+    end;
+dg_read_field_def_PlanStep(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, _) -> #{index => F@_1, description => F@_2, tool_hint => F@_3, risk_level => F@_4}.
+
+d_field_PlanStep_index(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_PlanStep_index(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_PlanStep_index(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = {begin <<Res:32/signed-native>> = <<(X bsl N + Acc):32/unsigned-native>>, id(Res, TrUserData) end, Rest},
+    dfp_read_field_def_PlanStep(RestF, 0, 0, F, NewFValue, F@_2, F@_3, F@_4, TrUserData).
+
+d_field_PlanStep_description(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_PlanStep_description(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_PlanStep_description(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PlanStep(RestF, 0, 0, F, F@_1, NewFValue, F@_3, F@_4, TrUserData).
+
+d_field_PlanStep_tool_hint(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_PlanStep_tool_hint(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_PlanStep_tool_hint(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PlanStep(RestF, 0, 0, F, F@_1, F@_2, NewFValue, F@_4, TrUserData).
+
+d_field_PlanStep_risk_level(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_PlanStep_risk_level(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_PlanStep_risk_level(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PlanStep(RestF, 0, 0, F, F@_1, F@_2, F@_3, NewFValue, TrUserData).
+
+skip_varint_PlanStep(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> skip_varint_PlanStep(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_varint_PlanStep(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_PlanStep(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_length_delimited_PlanStep(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> skip_length_delimited_PlanStep(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_length_delimited_PlanStep(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_PlanStep(Rest2, 0, 0, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_group_PlanStep(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_PlanStep(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_32_PlanStep(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_PlanStep(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_64_PlanStep(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_PlanStep(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+decode_msg_PlanGenerated(Bin, TrUserData) -> dfp_read_field_def_PlanGenerated(Bin, 0, 0, 0, id(<<>>, TrUserData), id([], TrUserData), id([], TrUserData), id([], TrUserData), TrUserData).
+
+dfp_read_field_def_PlanGenerated(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_PlanGenerated_goal(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_PlanGenerated(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_PlanGenerated_steps(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_PlanGenerated(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_PlanGenerated_warnings(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_PlanGenerated(<<34, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_PlanGenerated_suggestions(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_PlanGenerated(<<>>, 0, 0, _, F@_1, R1, R2, R3, TrUserData) ->
+    S1 = #{goal => F@_1, warnings => lists_reverse(R2, TrUserData), suggestions => lists_reverse(R3, TrUserData)},
+    if R1 == '$undef' -> S1;
+       true -> S1#{steps => lists_reverse(R1, TrUserData)}
+    end;
+dfp_read_field_def_PlanGenerated(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dg_read_field_def_PlanGenerated(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+dg_read_field_def_PlanGenerated(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 32 - 7 -> dg_read_field_def_PlanGenerated(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dg_read_field_def_PlanGenerated(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_PlanGenerated_goal(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        18 -> d_field_PlanGenerated_steps(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        26 -> d_field_PlanGenerated_warnings(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        34 -> d_field_PlanGenerated_suggestions(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_PlanGenerated(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                1 -> skip_64_PlanGenerated(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                2 -> skip_length_delimited_PlanGenerated(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                3 -> skip_group_PlanGenerated(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                5 -> skip_32_PlanGenerated(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, TrUserData)
+            end
+    end;
+dg_read_field_def_PlanGenerated(<<>>, 0, 0, _, F@_1, R1, R2, R3, TrUserData) ->
+    S1 = #{goal => F@_1, warnings => lists_reverse(R2, TrUserData), suggestions => lists_reverse(R3, TrUserData)},
+    if R1 == '$undef' -> S1;
+       true -> S1#{steps => lists_reverse(R1, TrUserData)}
+    end.
+
+d_field_PlanGenerated_goal(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_PlanGenerated_goal(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_PlanGenerated_goal(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PlanGenerated(RestF, 0, 0, F, NewFValue, F@_2, F@_3, F@_4, TrUserData).
+
+d_field_PlanGenerated_steps(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_PlanGenerated_steps(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_PlanGenerated_steps(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, Prev, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_PlanStep(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_PlanGenerated(RestF, 0, 0, F, F@_1, cons(NewFValue, Prev, TrUserData), F@_3, F@_4, TrUserData).
+
+d_field_PlanGenerated_warnings(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_PlanGenerated_warnings(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_PlanGenerated_warnings(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, Prev, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PlanGenerated(RestF, 0, 0, F, F@_1, F@_2, cons(NewFValue, Prev, TrUserData), F@_4, TrUserData).
+
+d_field_PlanGenerated_suggestions(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_PlanGenerated_suggestions(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_PlanGenerated_suggestions(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PlanGenerated(RestF, 0, 0, F, F@_1, F@_2, F@_3, cons(NewFValue, Prev, TrUserData), TrUserData).
+
+skip_varint_PlanGenerated(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> skip_varint_PlanGenerated(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_varint_PlanGenerated(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_PlanGenerated(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_length_delimited_PlanGenerated(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> skip_length_delimited_PlanGenerated(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_length_delimited_PlanGenerated(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_PlanGenerated(Rest2, 0, 0, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_group_PlanGenerated(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_PlanGenerated(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_32_PlanGenerated(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_PlanGenerated(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_64_PlanGenerated(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_PlanGenerated(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+decode_msg_PlanStepUpdate(Bin, TrUserData) -> dfp_read_field_def_PlanStepUpdate(Bin, 0, 0, 0, id(0, TrUserData), id('PLAN_STEP_PENDING', TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_PlanStepUpdate(<<8, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_PlanStepUpdate_step_index(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_PlanStepUpdate(<<16, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_PlanStepUpdate_status(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_PlanStepUpdate(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_PlanStepUpdate_result_summary(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_PlanStepUpdate(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{step_index => F@_1, status => F@_2, result_summary => F@_3};
+dfp_read_field_def_PlanStepUpdate(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_PlanStepUpdate(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+dg_read_field_def_PlanStepUpdate(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_PlanStepUpdate(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+dg_read_field_def_PlanStepUpdate(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_PlanStepUpdate_step_index(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        16 -> d_field_PlanStepUpdate_status(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        26 -> d_field_PlanStepUpdate_result_summary(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_PlanStepUpdate(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                1 -> skip_64_PlanStepUpdate(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                2 -> skip_length_delimited_PlanStepUpdate(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                3 -> skip_group_PlanStepUpdate(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                5 -> skip_32_PlanStepUpdate(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData)
+            end
+    end;
+dg_read_field_def_PlanStepUpdate(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{step_index => F@_1, status => F@_2, result_summary => F@_3}.
+
+d_field_PlanStepUpdate_step_index(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_PlanStepUpdate_step_index(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_PlanStepUpdate_step_index(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, TrUserData) ->
+    {NewFValue, RestF} = {begin <<Res:32/signed-native>> = <<(X bsl N + Acc):32/unsigned-native>>, id(Res, TrUserData) end, Rest},
+    dfp_read_field_def_PlanStepUpdate(RestF, 0, 0, F, NewFValue, F@_2, F@_3, TrUserData).
+
+d_field_PlanStepUpdate_status(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_PlanStepUpdate_status(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_PlanStepUpdate_status(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, TrUserData) ->
+    {NewFValue, RestF} = {id(d_enum_PlanStepStatus(begin <<Res:32/signed-native>> = <<(X bsl N + Acc):32/unsigned-native>>, id(Res, TrUserData) end), TrUserData), Rest},
+    dfp_read_field_def_PlanStepUpdate(RestF, 0, 0, F, F@_1, NewFValue, F@_3, TrUserData).
+
+d_field_PlanStepUpdate_result_summary(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_PlanStepUpdate_result_summary(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_PlanStepUpdate_result_summary(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PlanStepUpdate(RestF, 0, 0, F, F@_1, F@_2, NewFValue, TrUserData).
+
+skip_varint_PlanStepUpdate(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_PlanStepUpdate(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+skip_varint_PlanStepUpdate(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_PlanStepUpdate(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_length_delimited_PlanStepUpdate(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> skip_length_delimited_PlanStepUpdate(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+skip_length_delimited_PlanStepUpdate(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_PlanStepUpdate(Rest2, 0, 0, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_group_PlanStepUpdate(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_PlanStepUpdate(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, TrUserData).
+
+skip_32_PlanStepUpdate(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_PlanStepUpdate(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_64_PlanStepUpdate(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_PlanStepUpdate(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+decode_msg_ProviderConfig(Bin, TrUserData) ->
+    dfp_read_field_def_ProviderConfig(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id([], TrUserData), id(false, TrUserData), id(false, TrUserData), id(0, TrUserData), TrUserData).
+
+dfp_read_field_def_ProviderConfig(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> d_field_ProviderConfig_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_ProviderConfig(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> d_field_ProviderConfig_name(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_ProviderConfig(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> d_field_ProviderConfig_api_base(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_ProviderConfig(<<34, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> d_field_ProviderConfig_api_key(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_ProviderConfig(<<42, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> d_field_ProviderConfig_models(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_ProviderConfig(<<48, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> d_field_ProviderConfig_enabled(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_ProviderConfig(<<56, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> d_field_ProviderConfig_is_default(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_ProviderConfig(<<64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> d_field_ProviderConfig_latency_ms(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_ProviderConfig(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, R1, F@_6, F@_7, F@_8, TrUserData) ->
+    #{id => F@_1, name => F@_2, api_base => F@_3, api_key => F@_4, models => lists_reverse(R1, TrUserData), enabled => F@_6, is_default => F@_7, latency_ms => F@_8};
+dfp_read_field_def_ProviderConfig(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> dg_read_field_def_ProviderConfig(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+dg_read_field_def_ProviderConfig(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 32 - 7 ->
+    dg_read_field_def_ProviderConfig(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dg_read_field_def_ProviderConfig(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_ProviderConfig_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        18 -> d_field_ProviderConfig_name(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        26 -> d_field_ProviderConfig_api_base(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        34 -> d_field_ProviderConfig_api_key(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        42 -> d_field_ProviderConfig_models(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        48 -> d_field_ProviderConfig_enabled(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        56 -> d_field_ProviderConfig_is_default(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        64 -> d_field_ProviderConfig_latency_ms(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ProviderConfig(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+                1 -> skip_64_ProviderConfig(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+                2 -> skip_length_delimited_ProviderConfig(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+                3 -> skip_group_ProviderConfig(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+                5 -> skip_32_ProviderConfig(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData)
+            end
+    end;
+dg_read_field_def_ProviderConfig(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, R1, F@_6, F@_7, F@_8, TrUserData) ->
+    #{id => F@_1, name => F@_2, api_base => F@_3, api_key => F@_4, models => lists_reverse(R1, TrUserData), enabled => F@_6, is_default => F@_7, latency_ms => F@_8}.
+
+d_field_ProviderConfig_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_ProviderConfig_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_ProviderConfig_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ProviderConfig(RestF, 0, 0, F, NewFValue, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+d_field_ProviderConfig_name(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_ProviderConfig_name(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_ProviderConfig_name(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ProviderConfig(RestF, 0, 0, F, F@_1, NewFValue, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+d_field_ProviderConfig_api_base(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_ProviderConfig_api_base(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_ProviderConfig_api_base(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ProviderConfig(RestF, 0, 0, F, F@_1, F@_2, NewFValue, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+d_field_ProviderConfig_api_key(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_ProviderConfig_api_key(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_ProviderConfig_api_key(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, _, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ProviderConfig(RestF, 0, 0, F, F@_1, F@_2, F@_3, NewFValue, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+d_field_ProviderConfig_models(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_ProviderConfig_models(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_ProviderConfig_models(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, Prev, F@_6, F@_7, F@_8, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ProviderConfig(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, cons(NewFValue, Prev, TrUserData), F@_6, F@_7, F@_8, TrUserData).
+
+d_field_ProviderConfig_enabled(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_ProviderConfig_enabled(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_ProviderConfig_enabled(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, _, F@_7, F@_8, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_ProviderConfig(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, NewFValue, F@_7, F@_8, TrUserData).
+
+d_field_ProviderConfig_is_default(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_ProviderConfig_is_default(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_ProviderConfig_is_default(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, _, F@_8, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_ProviderConfig(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, NewFValue, F@_8, TrUserData).
+
+d_field_ProviderConfig_latency_ms(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_ProviderConfig_latency_ms(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_ProviderConfig_latency_ms(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, _, TrUserData) ->
+    {NewFValue, RestF} = {begin <<Res:64/signed-native>> = <<(X bsl N + Acc):64/unsigned-native>>, id(Res, TrUserData) end, Rest},
+    dfp_read_field_def_ProviderConfig(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, NewFValue, TrUserData).
+
+skip_varint_ProviderConfig(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> skip_varint_ProviderConfig(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+skip_varint_ProviderConfig(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> dfp_read_field_def_ProviderConfig(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+skip_length_delimited_ProviderConfig(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    skip_length_delimited_ProviderConfig(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+skip_length_delimited_ProviderConfig(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ProviderConfig(Rest2, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+skip_group_ProviderConfig(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ProviderConfig(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+skip_32_ProviderConfig(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> dfp_read_field_def_ProviderConfig(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+skip_64_ProviderConfig(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> dfp_read_field_def_ProviderConfig(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+decode_msg_ModelRoute(Bin, TrUserData) -> dfp_read_field_def_ModelRoute(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_ModelRoute(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_ModelRoute_model(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_ModelRoute(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_ModelRoute_provider_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_ModelRoute(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_ModelRoute_provider_name(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_ModelRoute(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{model => F@_1, provider_id => F@_2, provider_name => F@_3};
+dfp_read_field_def_ModelRoute(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_ModelRoute(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+dg_read_field_def_ModelRoute(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_ModelRoute(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+dg_read_field_def_ModelRoute(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_ModelRoute_model(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        18 -> d_field_ModelRoute_provider_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        26 -> d_field_ModelRoute_provider_name(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ModelRoute(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                1 -> skip_64_ModelRoute(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                2 -> skip_length_delimited_ModelRoute(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                3 -> skip_group_ModelRoute(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                5 -> skip_32_ModelRoute(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData)
+            end
+    end;
+dg_read_field_def_ModelRoute(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{model => F@_1, provider_id => F@_2, provider_name => F@_3}.
+
+d_field_ModelRoute_model(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_ModelRoute_model(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_ModelRoute_model(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ModelRoute(RestF, 0, 0, F, NewFValue, F@_2, F@_3, TrUserData).
+
+d_field_ModelRoute_provider_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_ModelRoute_provider_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_ModelRoute_provider_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ModelRoute(RestF, 0, 0, F, F@_1, NewFValue, F@_3, TrUserData).
+
+d_field_ModelRoute_provider_name(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_ModelRoute_provider_name(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_ModelRoute_provider_name(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ModelRoute(RestF, 0, 0, F, F@_1, F@_2, NewFValue, TrUserData).
+
+skip_varint_ModelRoute(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_ModelRoute(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+skip_varint_ModelRoute(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_ModelRoute(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_length_delimited_ModelRoute(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> skip_length_delimited_ModelRoute(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+skip_length_delimited_ModelRoute(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ModelRoute(Rest2, 0, 0, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_group_ModelRoute(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ModelRoute(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, TrUserData).
+
+skip_32_ModelRoute(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_ModelRoute(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_64_ModelRoute(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_ModelRoute(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+decode_msg_RiskPolicy(Bin, TrUserData) -> dfp_read_field_def_RiskPolicy(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_RiskPolicy(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_RiskPolicy_risk_level(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_RiskPolicy(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_RiskPolicy_action(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_RiskPolicy(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{risk_level => F@_1, action => F@_2};
+dfp_read_field_def_RiskPolicy(Other, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dg_read_field_def_RiskPolicy(Other, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+dg_read_field_def_RiskPolicy(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_RiskPolicy(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+dg_read_field_def_RiskPolicy(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_RiskPolicy_risk_level(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        18 -> d_field_RiskPolicy_action(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_RiskPolicy(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                1 -> skip_64_RiskPolicy(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_RiskPolicy(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                3 -> skip_group_RiskPolicy(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                5 -> skip_32_RiskPolicy(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData)
+            end
+    end;
+dg_read_field_def_RiskPolicy(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{risk_level => F@_1, action => F@_2}.
+
+d_field_RiskPolicy_risk_level(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_RiskPolicy_risk_level(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_RiskPolicy_risk_level(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_RiskPolicy(RestF, 0, 0, F, NewFValue, F@_2, TrUserData).
+
+d_field_RiskPolicy_action(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_RiskPolicy_action(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_RiskPolicy_action(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_RiskPolicy(RestF, 0, 0, F, F@_1, NewFValue, TrUserData).
+
+skip_varint_RiskPolicy(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_RiskPolicy(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+skip_varint_RiskPolicy(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_RiskPolicy(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_RiskPolicy(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_RiskPolicy(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+skip_length_delimited_RiskPolicy(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_RiskPolicy(Rest2, 0, 0, F, F@_1, F@_2, TrUserData).
+
+skip_group_RiskPolicy(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_RiskPolicy(Rest, 0, Z2, FNum, F@_1, F@_2, TrUserData).
+
+skip_32_RiskPolicy(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_RiskPolicy(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_64_RiskPolicy(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_RiskPolicy(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_ListProvidersResult(Bin, TrUserData) -> dfp_read_field_def_ListProvidersResult(Bin, 0, 0, 0, id([], TrUserData), TrUserData).
+
+dfp_read_field_def_ListProvidersResult(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_ListProvidersResult_providers(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_ListProvidersResult(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{providers => lists_reverse(R1, TrUserData)}
+    end;
+dfp_read_field_def_ListProvidersResult(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_ListProvidersResult(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_ListProvidersResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_ListProvidersResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_ListProvidersResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_ListProvidersResult_providers(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ListProvidersResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_ListProvidersResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_ListProvidersResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_ListProvidersResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_ListProvidersResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_ListProvidersResult(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{providers => lists_reverse(R1, TrUserData)}
+    end.
+
+d_field_ListProvidersResult_providers(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_ListProvidersResult_providers(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_ListProvidersResult_providers(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_ProviderConfig(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_ListProvidersResult(RestF, 0, 0, F, cons(NewFValue, Prev, TrUserData), TrUserData).
+
+skip_varint_ListProvidersResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_ListProvidersResult(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_ListProvidersResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_ListProvidersResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_ListProvidersResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_ListProvidersResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_ListProvidersResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ListProvidersResult(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_ListProvidersResult(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ListProvidersResult(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_ListProvidersResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_ListProvidersResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_ListProvidersResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_ListProvidersResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_UpsertProviderArgs(Bin, TrUserData) -> dfp_read_field_def_UpsertProviderArgs(Bin, 0, 0, 0, id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_UpsertProviderArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_UpsertProviderArgs_provider(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_UpsertProviderArgs(<<>>, 0, 0, _, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{provider => F@_1}
+    end;
+dfp_read_field_def_UpsertProviderArgs(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_UpsertProviderArgs(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_UpsertProviderArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_UpsertProviderArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_UpsertProviderArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_UpsertProviderArgs_provider(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_UpsertProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_UpsertProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_UpsertProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_UpsertProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_UpsertProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_UpsertProviderArgs(<<>>, 0, 0, _, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{provider => F@_1}
+    end.
+
+d_field_UpsertProviderArgs_provider(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_UpsertProviderArgs_provider(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_UpsertProviderArgs_provider(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_ProviderConfig(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_UpsertProviderArgs(RestF,
+                                          0,
+                                          0,
+                                          F,
+                                          if Prev == '$undef' -> NewFValue;
+                                             true -> merge_msg_ProviderConfig(Prev, NewFValue, TrUserData)
+                                          end,
+                                          TrUserData).
+
+skip_varint_UpsertProviderArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_UpsertProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_UpsertProviderArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_UpsertProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_UpsertProviderArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_UpsertProviderArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_UpsertProviderArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_UpsertProviderArgs(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_UpsertProviderArgs(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_UpsertProviderArgs(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_UpsertProviderArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_UpsertProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_UpsertProviderArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_UpsertProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_UpsertProviderResult(Bin, TrUserData) -> dfp_read_field_def_UpsertProviderResult(Bin, 0, 0, 0, id(false, TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_UpsertProviderResult(<<8, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_UpsertProviderResult_ok(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_UpsertProviderResult(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_UpsertProviderResult_id(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_UpsertProviderResult(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{ok => F@_1, id => F@_2};
+dfp_read_field_def_UpsertProviderResult(Other, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dg_read_field_def_UpsertProviderResult(Other, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+dg_read_field_def_UpsertProviderResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_UpsertProviderResult(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+dg_read_field_def_UpsertProviderResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_UpsertProviderResult_ok(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        18 -> d_field_UpsertProviderResult_id(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_UpsertProviderResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                1 -> skip_64_UpsertProviderResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_UpsertProviderResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                3 -> skip_group_UpsertProviderResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                5 -> skip_32_UpsertProviderResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData)
+            end
+    end;
+dg_read_field_def_UpsertProviderResult(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{ok => F@_1, id => F@_2}.
+
+d_field_UpsertProviderResult_ok(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_UpsertProviderResult_ok(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_UpsertProviderResult_ok(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_UpsertProviderResult(RestF, 0, 0, F, NewFValue, F@_2, TrUserData).
+
+d_field_UpsertProviderResult_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_UpsertProviderResult_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_UpsertProviderResult_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_UpsertProviderResult(RestF, 0, 0, F, F@_1, NewFValue, TrUserData).
+
+skip_varint_UpsertProviderResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_UpsertProviderResult(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+skip_varint_UpsertProviderResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_UpsertProviderResult(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_UpsertProviderResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_UpsertProviderResult(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+skip_length_delimited_UpsertProviderResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_UpsertProviderResult(Rest2, 0, 0, F, F@_1, F@_2, TrUserData).
+
+skip_group_UpsertProviderResult(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_UpsertProviderResult(Rest, 0, Z2, FNum, F@_1, F@_2, TrUserData).
+
+skip_32_UpsertProviderResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_UpsertProviderResult(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_64_UpsertProviderResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_UpsertProviderResult(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_DeleteProviderArgs(Bin, TrUserData) -> dfp_read_field_def_DeleteProviderArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_DeleteProviderArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_DeleteProviderArgs_provider_id(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_DeleteProviderArgs(<<>>, 0, 0, _, F@_1, _) -> #{provider_id => F@_1};
+dfp_read_field_def_DeleteProviderArgs(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_DeleteProviderArgs(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_DeleteProviderArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_DeleteProviderArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_DeleteProviderArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_DeleteProviderArgs_provider_id(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_DeleteProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_DeleteProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_DeleteProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_DeleteProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_DeleteProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_DeleteProviderArgs(<<>>, 0, 0, _, F@_1, _) -> #{provider_id => F@_1}.
+
+d_field_DeleteProviderArgs_provider_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_DeleteProviderArgs_provider_id(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_DeleteProviderArgs_provider_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_DeleteProviderArgs(RestF, 0, 0, F, NewFValue, TrUserData).
+
+skip_varint_DeleteProviderArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_DeleteProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_DeleteProviderArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_DeleteProviderArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_DeleteProviderArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_DeleteProviderArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_DeleteProviderArgs(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_DeleteProviderArgs(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_DeleteProviderArgs(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_DeleteProviderArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_DeleteProviderArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_DeleteProviderResult(Bin, TrUserData) -> dfp_read_field_def_DeleteProviderResult(Bin, 0, 0, 0, id(false, TrUserData), TrUserData).
+
+dfp_read_field_def_DeleteProviderResult(<<8, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_DeleteProviderResult_ok(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_DeleteProviderResult(<<>>, 0, 0, _, F@_1, _) -> #{ok => F@_1};
+dfp_read_field_def_DeleteProviderResult(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_DeleteProviderResult(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_DeleteProviderResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_DeleteProviderResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_DeleteProviderResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_DeleteProviderResult_ok(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_DeleteProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_DeleteProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_DeleteProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_DeleteProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_DeleteProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_DeleteProviderResult(<<>>, 0, 0, _, F@_1, _) -> #{ok => F@_1}.
+
+d_field_DeleteProviderResult_ok(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_DeleteProviderResult_ok(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_DeleteProviderResult_ok(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_DeleteProviderResult(RestF, 0, 0, F, NewFValue, TrUserData).
+
+skip_varint_DeleteProviderResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_DeleteProviderResult(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_DeleteProviderResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteProviderResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_DeleteProviderResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_DeleteProviderResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_DeleteProviderResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_DeleteProviderResult(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_DeleteProviderResult(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_DeleteProviderResult(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_DeleteProviderResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteProviderResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_DeleteProviderResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteProviderResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_SetDefaultProviderArgs(Bin, TrUserData) -> dfp_read_field_def_SetDefaultProviderArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_SetDefaultProviderArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_SetDefaultProviderArgs_provider_id(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_SetDefaultProviderArgs(<<>>, 0, 0, _, F@_1, _) -> #{provider_id => F@_1};
+dfp_read_field_def_SetDefaultProviderArgs(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_SetDefaultProviderArgs(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_SetDefaultProviderArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_SetDefaultProviderArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_SetDefaultProviderArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_SetDefaultProviderArgs_provider_id(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_SetDefaultProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_SetDefaultProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_SetDefaultProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_SetDefaultProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_SetDefaultProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_SetDefaultProviderArgs(<<>>, 0, 0, _, F@_1, _) -> #{provider_id => F@_1}.
+
+d_field_SetDefaultProviderArgs_provider_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_SetDefaultProviderArgs_provider_id(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_SetDefaultProviderArgs_provider_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_SetDefaultProviderArgs(RestF, 0, 0, F, NewFValue, TrUserData).
+
+skip_varint_SetDefaultProviderArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_SetDefaultProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_SetDefaultProviderArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_SetDefaultProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_SetDefaultProviderArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_SetDefaultProviderArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_SetDefaultProviderArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_SetDefaultProviderArgs(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_SetDefaultProviderArgs(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_SetDefaultProviderArgs(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_SetDefaultProviderArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_SetDefaultProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_SetDefaultProviderArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_SetDefaultProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_SetDefaultProviderResult(Bin, TrUserData) -> dfp_read_field_def_SetDefaultProviderResult(Bin, 0, 0, 0, id(false, TrUserData), TrUserData).
+
+dfp_read_field_def_SetDefaultProviderResult(<<8, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_SetDefaultProviderResult_ok(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_SetDefaultProviderResult(<<>>, 0, 0, _, F@_1, _) -> #{ok => F@_1};
+dfp_read_field_def_SetDefaultProviderResult(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_SetDefaultProviderResult(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_SetDefaultProviderResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_SetDefaultProviderResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_SetDefaultProviderResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_SetDefaultProviderResult_ok(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_SetDefaultProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_SetDefaultProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_SetDefaultProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_SetDefaultProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_SetDefaultProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_SetDefaultProviderResult(<<>>, 0, 0, _, F@_1, _) -> #{ok => F@_1}.
+
+d_field_SetDefaultProviderResult_ok(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_SetDefaultProviderResult_ok(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_SetDefaultProviderResult_ok(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_SetDefaultProviderResult(RestF, 0, 0, F, NewFValue, TrUserData).
+
+skip_varint_SetDefaultProviderResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_SetDefaultProviderResult(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_SetDefaultProviderResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_SetDefaultProviderResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_SetDefaultProviderResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_SetDefaultProviderResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_SetDefaultProviderResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_SetDefaultProviderResult(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_SetDefaultProviderResult(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_SetDefaultProviderResult(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_SetDefaultProviderResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_SetDefaultProviderResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_SetDefaultProviderResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_SetDefaultProviderResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_TestProviderArgs(Bin, TrUserData) -> dfp_read_field_def_TestProviderArgs(Bin, 0, 0, 0, id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_TestProviderArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_TestProviderArgs_provider(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_TestProviderArgs(<<>>, 0, 0, _, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{provider => F@_1}
+    end;
+dfp_read_field_def_TestProviderArgs(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_TestProviderArgs(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_TestProviderArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_TestProviderArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_TestProviderArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_TestProviderArgs_provider(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_TestProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_TestProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_TestProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_TestProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_TestProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_TestProviderArgs(<<>>, 0, 0, _, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{provider => F@_1}
+    end.
+
+d_field_TestProviderArgs_provider(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_TestProviderArgs_provider(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_TestProviderArgs_provider(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_ProviderConfig(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_TestProviderArgs(RestF,
+                                        0,
+                                        0,
+                                        F,
+                                        if Prev == '$undef' -> NewFValue;
+                                           true -> merge_msg_ProviderConfig(Prev, NewFValue, TrUserData)
+                                        end,
+                                        TrUserData).
+
+skip_varint_TestProviderArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_TestProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_TestProviderArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_TestProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_TestProviderArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_TestProviderArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_TestProviderArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_TestProviderArgs(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_TestProviderArgs(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_TestProviderArgs(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_TestProviderArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_TestProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_TestProviderArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_TestProviderArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_TestProviderResult(Bin, TrUserData) -> dfp_read_field_def_TestProviderResult(Bin, 0, 0, 0, id(false, TrUserData), id(0, TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_TestProviderResult(<<8, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_TestProviderResult_ok(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_TestProviderResult(<<16, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_TestProviderResult_latency_ms(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_TestProviderResult(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_TestProviderResult_error(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_TestProviderResult(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{ok => F@_1, latency_ms => F@_2, error => F@_3};
+dfp_read_field_def_TestProviderResult(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_TestProviderResult(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+dg_read_field_def_TestProviderResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_TestProviderResult(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+dg_read_field_def_TestProviderResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_TestProviderResult_ok(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        16 -> d_field_TestProviderResult_latency_ms(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        26 -> d_field_TestProviderResult_error(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_TestProviderResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                1 -> skip_64_TestProviderResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                2 -> skip_length_delimited_TestProviderResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                3 -> skip_group_TestProviderResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                5 -> skip_32_TestProviderResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData)
+            end
+    end;
+dg_read_field_def_TestProviderResult(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{ok => F@_1, latency_ms => F@_2, error => F@_3}.
+
+d_field_TestProviderResult_ok(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_TestProviderResult_ok(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_TestProviderResult_ok(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_TestProviderResult(RestF, 0, 0, F, NewFValue, F@_2, F@_3, TrUserData).
+
+d_field_TestProviderResult_latency_ms(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_TestProviderResult_latency_ms(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_TestProviderResult_latency_ms(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, TrUserData) ->
+    {NewFValue, RestF} = {begin <<Res:64/signed-native>> = <<(X bsl N + Acc):64/unsigned-native>>, id(Res, TrUserData) end, Rest},
+    dfp_read_field_def_TestProviderResult(RestF, 0, 0, F, F@_1, NewFValue, F@_3, TrUserData).
+
+d_field_TestProviderResult_error(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_TestProviderResult_error(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_TestProviderResult_error(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_TestProviderResult(RestF, 0, 0, F, F@_1, F@_2, NewFValue, TrUserData).
+
+skip_varint_TestProviderResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_TestProviderResult(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+skip_varint_TestProviderResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_TestProviderResult(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_length_delimited_TestProviderResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> skip_length_delimited_TestProviderResult(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+skip_length_delimited_TestProviderResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_TestProviderResult(Rest2, 0, 0, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_group_TestProviderResult(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_TestProviderResult(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, TrUserData).
+
+skip_32_TestProviderResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_TestProviderResult(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_64_TestProviderResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_TestProviderResult(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+decode_msg_GetRiskPoliciesResult(Bin, TrUserData) -> dfp_read_field_def_GetRiskPoliciesResult(Bin, 0, 0, 0, id([], TrUserData), TrUserData).
+
+dfp_read_field_def_GetRiskPoliciesResult(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_GetRiskPoliciesResult_policies(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_GetRiskPoliciesResult(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{policies => lists_reverse(R1, TrUserData)}
+    end;
+dfp_read_field_def_GetRiskPoliciesResult(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_GetRiskPoliciesResult(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_GetRiskPoliciesResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_GetRiskPoliciesResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_GetRiskPoliciesResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_GetRiskPoliciesResult_policies(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_GetRiskPoliciesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_GetRiskPoliciesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_GetRiskPoliciesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_GetRiskPoliciesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_GetRiskPoliciesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_GetRiskPoliciesResult(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{policies => lists_reverse(R1, TrUserData)}
+    end.
+
+d_field_GetRiskPoliciesResult_policies(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_GetRiskPoliciesResult_policies(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_GetRiskPoliciesResult_policies(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_RiskPolicy(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_GetRiskPoliciesResult(RestF, 0, 0, F, cons(NewFValue, Prev, TrUserData), TrUserData).
+
+skip_varint_GetRiskPoliciesResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_GetRiskPoliciesResult(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_GetRiskPoliciesResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_GetRiskPoliciesResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_GetRiskPoliciesResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_GetRiskPoliciesResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_GetRiskPoliciesResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_GetRiskPoliciesResult(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_GetRiskPoliciesResult(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_GetRiskPoliciesResult(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_GetRiskPoliciesResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_GetRiskPoliciesResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_GetRiskPoliciesResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_GetRiskPoliciesResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_SetRiskPolicyArgs(Bin, TrUserData) -> dfp_read_field_def_SetRiskPolicyArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_SetRiskPolicyArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_SetRiskPolicyArgs_risk_level(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_SetRiskPolicyArgs(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_SetRiskPolicyArgs_action(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_SetRiskPolicyArgs(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{risk_level => F@_1, action => F@_2};
+dfp_read_field_def_SetRiskPolicyArgs(Other, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dg_read_field_def_SetRiskPolicyArgs(Other, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+dg_read_field_def_SetRiskPolicyArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_SetRiskPolicyArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+dg_read_field_def_SetRiskPolicyArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_SetRiskPolicyArgs_risk_level(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        18 -> d_field_SetRiskPolicyArgs_action(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_SetRiskPolicyArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                1 -> skip_64_SetRiskPolicyArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_SetRiskPolicyArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                3 -> skip_group_SetRiskPolicyArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                5 -> skip_32_SetRiskPolicyArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData)
+            end
+    end;
+dg_read_field_def_SetRiskPolicyArgs(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{risk_level => F@_1, action => F@_2}.
+
+d_field_SetRiskPolicyArgs_risk_level(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_SetRiskPolicyArgs_risk_level(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_SetRiskPolicyArgs_risk_level(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_SetRiskPolicyArgs(RestF, 0, 0, F, NewFValue, F@_2, TrUserData).
+
+d_field_SetRiskPolicyArgs_action(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_SetRiskPolicyArgs_action(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_SetRiskPolicyArgs_action(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_SetRiskPolicyArgs(RestF, 0, 0, F, F@_1, NewFValue, TrUserData).
+
+skip_varint_SetRiskPolicyArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_SetRiskPolicyArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+skip_varint_SetRiskPolicyArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_SetRiskPolicyArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_SetRiskPolicyArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_SetRiskPolicyArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+skip_length_delimited_SetRiskPolicyArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_SetRiskPolicyArgs(Rest2, 0, 0, F, F@_1, F@_2, TrUserData).
+
+skip_group_SetRiskPolicyArgs(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_SetRiskPolicyArgs(Rest, 0, Z2, FNum, F@_1, F@_2, TrUserData).
+
+skip_32_SetRiskPolicyArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_SetRiskPolicyArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_64_SetRiskPolicyArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_SetRiskPolicyArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_SetRiskPolicyResult(Bin, TrUserData) -> dfp_read_field_def_SetRiskPolicyResult(Bin, 0, 0, 0, id(false, TrUserData), TrUserData).
+
+dfp_read_field_def_SetRiskPolicyResult(<<8, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_SetRiskPolicyResult_ok(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_SetRiskPolicyResult(<<>>, 0, 0, _, F@_1, _) -> #{ok => F@_1};
+dfp_read_field_def_SetRiskPolicyResult(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_SetRiskPolicyResult(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_SetRiskPolicyResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_SetRiskPolicyResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_SetRiskPolicyResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_SetRiskPolicyResult_ok(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_SetRiskPolicyResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_SetRiskPolicyResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_SetRiskPolicyResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_SetRiskPolicyResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_SetRiskPolicyResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_SetRiskPolicyResult(<<>>, 0, 0, _, F@_1, _) -> #{ok => F@_1}.
+
+d_field_SetRiskPolicyResult_ok(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_SetRiskPolicyResult_ok(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_SetRiskPolicyResult_ok(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_SetRiskPolicyResult(RestF, 0, 0, F, NewFValue, TrUserData).
+
+skip_varint_SetRiskPolicyResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_SetRiskPolicyResult(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_SetRiskPolicyResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_SetRiskPolicyResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_SetRiskPolicyResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_SetRiskPolicyResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_SetRiskPolicyResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_SetRiskPolicyResult(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_SetRiskPolicyResult(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_SetRiskPolicyResult(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_SetRiskPolicyResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_SetRiskPolicyResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_SetRiskPolicyResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_SetRiskPolicyResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_SetSessionProviderArgs(Bin, TrUserData) -> dfp_read_field_def_SetSessionProviderArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_SetSessionProviderArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_SetSessionProviderArgs_session_id(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_SetSessionProviderArgs(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_SetSessionProviderArgs_provider_id(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_SetSessionProviderArgs(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{session_id => F@_1, provider_id => F@_2};
+dfp_read_field_def_SetSessionProviderArgs(Other, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dg_read_field_def_SetSessionProviderArgs(Other, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+dg_read_field_def_SetSessionProviderArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_SetSessionProviderArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+dg_read_field_def_SetSessionProviderArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_SetSessionProviderArgs_session_id(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        18 -> d_field_SetSessionProviderArgs_provider_id(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_SetSessionProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                1 -> skip_64_SetSessionProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_SetSessionProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                3 -> skip_group_SetSessionProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                5 -> skip_32_SetSessionProviderArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData)
+            end
+    end;
+dg_read_field_def_SetSessionProviderArgs(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{session_id => F@_1, provider_id => F@_2}.
+
+d_field_SetSessionProviderArgs_session_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_SetSessionProviderArgs_session_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_SetSessionProviderArgs_session_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_SetSessionProviderArgs(RestF, 0, 0, F, NewFValue, F@_2, TrUserData).
+
+d_field_SetSessionProviderArgs_provider_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_SetSessionProviderArgs_provider_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_SetSessionProviderArgs_provider_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_SetSessionProviderArgs(RestF, 0, 0, F, F@_1, NewFValue, TrUserData).
+
+skip_varint_SetSessionProviderArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_SetSessionProviderArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+skip_varint_SetSessionProviderArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_SetSessionProviderArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_SetSessionProviderArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_SetSessionProviderArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+skip_length_delimited_SetSessionProviderArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_SetSessionProviderArgs(Rest2, 0, 0, F, F@_1, F@_2, TrUserData).
+
+skip_group_SetSessionProviderArgs(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_SetSessionProviderArgs(Rest, 0, Z2, FNum, F@_1, F@_2, TrUserData).
+
+skip_32_SetSessionProviderArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_SetSessionProviderArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_64_SetSessionProviderArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_SetSessionProviderArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_SetSessionProviderResult(Bin, TrUserData) -> dfp_read_field_def_SetSessionProviderResult(Bin, 0, 0, 0, id(false, TrUserData), TrUserData).
+
+dfp_read_field_def_SetSessionProviderResult(<<8, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_SetSessionProviderResult_ok(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_SetSessionProviderResult(<<>>, 0, 0, _, F@_1, _) -> #{ok => F@_1};
+dfp_read_field_def_SetSessionProviderResult(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_SetSessionProviderResult(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_SetSessionProviderResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_SetSessionProviderResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_SetSessionProviderResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_SetSessionProviderResult_ok(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_SetSessionProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_SetSessionProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_SetSessionProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_SetSessionProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_SetSessionProviderResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_SetSessionProviderResult(<<>>, 0, 0, _, F@_1, _) -> #{ok => F@_1}.
+
+d_field_SetSessionProviderResult_ok(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_SetSessionProviderResult_ok(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_SetSessionProviderResult_ok(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_SetSessionProviderResult(RestF, 0, 0, F, NewFValue, TrUserData).
+
+skip_varint_SetSessionProviderResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_SetSessionProviderResult(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_SetSessionProviderResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_SetSessionProviderResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_SetSessionProviderResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_SetSessionProviderResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_SetSessionProviderResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_SetSessionProviderResult(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_SetSessionProviderResult(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_SetSessionProviderResult(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_SetSessionProviderResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_SetSessionProviderResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_SetSessionProviderResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_SetSessionProviderResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_MemoryEntry(Bin, TrUserData) -> dfp_read_field_def_MemoryEntry(Bin, 0, 0, 0, id(<<>>, TrUserData), id('MEMORY_TIER_UNSPECIFIED', TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(0, TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_MemoryEntry(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_MemoryEntry_key(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_MemoryEntry(<<16, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_MemoryEntry_tier(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_MemoryEntry(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_MemoryEntry_content(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_MemoryEntry(<<34, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_MemoryEntry_source(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_MemoryEntry(<<40, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_MemoryEntry_created_at(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_MemoryEntry(<<50, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_MemoryEntry_session_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_MemoryEntry(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, _) -> #{key => F@_1, tier => F@_2, content => F@_3, source => F@_4, created_at => F@_5, session_id => F@_6};
+dfp_read_field_def_MemoryEntry(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> dg_read_field_def_MemoryEntry(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+dg_read_field_def_MemoryEntry(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 32 - 7 -> dg_read_field_def_MemoryEntry(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dg_read_field_def_MemoryEntry(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_MemoryEntry_key(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        16 -> d_field_MemoryEntry_tier(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        26 -> d_field_MemoryEntry_content(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        34 -> d_field_MemoryEntry_source(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        40 -> d_field_MemoryEntry_created_at(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        50 -> d_field_MemoryEntry_session_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_MemoryEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+                1 -> skip_64_MemoryEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+                2 -> skip_length_delimited_MemoryEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+                3 -> skip_group_MemoryEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+                5 -> skip_32_MemoryEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData)
+            end
+    end;
+dg_read_field_def_MemoryEntry(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, _) -> #{key => F@_1, tier => F@_2, content => F@_3, source => F@_4, created_at => F@_5, session_id => F@_6}.
+
+d_field_MemoryEntry_key(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_MemoryEntry_key(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_MemoryEntry_key(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_MemoryEntry(RestF, 0, 0, F, NewFValue, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+d_field_MemoryEntry_tier(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_MemoryEntry_tier(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_MemoryEntry_tier(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
+    {NewFValue, RestF} = {id(d_enum_MemoryTier(begin <<Res:32/signed-native>> = <<(X bsl N + Acc):32/unsigned-native>>, id(Res, TrUserData) end), TrUserData), Rest},
+    dfp_read_field_def_MemoryEntry(RestF, 0, 0, F, F@_1, NewFValue, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+d_field_MemoryEntry_content(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_MemoryEntry_content(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_MemoryEntry_content(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, F@_4, F@_5, F@_6, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_MemoryEntry(RestF, 0, 0, F, F@_1, F@_2, NewFValue, F@_4, F@_5, F@_6, TrUserData).
+
+d_field_MemoryEntry_source(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_MemoryEntry_source(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_MemoryEntry_source(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, _, F@_5, F@_6, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_MemoryEntry(RestF, 0, 0, F, F@_1, F@_2, F@_3, NewFValue, F@_5, F@_6, TrUserData).
+
+d_field_MemoryEntry_created_at(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_MemoryEntry_created_at(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_MemoryEntry_created_at(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, _, F@_6, TrUserData) ->
+    {NewFValue, RestF} = {begin <<Res:64/signed-native>> = <<(X bsl N + Acc):64/unsigned-native>>, id(Res, TrUserData) end, Rest},
+    dfp_read_field_def_MemoryEntry(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, NewFValue, F@_6, TrUserData).
+
+d_field_MemoryEntry_session_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_MemoryEntry_session_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_MemoryEntry_session_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_MemoryEntry(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, NewFValue, TrUserData).
+
+skip_varint_MemoryEntry(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> skip_varint_MemoryEntry(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+skip_varint_MemoryEntry(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> dfp_read_field_def_MemoryEntry(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+skip_length_delimited_MemoryEntry(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> skip_length_delimited_MemoryEntry(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+skip_length_delimited_MemoryEntry(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_MemoryEntry(Rest2, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+skip_group_MemoryEntry(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_MemoryEntry(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+skip_32_MemoryEntry(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> dfp_read_field_def_MemoryEntry(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+skip_64_MemoryEntry(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> dfp_read_field_def_MemoryEntry(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
+
+decode_msg_ListMemoriesArgs(Bin, TrUserData) -> dfp_read_field_def_ListMemoriesArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), id('MEMORY_TIER_UNSPECIFIED', TrUserData), TrUserData).
+
+dfp_read_field_def_ListMemoriesArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_ListMemoriesArgs_session_id(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_ListMemoriesArgs(<<16, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_ListMemoriesArgs_tier(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_ListMemoriesArgs(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{session_id => F@_1, tier => F@_2};
+dfp_read_field_def_ListMemoriesArgs(Other, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dg_read_field_def_ListMemoriesArgs(Other, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+dg_read_field_def_ListMemoriesArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_ListMemoriesArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+dg_read_field_def_ListMemoriesArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_ListMemoriesArgs_session_id(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        16 -> d_field_ListMemoriesArgs_tier(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ListMemoriesArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                1 -> skip_64_ListMemoriesArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_ListMemoriesArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                3 -> skip_group_ListMemoriesArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                5 -> skip_32_ListMemoriesArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData)
+            end
+    end;
+dg_read_field_def_ListMemoriesArgs(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{session_id => F@_1, tier => F@_2}.
+
+d_field_ListMemoriesArgs_session_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_ListMemoriesArgs_session_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_ListMemoriesArgs_session_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ListMemoriesArgs(RestF, 0, 0, F, NewFValue, F@_2, TrUserData).
+
+d_field_ListMemoriesArgs_tier(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_ListMemoriesArgs_tier(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_ListMemoriesArgs_tier(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = {id(d_enum_MemoryTier(begin <<Res:32/signed-native>> = <<(X bsl N + Acc):32/unsigned-native>>, id(Res, TrUserData) end), TrUserData), Rest},
+    dfp_read_field_def_ListMemoriesArgs(RestF, 0, 0, F, F@_1, NewFValue, TrUserData).
+
+skip_varint_ListMemoriesArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_ListMemoriesArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+skip_varint_ListMemoriesArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ListMemoriesArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_ListMemoriesArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_ListMemoriesArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+skip_length_delimited_ListMemoriesArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ListMemoriesArgs(Rest2, 0, 0, F, F@_1, F@_2, TrUserData).
+
+skip_group_ListMemoriesArgs(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ListMemoriesArgs(Rest, 0, Z2, FNum, F@_1, F@_2, TrUserData).
+
+skip_32_ListMemoriesArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ListMemoriesArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_64_ListMemoriesArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ListMemoriesArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_ListMemoriesResult(Bin, TrUserData) -> dfp_read_field_def_ListMemoriesResult(Bin, 0, 0, 0, id([], TrUserData), TrUserData).
+
+dfp_read_field_def_ListMemoriesResult(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_ListMemoriesResult_memories(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_ListMemoriesResult(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{memories => lists_reverse(R1, TrUserData)}
+    end;
+dfp_read_field_def_ListMemoriesResult(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_ListMemoriesResult(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_ListMemoriesResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_ListMemoriesResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_ListMemoriesResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_ListMemoriesResult_memories(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ListMemoriesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_ListMemoriesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_ListMemoriesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_ListMemoriesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_ListMemoriesResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_ListMemoriesResult(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{memories => lists_reverse(R1, TrUserData)}
+    end.
+
+d_field_ListMemoriesResult_memories(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_ListMemoriesResult_memories(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_ListMemoriesResult_memories(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_MemoryEntry(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_ListMemoriesResult(RestF, 0, 0, F, cons(NewFValue, Prev, TrUserData), TrUserData).
+
+skip_varint_ListMemoriesResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_ListMemoriesResult(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_ListMemoriesResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_ListMemoriesResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_ListMemoriesResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_ListMemoriesResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_ListMemoriesResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ListMemoriesResult(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_ListMemoriesResult(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ListMemoriesResult(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_ListMemoriesResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_ListMemoriesResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_ListMemoriesResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_ListMemoriesResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_AddMemoryArgs(Bin, TrUserData) -> dfp_read_field_def_AddMemoryArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), id('MEMORY_TIER_UNSPECIFIED', TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_AddMemoryArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_AddMemoryArgs_session_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_AddMemoryArgs(<<16, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_AddMemoryArgs_tier(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_AddMemoryArgs(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_AddMemoryArgs_content(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_AddMemoryArgs(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{session_id => F@_1, tier => F@_2, content => F@_3};
+dfp_read_field_def_AddMemoryArgs(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_AddMemoryArgs(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+dg_read_field_def_AddMemoryArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_AddMemoryArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+dg_read_field_def_AddMemoryArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_AddMemoryArgs_session_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        16 -> d_field_AddMemoryArgs_tier(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        26 -> d_field_AddMemoryArgs_content(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_AddMemoryArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                1 -> skip_64_AddMemoryArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                2 -> skip_length_delimited_AddMemoryArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                3 -> skip_group_AddMemoryArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                5 -> skip_32_AddMemoryArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData)
+            end
+    end;
+dg_read_field_def_AddMemoryArgs(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{session_id => F@_1, tier => F@_2, content => F@_3}.
+
+d_field_AddMemoryArgs_session_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_AddMemoryArgs_session_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_AddMemoryArgs_session_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_AddMemoryArgs(RestF, 0, 0, F, NewFValue, F@_2, F@_3, TrUserData).
+
+d_field_AddMemoryArgs_tier(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_AddMemoryArgs_tier(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_AddMemoryArgs_tier(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, TrUserData) ->
+    {NewFValue, RestF} = {id(d_enum_MemoryTier(begin <<Res:32/signed-native>> = <<(X bsl N + Acc):32/unsigned-native>>, id(Res, TrUserData) end), TrUserData), Rest},
+    dfp_read_field_def_AddMemoryArgs(RestF, 0, 0, F, F@_1, NewFValue, F@_3, TrUserData).
+
+d_field_AddMemoryArgs_content(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_AddMemoryArgs_content(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_AddMemoryArgs_content(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_AddMemoryArgs(RestF, 0, 0, F, F@_1, F@_2, NewFValue, TrUserData).
+
+skip_varint_AddMemoryArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_AddMemoryArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+skip_varint_AddMemoryArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_AddMemoryArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_length_delimited_AddMemoryArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> skip_length_delimited_AddMemoryArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+skip_length_delimited_AddMemoryArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_AddMemoryArgs(Rest2, 0, 0, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_group_AddMemoryArgs(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_AddMemoryArgs(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, TrUserData).
+
+skip_32_AddMemoryArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_AddMemoryArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_64_AddMemoryArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_AddMemoryArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+decode_msg_AddMemoryResult(Bin, TrUserData) -> dfp_read_field_def_AddMemoryResult(Bin, 0, 0, 0, id(false, TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_AddMemoryResult(<<8, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_AddMemoryResult_ok(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_AddMemoryResult(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_AddMemoryResult_key(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_AddMemoryResult(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{ok => F@_1, key => F@_2};
+dfp_read_field_def_AddMemoryResult(Other, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dg_read_field_def_AddMemoryResult(Other, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+dg_read_field_def_AddMemoryResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_AddMemoryResult(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+dg_read_field_def_AddMemoryResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_AddMemoryResult_ok(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        18 -> d_field_AddMemoryResult_key(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_AddMemoryResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                1 -> skip_64_AddMemoryResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_AddMemoryResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                3 -> skip_group_AddMemoryResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                5 -> skip_32_AddMemoryResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData)
+            end
+    end;
+dg_read_field_def_AddMemoryResult(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{ok => F@_1, key => F@_2}.
+
+d_field_AddMemoryResult_ok(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_AddMemoryResult_ok(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_AddMemoryResult_ok(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_AddMemoryResult(RestF, 0, 0, F, NewFValue, F@_2, TrUserData).
+
+d_field_AddMemoryResult_key(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_AddMemoryResult_key(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_AddMemoryResult_key(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_AddMemoryResult(RestF, 0, 0, F, F@_1, NewFValue, TrUserData).
+
+skip_varint_AddMemoryResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_AddMemoryResult(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+skip_varint_AddMemoryResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_AddMemoryResult(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_AddMemoryResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_AddMemoryResult(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+skip_length_delimited_AddMemoryResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_AddMemoryResult(Rest2, 0, 0, F, F@_1, F@_2, TrUserData).
+
+skip_group_AddMemoryResult(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_AddMemoryResult(Rest, 0, Z2, FNum, F@_1, F@_2, TrUserData).
+
+skip_32_AddMemoryResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_AddMemoryResult(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_64_AddMemoryResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_AddMemoryResult(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_DeleteMemoryArgs(Bin, TrUserData) -> dfp_read_field_def_DeleteMemoryArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), id('MEMORY_TIER_UNSPECIFIED', TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_DeleteMemoryArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_DeleteMemoryArgs_session_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_DeleteMemoryArgs(<<16, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_DeleteMemoryArgs_tier(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_DeleteMemoryArgs(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> d_field_DeleteMemoryArgs_key(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_DeleteMemoryArgs(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{session_id => F@_1, tier => F@_2, key => F@_3};
+dfp_read_field_def_DeleteMemoryArgs(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_DeleteMemoryArgs(Other, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+dg_read_field_def_DeleteMemoryArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_DeleteMemoryArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+dg_read_field_def_DeleteMemoryArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_DeleteMemoryArgs_session_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        16 -> d_field_DeleteMemoryArgs_tier(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        26 -> d_field_DeleteMemoryArgs_key(Rest, 0, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_DeleteMemoryArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                1 -> skip_64_DeleteMemoryArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                2 -> skip_length_delimited_DeleteMemoryArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                3 -> skip_group_DeleteMemoryArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData);
+                5 -> skip_32_DeleteMemoryArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, TrUserData)
+            end
+    end;
+dg_read_field_def_DeleteMemoryArgs(<<>>, 0, 0, _, F@_1, F@_2, F@_3, _) -> #{session_id => F@_1, tier => F@_2, key => F@_3}.
+
+d_field_DeleteMemoryArgs_session_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_DeleteMemoryArgs_session_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_DeleteMemoryArgs_session_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_DeleteMemoryArgs(RestF, 0, 0, F, NewFValue, F@_2, F@_3, TrUserData).
+
+d_field_DeleteMemoryArgs_tier(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_DeleteMemoryArgs_tier(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_DeleteMemoryArgs_tier(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, TrUserData) ->
+    {NewFValue, RestF} = {id(d_enum_MemoryTier(begin <<Res:32/signed-native>> = <<(X bsl N + Acc):32/unsigned-native>>, id(Res, TrUserData) end), TrUserData), Rest},
+    dfp_read_field_def_DeleteMemoryArgs(RestF, 0, 0, F, F@_1, NewFValue, F@_3, TrUserData).
+
+d_field_DeleteMemoryArgs_key(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_DeleteMemoryArgs_key(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+d_field_DeleteMemoryArgs_key(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_DeleteMemoryArgs(RestF, 0, 0, F, F@_1, F@_2, NewFValue, TrUserData).
+
+skip_varint_DeleteMemoryArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_DeleteMemoryArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData);
+skip_varint_DeleteMemoryArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_DeleteMemoryArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_length_delimited_DeleteMemoryArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> skip_length_delimited_DeleteMemoryArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, TrUserData);
+skip_length_delimited_DeleteMemoryArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_DeleteMemoryArgs(Rest2, 0, 0, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_group_DeleteMemoryArgs(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_DeleteMemoryArgs(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, TrUserData).
+
+skip_32_DeleteMemoryArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_DeleteMemoryArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+skip_64_DeleteMemoryArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_DeleteMemoryArgs(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, TrUserData).
+
+decode_msg_DeleteMemoryResult(Bin, TrUserData) -> dfp_read_field_def_DeleteMemoryResult(Bin, 0, 0, 0, id(false, TrUserData), TrUserData).
+
+dfp_read_field_def_DeleteMemoryResult(<<8, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_DeleteMemoryResult_ok(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_DeleteMemoryResult(<<>>, 0, 0, _, F@_1, _) -> #{ok => F@_1};
+dfp_read_field_def_DeleteMemoryResult(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_DeleteMemoryResult(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_DeleteMemoryResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_DeleteMemoryResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_DeleteMemoryResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_DeleteMemoryResult_ok(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_DeleteMemoryResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_DeleteMemoryResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_DeleteMemoryResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_DeleteMemoryResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_DeleteMemoryResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_DeleteMemoryResult(<<>>, 0, 0, _, F@_1, _) -> #{ok => F@_1}.
+
+d_field_DeleteMemoryResult_ok(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_DeleteMemoryResult_ok(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_DeleteMemoryResult_ok(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_DeleteMemoryResult(RestF, 0, 0, F, NewFValue, TrUserData).
+
+skip_varint_DeleteMemoryResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_DeleteMemoryResult(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_DeleteMemoryResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteMemoryResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_DeleteMemoryResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_DeleteMemoryResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_DeleteMemoryResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_DeleteMemoryResult(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_DeleteMemoryResult(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_DeleteMemoryResult(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_DeleteMemoryResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteMemoryResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_DeleteMemoryResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteMemoryResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_ClearMemoriesArgs(Bin, TrUserData) -> dfp_read_field_def_ClearMemoriesArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), id('MEMORY_TIER_UNSPECIFIED', TrUserData), TrUserData).
+
+dfp_read_field_def_ClearMemoriesArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_ClearMemoriesArgs_session_id(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_ClearMemoriesArgs(<<16, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_ClearMemoriesArgs_tier(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_ClearMemoriesArgs(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{session_id => F@_1, tier => F@_2};
+dfp_read_field_def_ClearMemoriesArgs(Other, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dg_read_field_def_ClearMemoriesArgs(Other, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+dg_read_field_def_ClearMemoriesArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_ClearMemoriesArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+dg_read_field_def_ClearMemoriesArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_ClearMemoriesArgs_session_id(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        16 -> d_field_ClearMemoriesArgs_tier(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ClearMemoriesArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                1 -> skip_64_ClearMemoriesArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_ClearMemoriesArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                3 -> skip_group_ClearMemoriesArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                5 -> skip_32_ClearMemoriesArgs(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData)
+            end
+    end;
+dg_read_field_def_ClearMemoriesArgs(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{session_id => F@_1, tier => F@_2}.
+
+d_field_ClearMemoriesArgs_session_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_ClearMemoriesArgs_session_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_ClearMemoriesArgs_session_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_ClearMemoriesArgs(RestF, 0, 0, F, NewFValue, F@_2, TrUserData).
+
+d_field_ClearMemoriesArgs_tier(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_ClearMemoriesArgs_tier(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_ClearMemoriesArgs_tier(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = {id(d_enum_MemoryTier(begin <<Res:32/signed-native>> = <<(X bsl N + Acc):32/unsigned-native>>, id(Res, TrUserData) end), TrUserData), Rest},
+    dfp_read_field_def_ClearMemoriesArgs(RestF, 0, 0, F, F@_1, NewFValue, TrUserData).
+
+skip_varint_ClearMemoriesArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_ClearMemoriesArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+skip_varint_ClearMemoriesArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ClearMemoriesArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_ClearMemoriesArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_ClearMemoriesArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+skip_length_delimited_ClearMemoriesArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ClearMemoriesArgs(Rest2, 0, 0, F, F@_1, F@_2, TrUserData).
+
+skip_group_ClearMemoriesArgs(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ClearMemoriesArgs(Rest, 0, Z2, FNum, F@_1, F@_2, TrUserData).
+
+skip_32_ClearMemoriesArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ClearMemoriesArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_64_ClearMemoriesArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ClearMemoriesArgs(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_ClearMemoriesResult(Bin, TrUserData) -> dfp_read_field_def_ClearMemoriesResult(Bin, 0, 0, 0, id(false, TrUserData), id(0, TrUserData), TrUserData).
+
+dfp_read_field_def_ClearMemoriesResult(<<8, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_ClearMemoriesResult_ok(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_ClearMemoriesResult(<<16, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> d_field_ClearMemoriesResult_count(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+dfp_read_field_def_ClearMemoriesResult(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{ok => F@_1, count => F@_2};
+dfp_read_field_def_ClearMemoriesResult(Other, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dg_read_field_def_ClearMemoriesResult(Other, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+dg_read_field_def_ClearMemoriesResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_ClearMemoriesResult(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+dg_read_field_def_ClearMemoriesResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_ClearMemoriesResult_ok(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        16 -> d_field_ClearMemoriesResult_count(Rest, 0, 0, 0, F@_1, F@_2, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ClearMemoriesResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                1 -> skip_64_ClearMemoriesResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_ClearMemoriesResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                3 -> skip_group_ClearMemoriesResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData);
+                5 -> skip_32_ClearMemoriesResult(Rest, 0, 0, Key bsr 3, F@_1, F@_2, TrUserData)
+            end
+    end;
+dg_read_field_def_ClearMemoriesResult(<<>>, 0, 0, _, F@_1, F@_2, _) -> #{ok => F@_1, count => F@_2}.
+
+d_field_ClearMemoriesResult_ok(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_ClearMemoriesResult_ok(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_ClearMemoriesResult_ok(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_ClearMemoriesResult(RestF, 0, 0, F, NewFValue, F@_2, TrUserData).
+
+d_field_ClearMemoriesResult_count(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> d_field_ClearMemoriesResult_count(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+d_field_ClearMemoriesResult_count(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = {begin <<Res:32/signed-native>> = <<(X bsl N + Acc):32/unsigned-native>>, id(Res, TrUserData) end, Rest},
+    dfp_read_field_def_ClearMemoriesResult(RestF, 0, 0, F, F@_1, NewFValue, TrUserData).
+
+skip_varint_ClearMemoriesResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> skip_varint_ClearMemoriesResult(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData);
+skip_varint_ClearMemoriesResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ClearMemoriesResult(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_ClearMemoriesResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_ClearMemoriesResult(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, TrUserData);
+skip_length_delimited_ClearMemoriesResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ClearMemoriesResult(Rest2, 0, 0, F, F@_1, F@_2, TrUserData).
+
+skip_group_ClearMemoriesResult(Bin, _, Z2, FNum, F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ClearMemoriesResult(Rest, 0, Z2, FNum, F@_1, F@_2, TrUserData).
+
+skip_32_ClearMemoriesResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ClearMemoriesResult(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+skip_64_ClearMemoriesResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, TrUserData) -> dfp_read_field_def_ClearMemoriesResult(Rest, Z1, Z2, F, F@_1, F@_2, TrUserData).
+
+decode_msg_CancelExecutionArgs(Bin, TrUserData) -> dfp_read_field_def_CancelExecutionArgs(Bin, 0, 0, 0, id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_CancelExecutionArgs(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_CancelExecutionArgs_session_id(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_CancelExecutionArgs(<<>>, 0, 0, _, F@_1, _) -> #{session_id => F@_1};
+dfp_read_field_def_CancelExecutionArgs(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_CancelExecutionArgs(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_CancelExecutionArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_CancelExecutionArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_CancelExecutionArgs(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_CancelExecutionArgs_session_id(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_CancelExecutionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_CancelExecutionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_CancelExecutionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_CancelExecutionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_CancelExecutionArgs(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_CancelExecutionArgs(<<>>, 0, 0, _, F@_1, _) -> #{session_id => F@_1}.
+
+d_field_CancelExecutionArgs_session_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_CancelExecutionArgs_session_id(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_CancelExecutionArgs_session_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_CancelExecutionArgs(RestF, 0, 0, F, NewFValue, TrUserData).
+
+skip_varint_CancelExecutionArgs(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_CancelExecutionArgs(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_CancelExecutionArgs(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_CancelExecutionArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_CancelExecutionArgs(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_CancelExecutionArgs(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_CancelExecutionArgs(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_CancelExecutionArgs(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_CancelExecutionArgs(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_CancelExecutionArgs(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_CancelExecutionArgs(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_CancelExecutionArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_CancelExecutionArgs(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_CancelExecutionArgs(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+decode_msg_CancelExecutionResult(Bin, TrUserData) -> dfp_read_field_def_CancelExecutionResult(Bin, 0, 0, 0, id(false, TrUserData), TrUserData).
+
+dfp_read_field_def_CancelExecutionResult(<<8, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_CancelExecutionResult_ok(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_CancelExecutionResult(<<>>, 0, 0, _, F@_1, _) -> #{ok => F@_1};
+dfp_read_field_def_CancelExecutionResult(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_CancelExecutionResult(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_CancelExecutionResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_CancelExecutionResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_CancelExecutionResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        8 -> d_field_CancelExecutionResult_ok(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_CancelExecutionResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_CancelExecutionResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_CancelExecutionResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_CancelExecutionResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_CancelExecutionResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_CancelExecutionResult(<<>>, 0, 0, _, F@_1, _) -> #{ok => F@_1}.
+
+d_field_CancelExecutionResult_ok(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_CancelExecutionResult_ok(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_CancelExecutionResult_ok(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_CancelExecutionResult(RestF, 0, 0, F, NewFValue, TrUserData).
+
+skip_varint_CancelExecutionResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_CancelExecutionResult(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_CancelExecutionResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_CancelExecutionResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_CancelExecutionResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_CancelExecutionResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_CancelExecutionResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_CancelExecutionResult(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_CancelExecutionResult(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_CancelExecutionResult(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_CancelExecutionResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_CancelExecutionResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_CancelExecutionResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_CancelExecutionResult(Rest, Z1, Z2, F, F@_1, TrUserData).
 
 decode_msg_LlmChunk(Bin, TrUserData) -> dfp_read_field_def_LlmChunk(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
 
@@ -4763,6 +7657,19 @@ skip_32_DeleteSessionResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) 
 
 skip_64_DeleteSessionResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_DeleteSessionResult(Rest, Z1, Z2, F, F@_1, TrUserData).
 
+d_enum_PlanStepStatus(0) -> 'PLAN_STEP_PENDING';
+d_enum_PlanStepStatus(1) -> 'PLAN_STEP_RUNNING';
+d_enum_PlanStepStatus(2) -> 'PLAN_STEP_DONE';
+d_enum_PlanStepStatus(3) -> 'PLAN_STEP_FAILED';
+d_enum_PlanStepStatus(4) -> 'PLAN_STEP_SKIPPED';
+d_enum_PlanStepStatus(V) -> V.
+
+d_enum_MemoryTier(0) -> 'MEMORY_TIER_UNSPECIFIED';
+d_enum_MemoryTier(1) -> 'MEMORY_TIER_FACTS';
+d_enum_MemoryTier(2) -> 'MEMORY_TIER_PREFERENCES';
+d_enum_MemoryTier(3) -> 'MEMORY_TIER_WORKSPACE';
+d_enum_MemoryTier(V) -> V.
+
 read_group(Bin, FieldNum) ->
     {NumBytes, EndTagLen} = read_gr_b(Bin, 0, 0, 0, 0, FieldNum),
     <<Group:NumBytes/binary, _:EndTagLen/binary, Rest/binary>> = Bin,
@@ -4834,6 +7741,37 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'PanelStream' -> merge_msg_PanelStream(Prev, New, TrUserData);
         'ApprovalRequired' -> merge_msg_ApprovalRequired(Prev, New, TrUserData);
         'PendingApprovalEntry' -> merge_msg_PendingApprovalEntry(Prev, New, TrUserData);
+        'PlanStep' -> merge_msg_PlanStep(Prev, New, TrUserData);
+        'PlanGenerated' -> merge_msg_PlanGenerated(Prev, New, TrUserData);
+        'PlanStepUpdate' -> merge_msg_PlanStepUpdate(Prev, New, TrUserData);
+        'ProviderConfig' -> merge_msg_ProviderConfig(Prev, New, TrUserData);
+        'ModelRoute' -> merge_msg_ModelRoute(Prev, New, TrUserData);
+        'RiskPolicy' -> merge_msg_RiskPolicy(Prev, New, TrUserData);
+        'ListProvidersResult' -> merge_msg_ListProvidersResult(Prev, New, TrUserData);
+        'UpsertProviderArgs' -> merge_msg_UpsertProviderArgs(Prev, New, TrUserData);
+        'UpsertProviderResult' -> merge_msg_UpsertProviderResult(Prev, New, TrUserData);
+        'DeleteProviderArgs' -> merge_msg_DeleteProviderArgs(Prev, New, TrUserData);
+        'DeleteProviderResult' -> merge_msg_DeleteProviderResult(Prev, New, TrUserData);
+        'SetDefaultProviderArgs' -> merge_msg_SetDefaultProviderArgs(Prev, New, TrUserData);
+        'SetDefaultProviderResult' -> merge_msg_SetDefaultProviderResult(Prev, New, TrUserData);
+        'TestProviderArgs' -> merge_msg_TestProviderArgs(Prev, New, TrUserData);
+        'TestProviderResult' -> merge_msg_TestProviderResult(Prev, New, TrUserData);
+        'GetRiskPoliciesResult' -> merge_msg_GetRiskPoliciesResult(Prev, New, TrUserData);
+        'SetRiskPolicyArgs' -> merge_msg_SetRiskPolicyArgs(Prev, New, TrUserData);
+        'SetRiskPolicyResult' -> merge_msg_SetRiskPolicyResult(Prev, New, TrUserData);
+        'SetSessionProviderArgs' -> merge_msg_SetSessionProviderArgs(Prev, New, TrUserData);
+        'SetSessionProviderResult' -> merge_msg_SetSessionProviderResult(Prev, New, TrUserData);
+        'MemoryEntry' -> merge_msg_MemoryEntry(Prev, New, TrUserData);
+        'ListMemoriesArgs' -> merge_msg_ListMemoriesArgs(Prev, New, TrUserData);
+        'ListMemoriesResult' -> merge_msg_ListMemoriesResult(Prev, New, TrUserData);
+        'AddMemoryArgs' -> merge_msg_AddMemoryArgs(Prev, New, TrUserData);
+        'AddMemoryResult' -> merge_msg_AddMemoryResult(Prev, New, TrUserData);
+        'DeleteMemoryArgs' -> merge_msg_DeleteMemoryArgs(Prev, New, TrUserData);
+        'DeleteMemoryResult' -> merge_msg_DeleteMemoryResult(Prev, New, TrUserData);
+        'ClearMemoriesArgs' -> merge_msg_ClearMemoriesArgs(Prev, New, TrUserData);
+        'ClearMemoriesResult' -> merge_msg_ClearMemoriesResult(Prev, New, TrUserData);
+        'CancelExecutionArgs' -> merge_msg_CancelExecutionArgs(Prev, New, TrUserData);
+        'CancelExecutionResult' -> merge_msg_CancelExecutionResult(Prev, New, TrUserData);
         'LlmChunk' -> merge_msg_LlmChunk(Prev, New, TrUserData);
         'JsonField' -> merge_msg_JsonField(Prev, New, TrUserData);
         'ToolParameter' -> merge_msg_ToolParameter(Prev, New, TrUserData);
@@ -4978,16 +7916,22 @@ merge_msg_PanelStream(PMsg, NMsg, TrUserData) ->
         {#{final := PFfinal}, #{final := NFfinal}} -> S2#{final => merge_msg_FinalAnswer(PFfinal, NFfinal, TrUserData)};
         {#{error := PFerror}, #{error := NFerror}} -> S2#{error => merge_msg_StreamError(PFerror, NFerror, TrUserData)};
         {#{approval_required := PFapproval_required}, #{approval_required := NFapproval_required}} -> S2#{approval_required => merge_msg_ApprovalRequired(PFapproval_required, NFapproval_required, TrUserData)};
+        {#{plan_generated := PFplan_generated}, #{plan_generated := NFplan_generated}} -> S2#{plan_generated => merge_msg_PlanGenerated(PFplan_generated, NFplan_generated, TrUserData)};
+        {#{plan_step_update := PFplan_step_update}, #{plan_step_update := NFplan_step_update}} -> S2#{plan_step_update => merge_msg_PlanStepUpdate(PFplan_step_update, NFplan_step_update, TrUserData)};
         {_, #{chunk := NFchunk}} -> S2#{chunk => NFchunk};
         {_, #{tool_event := NFtool_event}} -> S2#{tool_event => NFtool_event};
         {_, #{final := NFfinal}} -> S2#{final => NFfinal};
         {_, #{error := NFerror}} -> S2#{error => NFerror};
         {_, #{approval_required := NFapproval_required}} -> S2#{approval_required => NFapproval_required};
+        {_, #{plan_generated := NFplan_generated}} -> S2#{plan_generated => NFplan_generated};
+        {_, #{plan_step_update := NFplan_step_update}} -> S2#{plan_step_update => NFplan_step_update};
         {#{chunk := PFchunk}, _} -> S2#{chunk => PFchunk};
         {#{tool_event := PFtool_event}, _} -> S2#{tool_event => PFtool_event};
         {#{final := PFfinal}, _} -> S2#{final => PFfinal};
         {#{error := PFerror}, _} -> S2#{error => PFerror};
         {#{approval_required := PFapproval_required}, _} -> S2#{approval_required => PFapproval_required};
+        {#{plan_generated := PFplan_generated}, _} -> S2#{plan_generated => PFplan_generated};
+        {#{plan_step_update := PFplan_step_update}, _} -> S2#{plan_step_update => PFplan_step_update};
         _ -> S2
     end.
 
@@ -5072,6 +8016,474 @@ merge_msg_PendingApprovalEntry(PMsg, NMsg, _) ->
         {_, #{registered_at := NFregistered_at}} -> S8#{registered_at => NFregistered_at};
         {#{registered_at := PFregistered_at}, _} -> S8#{registered_at => PFregistered_at};
         _ -> S8
+    end.
+
+-compile({nowarn_unused_function,merge_msg_PlanStep/3}).
+merge_msg_PlanStep(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{index := NFindex}} -> S1#{index => NFindex};
+             {#{index := PFindex}, _} -> S1#{index => PFindex};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{description := NFdescription}} -> S2#{description => NFdescription};
+             {#{description := PFdescription}, _} -> S2#{description => PFdescription};
+             _ -> S2
+         end,
+    S4 = case {PMsg, NMsg} of
+             {_, #{tool_hint := NFtool_hint}} -> S3#{tool_hint => NFtool_hint};
+             {#{tool_hint := PFtool_hint}, _} -> S3#{tool_hint => PFtool_hint};
+             _ -> S3
+         end,
+    case {PMsg, NMsg} of
+        {_, #{risk_level := NFrisk_level}} -> S4#{risk_level => NFrisk_level};
+        {#{risk_level := PFrisk_level}, _} -> S4#{risk_level => PFrisk_level};
+        _ -> S4
+    end.
+
+-compile({nowarn_unused_function,merge_msg_PlanGenerated/3}).
+merge_msg_PlanGenerated(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{goal := NFgoal}} -> S1#{goal => NFgoal};
+             {#{goal := PFgoal}, _} -> S1#{goal => PFgoal};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {#{steps := PFsteps}, #{steps := NFsteps}} -> S2#{steps => 'erlang_++'(PFsteps, NFsteps, TrUserData)};
+             {_, #{steps := NFsteps}} -> S2#{steps => NFsteps};
+             {#{steps := PFsteps}, _} -> S2#{steps => PFsteps};
+             {_, _} -> S2
+         end,
+    S4 = case {PMsg, NMsg} of
+             {#{warnings := PFwarnings}, #{warnings := NFwarnings}} -> S3#{warnings => 'erlang_++'(PFwarnings, NFwarnings, TrUserData)};
+             {_, #{warnings := NFwarnings}} -> S3#{warnings => NFwarnings};
+             {#{warnings := PFwarnings}, _} -> S3#{warnings => PFwarnings};
+             {_, _} -> S3
+         end,
+    case {PMsg, NMsg} of
+        {#{suggestions := PFsuggestions}, #{suggestions := NFsuggestions}} -> S4#{suggestions => 'erlang_++'(PFsuggestions, NFsuggestions, TrUserData)};
+        {_, #{suggestions := NFsuggestions}} -> S4#{suggestions => NFsuggestions};
+        {#{suggestions := PFsuggestions}, _} -> S4#{suggestions => PFsuggestions};
+        {_, _} -> S4
+    end.
+
+-compile({nowarn_unused_function,merge_msg_PlanStepUpdate/3}).
+merge_msg_PlanStepUpdate(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{step_index := NFstep_index}} -> S1#{step_index => NFstep_index};
+             {#{step_index := PFstep_index}, _} -> S1#{step_index => PFstep_index};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{status := NFstatus}} -> S2#{status => NFstatus};
+             {#{status := PFstatus}, _} -> S2#{status => PFstatus};
+             _ -> S2
+         end,
+    case {PMsg, NMsg} of
+        {_, #{result_summary := NFresult_summary}} -> S3#{result_summary => NFresult_summary};
+        {#{result_summary := PFresult_summary}, _} -> S3#{result_summary => PFresult_summary};
+        _ -> S3
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ProviderConfig/3}).
+merge_msg_ProviderConfig(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{id := NFid}} -> S1#{id => NFid};
+             {#{id := PFid}, _} -> S1#{id => PFid};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{name := NFname}} -> S2#{name => NFname};
+             {#{name := PFname}, _} -> S2#{name => PFname};
+             _ -> S2
+         end,
+    S4 = case {PMsg, NMsg} of
+             {_, #{api_base := NFapi_base}} -> S3#{api_base => NFapi_base};
+             {#{api_base := PFapi_base}, _} -> S3#{api_base => PFapi_base};
+             _ -> S3
+         end,
+    S5 = case {PMsg, NMsg} of
+             {_, #{api_key := NFapi_key}} -> S4#{api_key => NFapi_key};
+             {#{api_key := PFapi_key}, _} -> S4#{api_key => PFapi_key};
+             _ -> S4
+         end,
+    S6 = case {PMsg, NMsg} of
+             {#{models := PFmodels}, #{models := NFmodels}} -> S5#{models => 'erlang_++'(PFmodels, NFmodels, TrUserData)};
+             {_, #{models := NFmodels}} -> S5#{models => NFmodels};
+             {#{models := PFmodels}, _} -> S5#{models => PFmodels};
+             {_, _} -> S5
+         end,
+    S7 = case {PMsg, NMsg} of
+             {_, #{enabled := NFenabled}} -> S6#{enabled => NFenabled};
+             {#{enabled := PFenabled}, _} -> S6#{enabled => PFenabled};
+             _ -> S6
+         end,
+    S8 = case {PMsg, NMsg} of
+             {_, #{is_default := NFis_default}} -> S7#{is_default => NFis_default};
+             {#{is_default := PFis_default}, _} -> S7#{is_default => PFis_default};
+             _ -> S7
+         end,
+    case {PMsg, NMsg} of
+        {_, #{latency_ms := NFlatency_ms}} -> S8#{latency_ms => NFlatency_ms};
+        {#{latency_ms := PFlatency_ms}, _} -> S8#{latency_ms => PFlatency_ms};
+        _ -> S8
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ModelRoute/3}).
+merge_msg_ModelRoute(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{model := NFmodel}} -> S1#{model => NFmodel};
+             {#{model := PFmodel}, _} -> S1#{model => PFmodel};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{provider_id := NFprovider_id}} -> S2#{provider_id => NFprovider_id};
+             {#{provider_id := PFprovider_id}, _} -> S2#{provider_id => PFprovider_id};
+             _ -> S2
+         end,
+    case {PMsg, NMsg} of
+        {_, #{provider_name := NFprovider_name}} -> S3#{provider_name => NFprovider_name};
+        {#{provider_name := PFprovider_name}, _} -> S3#{provider_name => PFprovider_name};
+        _ -> S3
+    end.
+
+-compile({nowarn_unused_function,merge_msg_RiskPolicy/3}).
+merge_msg_RiskPolicy(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{risk_level := NFrisk_level}} -> S1#{risk_level => NFrisk_level};
+             {#{risk_level := PFrisk_level}, _} -> S1#{risk_level => PFrisk_level};
+             _ -> S1
+         end,
+    case {PMsg, NMsg} of
+        {_, #{action := NFaction}} -> S2#{action => NFaction};
+        {#{action := PFaction}, _} -> S2#{action => PFaction};
+        _ -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ListProvidersResult/3}).
+merge_msg_ListProvidersResult(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {#{providers := PFproviders}, #{providers := NFproviders}} -> S1#{providers => 'erlang_++'(PFproviders, NFproviders, TrUserData)};
+        {_, #{providers := NFproviders}} -> S1#{providers => NFproviders};
+        {#{providers := PFproviders}, _} -> S1#{providers => PFproviders};
+        {_, _} -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_UpsertProviderArgs/3}).
+merge_msg_UpsertProviderArgs(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {#{provider := PFprovider}, #{provider := NFprovider}} -> S1#{provider => merge_msg_ProviderConfig(PFprovider, NFprovider, TrUserData)};
+        {_, #{provider := NFprovider}} -> S1#{provider => NFprovider};
+        {#{provider := PFprovider}, _} -> S1#{provider => PFprovider};
+        {_, _} -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_UpsertProviderResult/3}).
+merge_msg_UpsertProviderResult(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{ok := NFok}} -> S1#{ok => NFok};
+             {#{ok := PFok}, _} -> S1#{ok => PFok};
+             _ -> S1
+         end,
+    case {PMsg, NMsg} of
+        {_, #{id := NFid}} -> S2#{id => NFid};
+        {#{id := PFid}, _} -> S2#{id => PFid};
+        _ -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_DeleteProviderArgs/3}).
+merge_msg_DeleteProviderArgs(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {_, #{provider_id := NFprovider_id}} -> S1#{provider_id => NFprovider_id};
+        {#{provider_id := PFprovider_id}, _} -> S1#{provider_id => PFprovider_id};
+        _ -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_DeleteProviderResult/3}).
+merge_msg_DeleteProviderResult(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {_, #{ok := NFok}} -> S1#{ok => NFok};
+        {#{ok := PFok}, _} -> S1#{ok => PFok};
+        _ -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_SetDefaultProviderArgs/3}).
+merge_msg_SetDefaultProviderArgs(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {_, #{provider_id := NFprovider_id}} -> S1#{provider_id => NFprovider_id};
+        {#{provider_id := PFprovider_id}, _} -> S1#{provider_id => PFprovider_id};
+        _ -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_SetDefaultProviderResult/3}).
+merge_msg_SetDefaultProviderResult(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {_, #{ok := NFok}} -> S1#{ok => NFok};
+        {#{ok := PFok}, _} -> S1#{ok => PFok};
+        _ -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_TestProviderArgs/3}).
+merge_msg_TestProviderArgs(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {#{provider := PFprovider}, #{provider := NFprovider}} -> S1#{provider => merge_msg_ProviderConfig(PFprovider, NFprovider, TrUserData)};
+        {_, #{provider := NFprovider}} -> S1#{provider => NFprovider};
+        {#{provider := PFprovider}, _} -> S1#{provider => PFprovider};
+        {_, _} -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_TestProviderResult/3}).
+merge_msg_TestProviderResult(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{ok := NFok}} -> S1#{ok => NFok};
+             {#{ok := PFok}, _} -> S1#{ok => PFok};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{latency_ms := NFlatency_ms}} -> S2#{latency_ms => NFlatency_ms};
+             {#{latency_ms := PFlatency_ms}, _} -> S2#{latency_ms => PFlatency_ms};
+             _ -> S2
+         end,
+    case {PMsg, NMsg} of
+        {_, #{error := NFerror}} -> S3#{error => NFerror};
+        {#{error := PFerror}, _} -> S3#{error => PFerror};
+        _ -> S3
+    end.
+
+-compile({nowarn_unused_function,merge_msg_GetRiskPoliciesResult/3}).
+merge_msg_GetRiskPoliciesResult(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {#{policies := PFpolicies}, #{policies := NFpolicies}} -> S1#{policies => 'erlang_++'(PFpolicies, NFpolicies, TrUserData)};
+        {_, #{policies := NFpolicies}} -> S1#{policies => NFpolicies};
+        {#{policies := PFpolicies}, _} -> S1#{policies => PFpolicies};
+        {_, _} -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_SetRiskPolicyArgs/3}).
+merge_msg_SetRiskPolicyArgs(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{risk_level := NFrisk_level}} -> S1#{risk_level => NFrisk_level};
+             {#{risk_level := PFrisk_level}, _} -> S1#{risk_level => PFrisk_level};
+             _ -> S1
+         end,
+    case {PMsg, NMsg} of
+        {_, #{action := NFaction}} -> S2#{action => NFaction};
+        {#{action := PFaction}, _} -> S2#{action => PFaction};
+        _ -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_SetRiskPolicyResult/3}).
+merge_msg_SetRiskPolicyResult(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {_, #{ok := NFok}} -> S1#{ok => NFok};
+        {#{ok := PFok}, _} -> S1#{ok => PFok};
+        _ -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_SetSessionProviderArgs/3}).
+merge_msg_SetSessionProviderArgs(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{session_id := NFsession_id}} -> S1#{session_id => NFsession_id};
+             {#{session_id := PFsession_id}, _} -> S1#{session_id => PFsession_id};
+             _ -> S1
+         end,
+    case {PMsg, NMsg} of
+        {_, #{provider_id := NFprovider_id}} -> S2#{provider_id => NFprovider_id};
+        {#{provider_id := PFprovider_id}, _} -> S2#{provider_id => PFprovider_id};
+        _ -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_SetSessionProviderResult/3}).
+merge_msg_SetSessionProviderResult(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {_, #{ok := NFok}} -> S1#{ok => NFok};
+        {#{ok := PFok}, _} -> S1#{ok => PFok};
+        _ -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_MemoryEntry/3}).
+merge_msg_MemoryEntry(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{key := NFkey}} -> S1#{key => NFkey};
+             {#{key := PFkey}, _} -> S1#{key => PFkey};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{tier := NFtier}} -> S2#{tier => NFtier};
+             {#{tier := PFtier}, _} -> S2#{tier => PFtier};
+             _ -> S2
+         end,
+    S4 = case {PMsg, NMsg} of
+             {_, #{content := NFcontent}} -> S3#{content => NFcontent};
+             {#{content := PFcontent}, _} -> S3#{content => PFcontent};
+             _ -> S3
+         end,
+    S5 = case {PMsg, NMsg} of
+             {_, #{source := NFsource}} -> S4#{source => NFsource};
+             {#{source := PFsource}, _} -> S4#{source => PFsource};
+             _ -> S4
+         end,
+    S6 = case {PMsg, NMsg} of
+             {_, #{created_at := NFcreated_at}} -> S5#{created_at => NFcreated_at};
+             {#{created_at := PFcreated_at}, _} -> S5#{created_at => PFcreated_at};
+             _ -> S5
+         end,
+    case {PMsg, NMsg} of
+        {_, #{session_id := NFsession_id}} -> S6#{session_id => NFsession_id};
+        {#{session_id := PFsession_id}, _} -> S6#{session_id => PFsession_id};
+        _ -> S6
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ListMemoriesArgs/3}).
+merge_msg_ListMemoriesArgs(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{session_id := NFsession_id}} -> S1#{session_id => NFsession_id};
+             {#{session_id := PFsession_id}, _} -> S1#{session_id => PFsession_id};
+             _ -> S1
+         end,
+    case {PMsg, NMsg} of
+        {_, #{tier := NFtier}} -> S2#{tier => NFtier};
+        {#{tier := PFtier}, _} -> S2#{tier => PFtier};
+        _ -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ListMemoriesResult/3}).
+merge_msg_ListMemoriesResult(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {#{memories := PFmemories}, #{memories := NFmemories}} -> S1#{memories => 'erlang_++'(PFmemories, NFmemories, TrUserData)};
+        {_, #{memories := NFmemories}} -> S1#{memories => NFmemories};
+        {#{memories := PFmemories}, _} -> S1#{memories => PFmemories};
+        {_, _} -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_AddMemoryArgs/3}).
+merge_msg_AddMemoryArgs(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{session_id := NFsession_id}} -> S1#{session_id => NFsession_id};
+             {#{session_id := PFsession_id}, _} -> S1#{session_id => PFsession_id};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{tier := NFtier}} -> S2#{tier => NFtier};
+             {#{tier := PFtier}, _} -> S2#{tier => PFtier};
+             _ -> S2
+         end,
+    case {PMsg, NMsg} of
+        {_, #{content := NFcontent}} -> S3#{content => NFcontent};
+        {#{content := PFcontent}, _} -> S3#{content => PFcontent};
+        _ -> S3
+    end.
+
+-compile({nowarn_unused_function,merge_msg_AddMemoryResult/3}).
+merge_msg_AddMemoryResult(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{ok := NFok}} -> S1#{ok => NFok};
+             {#{ok := PFok}, _} -> S1#{ok => PFok};
+             _ -> S1
+         end,
+    case {PMsg, NMsg} of
+        {_, #{key := NFkey}} -> S2#{key => NFkey};
+        {#{key := PFkey}, _} -> S2#{key => PFkey};
+        _ -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_DeleteMemoryArgs/3}).
+merge_msg_DeleteMemoryArgs(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{session_id := NFsession_id}} -> S1#{session_id => NFsession_id};
+             {#{session_id := PFsession_id}, _} -> S1#{session_id => PFsession_id};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{tier := NFtier}} -> S2#{tier => NFtier};
+             {#{tier := PFtier}, _} -> S2#{tier => PFtier};
+             _ -> S2
+         end,
+    case {PMsg, NMsg} of
+        {_, #{key := NFkey}} -> S3#{key => NFkey};
+        {#{key := PFkey}, _} -> S3#{key => PFkey};
+        _ -> S3
+    end.
+
+-compile({nowarn_unused_function,merge_msg_DeleteMemoryResult/3}).
+merge_msg_DeleteMemoryResult(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {_, #{ok := NFok}} -> S1#{ok => NFok};
+        {#{ok := PFok}, _} -> S1#{ok => PFok};
+        _ -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ClearMemoriesArgs/3}).
+merge_msg_ClearMemoriesArgs(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{session_id := NFsession_id}} -> S1#{session_id => NFsession_id};
+             {#{session_id := PFsession_id}, _} -> S1#{session_id => PFsession_id};
+             _ -> S1
+         end,
+    case {PMsg, NMsg} of
+        {_, #{tier := NFtier}} -> S2#{tier => NFtier};
+        {#{tier := PFtier}, _} -> S2#{tier => PFtier};
+        _ -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ClearMemoriesResult/3}).
+merge_msg_ClearMemoriesResult(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{ok := NFok}} -> S1#{ok => NFok};
+             {#{ok := PFok}, _} -> S1#{ok => PFok};
+             _ -> S1
+         end,
+    case {PMsg, NMsg} of
+        {_, #{count := NFcount}} -> S2#{count => NFcount};
+        {#{count := PFcount}, _} -> S2#{count => PFcount};
+        _ -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_CancelExecutionArgs/3}).
+merge_msg_CancelExecutionArgs(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {_, #{session_id := NFsession_id}} -> S1#{session_id => NFsession_id};
+        {#{session_id := PFsession_id}, _} -> S1#{session_id => PFsession_id};
+        _ -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_CancelExecutionResult/3}).
+merge_msg_CancelExecutionResult(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {_, #{ok := NFok}} -> S1#{ok => NFok};
+        {#{ok := PFok}, _} -> S1#{ok => PFok};
+        _ -> S1
     end.
 
 -compile({nowarn_unused_function,merge_msg_LlmChunk/3}).
@@ -5631,6 +9043,37 @@ verify_msg(Msg, MsgName, Opts) ->
         'PanelStream' -> v_msg_PanelStream(Msg, [MsgName], TrUserData);
         'ApprovalRequired' -> v_msg_ApprovalRequired(Msg, [MsgName], TrUserData);
         'PendingApprovalEntry' -> v_msg_PendingApprovalEntry(Msg, [MsgName], TrUserData);
+        'PlanStep' -> v_msg_PlanStep(Msg, [MsgName], TrUserData);
+        'PlanGenerated' -> v_msg_PlanGenerated(Msg, [MsgName], TrUserData);
+        'PlanStepUpdate' -> v_msg_PlanStepUpdate(Msg, [MsgName], TrUserData);
+        'ProviderConfig' -> v_msg_ProviderConfig(Msg, [MsgName], TrUserData);
+        'ModelRoute' -> v_msg_ModelRoute(Msg, [MsgName], TrUserData);
+        'RiskPolicy' -> v_msg_RiskPolicy(Msg, [MsgName], TrUserData);
+        'ListProvidersResult' -> v_msg_ListProvidersResult(Msg, [MsgName], TrUserData);
+        'UpsertProviderArgs' -> v_msg_UpsertProviderArgs(Msg, [MsgName], TrUserData);
+        'UpsertProviderResult' -> v_msg_UpsertProviderResult(Msg, [MsgName], TrUserData);
+        'DeleteProviderArgs' -> v_msg_DeleteProviderArgs(Msg, [MsgName], TrUserData);
+        'DeleteProviderResult' -> v_msg_DeleteProviderResult(Msg, [MsgName], TrUserData);
+        'SetDefaultProviderArgs' -> v_msg_SetDefaultProviderArgs(Msg, [MsgName], TrUserData);
+        'SetDefaultProviderResult' -> v_msg_SetDefaultProviderResult(Msg, [MsgName], TrUserData);
+        'TestProviderArgs' -> v_msg_TestProviderArgs(Msg, [MsgName], TrUserData);
+        'TestProviderResult' -> v_msg_TestProviderResult(Msg, [MsgName], TrUserData);
+        'GetRiskPoliciesResult' -> v_msg_GetRiskPoliciesResult(Msg, [MsgName], TrUserData);
+        'SetRiskPolicyArgs' -> v_msg_SetRiskPolicyArgs(Msg, [MsgName], TrUserData);
+        'SetRiskPolicyResult' -> v_msg_SetRiskPolicyResult(Msg, [MsgName], TrUserData);
+        'SetSessionProviderArgs' -> v_msg_SetSessionProviderArgs(Msg, [MsgName], TrUserData);
+        'SetSessionProviderResult' -> v_msg_SetSessionProviderResult(Msg, [MsgName], TrUserData);
+        'MemoryEntry' -> v_msg_MemoryEntry(Msg, [MsgName], TrUserData);
+        'ListMemoriesArgs' -> v_msg_ListMemoriesArgs(Msg, [MsgName], TrUserData);
+        'ListMemoriesResult' -> v_msg_ListMemoriesResult(Msg, [MsgName], TrUserData);
+        'AddMemoryArgs' -> v_msg_AddMemoryArgs(Msg, [MsgName], TrUserData);
+        'AddMemoryResult' -> v_msg_AddMemoryResult(Msg, [MsgName], TrUserData);
+        'DeleteMemoryArgs' -> v_msg_DeleteMemoryArgs(Msg, [MsgName], TrUserData);
+        'DeleteMemoryResult' -> v_msg_DeleteMemoryResult(Msg, [MsgName], TrUserData);
+        'ClearMemoriesArgs' -> v_msg_ClearMemoriesArgs(Msg, [MsgName], TrUserData);
+        'ClearMemoriesResult' -> v_msg_ClearMemoriesResult(Msg, [MsgName], TrUserData);
+        'CancelExecutionArgs' -> v_msg_CancelExecutionArgs(Msg, [MsgName], TrUserData);
+        'CancelExecutionResult' -> v_msg_CancelExecutionResult(Msg, [MsgName], TrUserData);
         'LlmChunk' -> v_msg_LlmChunk(Msg, [MsgName], TrUserData);
         'JsonField' -> v_msg_JsonField(Msg, [MsgName], TrUserData);
         'ToolParameter' -> v_msg_ToolParameter(Msg, [MsgName], TrUserData);
@@ -5852,38 +9295,52 @@ v_msg_PanelStream(#{} = M, Path, TrUserData) ->
     end,
     case M of
         #{chunk := OF2} ->
-            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required], M)) of
+            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required, plan_generated, plan_step_update], M)) of
                 [_] -> ok;
                 OFDupsOF2 -> mk_type_error({multiple_oneof_keys, OFDupsOF2, payload}, M, [payload | Path])
             end,
             v_submsg_LlmChunk(OF2, [chunk | Path], TrUserData);
         #{tool_event := OF2} ->
-            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required], M)) of
+            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required, plan_generated, plan_step_update], M)) of
                 [_] -> ok;
                 OFDupsOF2 -> mk_type_error({multiple_oneof_keys, OFDupsOF2, payload}, M, [payload | Path])
             end,
             v_submsg_ToolEvent(OF2, [tool_event | Path], TrUserData);
         #{final := OF2} ->
-            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required], M)) of
+            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required, plan_generated, plan_step_update], M)) of
                 [_] -> ok;
                 OFDupsOF2 -> mk_type_error({multiple_oneof_keys, OFDupsOF2, payload}, M, [payload | Path])
             end,
             v_submsg_FinalAnswer(OF2, [final | Path], TrUserData);
         #{error := OF2} ->
-            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required], M)) of
+            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required, plan_generated, plan_step_update], M)) of
                 [_] -> ok;
                 OFDupsOF2 -> mk_type_error({multiple_oneof_keys, OFDupsOF2, payload}, M, [payload | Path])
             end,
             v_submsg_StreamError(OF2, [error | Path], TrUserData);
         #{approval_required := OF2} ->
-            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required], M)) of
+            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required, plan_generated, plan_step_update], M)) of
                 [_] -> ok;
                 OFDupsOF2 -> mk_type_error({multiple_oneof_keys, OFDupsOF2, payload}, M, [payload | Path])
             end,
             v_submsg_ApprovalRequired(OF2, [approval_required | Path], TrUserData);
+        #{plan_generated := OF2} ->
+            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required, plan_generated, plan_step_update], M)) of
+                [_] -> ok;
+                OFDupsOF2 -> mk_type_error({multiple_oneof_keys, OFDupsOF2, payload}, M, [payload | Path])
+            end,
+            v_submsg_PlanGenerated(OF2, [plan_generated | Path], TrUserData);
+        #{plan_step_update := OF2} ->
+            case maps:keys(maps:with([chunk, tool_event, final, error, approval_required, plan_generated, plan_step_update], M)) of
+                [_] -> ok;
+                OFDupsOF2 -> mk_type_error({multiple_oneof_keys, OFDupsOF2, payload}, M, [payload | Path])
+            end,
+            v_submsg_PlanStepUpdate(OF2, [plan_step_update | Path], TrUserData);
         _ -> ok
     end,
-    lists:foreach(fun (approval_required) -> ok;
+    lists:foreach(fun (plan_step_update) -> ok;
+                      (plan_generated) -> ok;
+                      (approval_required) -> ok;
                       (error) -> ok;
                       (final) -> ok;
                       (tool_event) -> ok;
@@ -5998,6 +9455,710 @@ v_msg_PendingApprovalEntry(#{} = M, Path, TrUserData) ->
     ok;
 v_msg_PendingApprovalEntry(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PendingApprovalEntry'}, M, Path);
 v_msg_PendingApprovalEntry(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PendingApprovalEntry'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_PlanStep/3}).
+-dialyzer({nowarn_function,v_submsg_PlanStep/3}).
+v_submsg_PlanStep(Msg, Path, TrUserData) -> v_msg_PlanStep(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_PlanStep/3}).
+-dialyzer({nowarn_function,v_msg_PlanStep/3}).
+v_msg_PlanStep(#{} = M, Path, TrUserData) ->
+    case M of
+        #{index := F1} -> v_type_int32(F1, [index | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{description := F2} -> v_type_string(F2, [description | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{tool_hint := F3} -> v_type_string(F3, [tool_hint | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{risk_level := F4} -> v_type_string(F4, [risk_level | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (risk_level) -> ok;
+                      (tool_hint) -> ok;
+                      (description) -> ok;
+                      (index) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_PlanStep(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PlanStep'}, M, Path);
+v_msg_PlanStep(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PlanStep'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_PlanGenerated/3}).
+-dialyzer({nowarn_function,v_submsg_PlanGenerated/3}).
+v_submsg_PlanGenerated(Msg, Path, TrUserData) -> v_msg_PlanGenerated(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_PlanGenerated/3}).
+-dialyzer({nowarn_function,v_msg_PlanGenerated/3}).
+v_msg_PlanGenerated(#{} = M, Path, TrUserData) ->
+    case M of
+        #{goal := F1} -> v_type_string(F1, [goal | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{steps := F2} ->
+            if is_list(F2) ->
+                   _ = [v_submsg_PlanStep(Elem, [steps | Path], TrUserData) || Elem <- F2],
+                   ok;
+               true -> mk_type_error({invalid_list_of, {msg, 'PlanStep'}}, F2, [steps | Path])
+            end;
+        _ -> ok
+    end,
+    case M of
+        #{warnings := F3} ->
+            if is_list(F3) ->
+                   _ = [v_type_string(Elem, [warnings | Path], TrUserData) || Elem <- F3],
+                   ok;
+               true -> mk_type_error({invalid_list_of, string}, F3, [warnings | Path])
+            end;
+        _ -> ok
+    end,
+    case M of
+        #{suggestions := F4} ->
+            if is_list(F4) ->
+                   _ = [v_type_string(Elem, [suggestions | Path], TrUserData) || Elem <- F4],
+                   ok;
+               true -> mk_type_error({invalid_list_of, string}, F4, [suggestions | Path])
+            end;
+        _ -> ok
+    end,
+    lists:foreach(fun (suggestions) -> ok;
+                      (warnings) -> ok;
+                      (steps) -> ok;
+                      (goal) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_PlanGenerated(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PlanGenerated'}, M, Path);
+v_msg_PlanGenerated(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PlanGenerated'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_PlanStepUpdate/3}).
+-dialyzer({nowarn_function,v_submsg_PlanStepUpdate/3}).
+v_submsg_PlanStepUpdate(Msg, Path, TrUserData) -> v_msg_PlanStepUpdate(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_PlanStepUpdate/3}).
+-dialyzer({nowarn_function,v_msg_PlanStepUpdate/3}).
+v_msg_PlanStepUpdate(#{} = M, Path, TrUserData) ->
+    case M of
+        #{step_index := F1} -> v_type_int32(F1, [step_index | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{status := F2} -> v_enum_PlanStepStatus(F2, [status | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{result_summary := F3} -> v_type_string(F3, [result_summary | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (result_summary) -> ok;
+                      (status) -> ok;
+                      (step_index) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_PlanStepUpdate(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PlanStepUpdate'}, M, Path);
+v_msg_PlanStepUpdate(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PlanStepUpdate'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_ProviderConfig/3}).
+-dialyzer({nowarn_function,v_submsg_ProviderConfig/3}).
+v_submsg_ProviderConfig(Msg, Path, TrUserData) -> v_msg_ProviderConfig(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_ProviderConfig/3}).
+-dialyzer({nowarn_function,v_msg_ProviderConfig/3}).
+v_msg_ProviderConfig(#{} = M, Path, TrUserData) ->
+    case M of
+        #{id := F1} -> v_type_string(F1, [id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{name := F2} -> v_type_string(F2, [name | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{api_base := F3} -> v_type_string(F3, [api_base | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{api_key := F4} -> v_type_string(F4, [api_key | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{models := F5} ->
+            if is_list(F5) ->
+                   _ = [v_type_string(Elem, [models | Path], TrUserData) || Elem <- F5],
+                   ok;
+               true -> mk_type_error({invalid_list_of, string}, F5, [models | Path])
+            end;
+        _ -> ok
+    end,
+    case M of
+        #{enabled := F6} -> v_type_bool(F6, [enabled | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{is_default := F7} -> v_type_bool(F7, [is_default | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{latency_ms := F8} -> v_type_int64(F8, [latency_ms | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (latency_ms) -> ok;
+                      (is_default) -> ok;
+                      (enabled) -> ok;
+                      (models) -> ok;
+                      (api_key) -> ok;
+                      (api_base) -> ok;
+                      (name) -> ok;
+                      (id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ProviderConfig(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ProviderConfig'}, M, Path);
+v_msg_ProviderConfig(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ProviderConfig'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_ModelRoute/3}).
+-dialyzer({nowarn_function,v_msg_ModelRoute/3}).
+v_msg_ModelRoute(#{} = M, Path, TrUserData) ->
+    case M of
+        #{model := F1} -> v_type_string(F1, [model | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{provider_id := F2} -> v_type_string(F2, [provider_id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{provider_name := F3} -> v_type_string(F3, [provider_name | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (provider_name) -> ok;
+                      (provider_id) -> ok;
+                      (model) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ModelRoute(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ModelRoute'}, M, Path);
+v_msg_ModelRoute(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ModelRoute'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_RiskPolicy/3}).
+-dialyzer({nowarn_function,v_submsg_RiskPolicy/3}).
+v_submsg_RiskPolicy(Msg, Path, TrUserData) -> v_msg_RiskPolicy(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_RiskPolicy/3}).
+-dialyzer({nowarn_function,v_msg_RiskPolicy/3}).
+v_msg_RiskPolicy(#{} = M, Path, TrUserData) ->
+    case M of
+        #{risk_level := F1} -> v_type_string(F1, [risk_level | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{action := F2} -> v_type_string(F2, [action | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (action) -> ok;
+                      (risk_level) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_RiskPolicy(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'RiskPolicy'}, M, Path);
+v_msg_RiskPolicy(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'RiskPolicy'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_ListProvidersResult/3}).
+-dialyzer({nowarn_function,v_msg_ListProvidersResult/3}).
+v_msg_ListProvidersResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{providers := F1} ->
+            if is_list(F1) ->
+                   _ = [v_submsg_ProviderConfig(Elem, [providers | Path], TrUserData) || Elem <- F1],
+                   ok;
+               true -> mk_type_error({invalid_list_of, {msg, 'ProviderConfig'}}, F1, [providers | Path])
+            end;
+        _ -> ok
+    end,
+    lists:foreach(fun (providers) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ListProvidersResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ListProvidersResult'}, M, Path);
+v_msg_ListProvidersResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ListProvidersResult'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_UpsertProviderArgs/3}).
+-dialyzer({nowarn_function,v_msg_UpsertProviderArgs/3}).
+v_msg_UpsertProviderArgs(#{} = M, Path, TrUserData) ->
+    case M of
+        #{provider := F1} -> v_submsg_ProviderConfig(F1, [provider | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (provider) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_UpsertProviderArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'UpsertProviderArgs'}, M, Path);
+v_msg_UpsertProviderArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'UpsertProviderArgs'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_UpsertProviderResult/3}).
+-dialyzer({nowarn_function,v_msg_UpsertProviderResult/3}).
+v_msg_UpsertProviderResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{ok := F1} -> v_type_bool(F1, [ok | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{id := F2} -> v_type_string(F2, [id | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (id) -> ok;
+                      (ok) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_UpsertProviderResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'UpsertProviderResult'}, M, Path);
+v_msg_UpsertProviderResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'UpsertProviderResult'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_DeleteProviderArgs/3}).
+-dialyzer({nowarn_function,v_msg_DeleteProviderArgs/3}).
+v_msg_DeleteProviderArgs(#{} = M, Path, TrUserData) ->
+    case M of
+        #{provider_id := F1} -> v_type_string(F1, [provider_id | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (provider_id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_DeleteProviderArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'DeleteProviderArgs'}, M, Path);
+v_msg_DeleteProviderArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'DeleteProviderArgs'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_DeleteProviderResult/3}).
+-dialyzer({nowarn_function,v_msg_DeleteProviderResult/3}).
+v_msg_DeleteProviderResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{ok := F1} -> v_type_bool(F1, [ok | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (ok) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_DeleteProviderResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'DeleteProviderResult'}, M, Path);
+v_msg_DeleteProviderResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'DeleteProviderResult'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_SetDefaultProviderArgs/3}).
+-dialyzer({nowarn_function,v_msg_SetDefaultProviderArgs/3}).
+v_msg_SetDefaultProviderArgs(#{} = M, Path, TrUserData) ->
+    case M of
+        #{provider_id := F1} -> v_type_string(F1, [provider_id | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (provider_id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_SetDefaultProviderArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'SetDefaultProviderArgs'}, M, Path);
+v_msg_SetDefaultProviderArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'SetDefaultProviderArgs'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_SetDefaultProviderResult/3}).
+-dialyzer({nowarn_function,v_msg_SetDefaultProviderResult/3}).
+v_msg_SetDefaultProviderResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{ok := F1} -> v_type_bool(F1, [ok | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (ok) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_SetDefaultProviderResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'SetDefaultProviderResult'}, M, Path);
+v_msg_SetDefaultProviderResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'SetDefaultProviderResult'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_TestProviderArgs/3}).
+-dialyzer({nowarn_function,v_msg_TestProviderArgs/3}).
+v_msg_TestProviderArgs(#{} = M, Path, TrUserData) ->
+    case M of
+        #{provider := F1} -> v_submsg_ProviderConfig(F1, [provider | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (provider) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_TestProviderArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'TestProviderArgs'}, M, Path);
+v_msg_TestProviderArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'TestProviderArgs'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_TestProviderResult/3}).
+-dialyzer({nowarn_function,v_msg_TestProviderResult/3}).
+v_msg_TestProviderResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{ok := F1} -> v_type_bool(F1, [ok | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{latency_ms := F2} -> v_type_int64(F2, [latency_ms | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{error := F3} -> v_type_string(F3, [error | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (error) -> ok;
+                      (latency_ms) -> ok;
+                      (ok) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_TestProviderResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'TestProviderResult'}, M, Path);
+v_msg_TestProviderResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'TestProviderResult'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_GetRiskPoliciesResult/3}).
+-dialyzer({nowarn_function,v_msg_GetRiskPoliciesResult/3}).
+v_msg_GetRiskPoliciesResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{policies := F1} ->
+            if is_list(F1) ->
+                   _ = [v_submsg_RiskPolicy(Elem, [policies | Path], TrUserData) || Elem <- F1],
+                   ok;
+               true -> mk_type_error({invalid_list_of, {msg, 'RiskPolicy'}}, F1, [policies | Path])
+            end;
+        _ -> ok
+    end,
+    lists:foreach(fun (policies) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_GetRiskPoliciesResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'GetRiskPoliciesResult'}, M, Path);
+v_msg_GetRiskPoliciesResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'GetRiskPoliciesResult'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_SetRiskPolicyArgs/3}).
+-dialyzer({nowarn_function,v_msg_SetRiskPolicyArgs/3}).
+v_msg_SetRiskPolicyArgs(#{} = M, Path, TrUserData) ->
+    case M of
+        #{risk_level := F1} -> v_type_string(F1, [risk_level | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{action := F2} -> v_type_string(F2, [action | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (action) -> ok;
+                      (risk_level) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_SetRiskPolicyArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'SetRiskPolicyArgs'}, M, Path);
+v_msg_SetRiskPolicyArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'SetRiskPolicyArgs'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_SetRiskPolicyResult/3}).
+-dialyzer({nowarn_function,v_msg_SetRiskPolicyResult/3}).
+v_msg_SetRiskPolicyResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{ok := F1} -> v_type_bool(F1, [ok | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (ok) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_SetRiskPolicyResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'SetRiskPolicyResult'}, M, Path);
+v_msg_SetRiskPolicyResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'SetRiskPolicyResult'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_SetSessionProviderArgs/3}).
+-dialyzer({nowarn_function,v_msg_SetSessionProviderArgs/3}).
+v_msg_SetSessionProviderArgs(#{} = M, Path, TrUserData) ->
+    case M of
+        #{session_id := F1} -> v_type_string(F1, [session_id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{provider_id := F2} -> v_type_string(F2, [provider_id | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (provider_id) -> ok;
+                      (session_id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_SetSessionProviderArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'SetSessionProviderArgs'}, M, Path);
+v_msg_SetSessionProviderArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'SetSessionProviderArgs'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_SetSessionProviderResult/3}).
+-dialyzer({nowarn_function,v_msg_SetSessionProviderResult/3}).
+v_msg_SetSessionProviderResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{ok := F1} -> v_type_bool(F1, [ok | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (ok) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_SetSessionProviderResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'SetSessionProviderResult'}, M, Path);
+v_msg_SetSessionProviderResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'SetSessionProviderResult'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_MemoryEntry/3}).
+-dialyzer({nowarn_function,v_submsg_MemoryEntry/3}).
+v_submsg_MemoryEntry(Msg, Path, TrUserData) -> v_msg_MemoryEntry(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_MemoryEntry/3}).
+-dialyzer({nowarn_function,v_msg_MemoryEntry/3}).
+v_msg_MemoryEntry(#{} = M, Path, TrUserData) ->
+    case M of
+        #{key := F1} -> v_type_string(F1, [key | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{tier := F2} -> v_enum_MemoryTier(F2, [tier | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{content := F3} -> v_type_string(F3, [content | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{source := F4} -> v_type_string(F4, [source | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{created_at := F5} -> v_type_int64(F5, [created_at | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{session_id := F6} -> v_type_string(F6, [session_id | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (session_id) -> ok;
+                      (created_at) -> ok;
+                      (source) -> ok;
+                      (content) -> ok;
+                      (tier) -> ok;
+                      (key) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_MemoryEntry(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'MemoryEntry'}, M, Path);
+v_msg_MemoryEntry(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'MemoryEntry'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_ListMemoriesArgs/3}).
+-dialyzer({nowarn_function,v_msg_ListMemoriesArgs/3}).
+v_msg_ListMemoriesArgs(#{} = M, Path, TrUserData) ->
+    case M of
+        #{session_id := F1} -> v_type_string(F1, [session_id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{tier := F2} -> v_enum_MemoryTier(F2, [tier | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (tier) -> ok;
+                      (session_id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ListMemoriesArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ListMemoriesArgs'}, M, Path);
+v_msg_ListMemoriesArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ListMemoriesArgs'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_ListMemoriesResult/3}).
+-dialyzer({nowarn_function,v_msg_ListMemoriesResult/3}).
+v_msg_ListMemoriesResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{memories := F1} ->
+            if is_list(F1) ->
+                   _ = [v_submsg_MemoryEntry(Elem, [memories | Path], TrUserData) || Elem <- F1],
+                   ok;
+               true -> mk_type_error({invalid_list_of, {msg, 'MemoryEntry'}}, F1, [memories | Path])
+            end;
+        _ -> ok
+    end,
+    lists:foreach(fun (memories) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ListMemoriesResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ListMemoriesResult'}, M, Path);
+v_msg_ListMemoriesResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ListMemoriesResult'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_AddMemoryArgs/3}).
+-dialyzer({nowarn_function,v_msg_AddMemoryArgs/3}).
+v_msg_AddMemoryArgs(#{} = M, Path, TrUserData) ->
+    case M of
+        #{session_id := F1} -> v_type_string(F1, [session_id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{tier := F2} -> v_enum_MemoryTier(F2, [tier | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{content := F3} -> v_type_string(F3, [content | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (content) -> ok;
+                      (tier) -> ok;
+                      (session_id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_AddMemoryArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'AddMemoryArgs'}, M, Path);
+v_msg_AddMemoryArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'AddMemoryArgs'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_AddMemoryResult/3}).
+-dialyzer({nowarn_function,v_msg_AddMemoryResult/3}).
+v_msg_AddMemoryResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{ok := F1} -> v_type_bool(F1, [ok | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{key := F2} -> v_type_string(F2, [key | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (key) -> ok;
+                      (ok) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_AddMemoryResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'AddMemoryResult'}, M, Path);
+v_msg_AddMemoryResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'AddMemoryResult'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_DeleteMemoryArgs/3}).
+-dialyzer({nowarn_function,v_msg_DeleteMemoryArgs/3}).
+v_msg_DeleteMemoryArgs(#{} = M, Path, TrUserData) ->
+    case M of
+        #{session_id := F1} -> v_type_string(F1, [session_id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{tier := F2} -> v_enum_MemoryTier(F2, [tier | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{key := F3} -> v_type_string(F3, [key | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (key) -> ok;
+                      (tier) -> ok;
+                      (session_id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_DeleteMemoryArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'DeleteMemoryArgs'}, M, Path);
+v_msg_DeleteMemoryArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'DeleteMemoryArgs'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_DeleteMemoryResult/3}).
+-dialyzer({nowarn_function,v_msg_DeleteMemoryResult/3}).
+v_msg_DeleteMemoryResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{ok := F1} -> v_type_bool(F1, [ok | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (ok) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_DeleteMemoryResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'DeleteMemoryResult'}, M, Path);
+v_msg_DeleteMemoryResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'DeleteMemoryResult'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_ClearMemoriesArgs/3}).
+-dialyzer({nowarn_function,v_msg_ClearMemoriesArgs/3}).
+v_msg_ClearMemoriesArgs(#{} = M, Path, TrUserData) ->
+    case M of
+        #{session_id := F1} -> v_type_string(F1, [session_id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{tier := F2} -> v_enum_MemoryTier(F2, [tier | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (tier) -> ok;
+                      (session_id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ClearMemoriesArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ClearMemoriesArgs'}, M, Path);
+v_msg_ClearMemoriesArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ClearMemoriesArgs'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_ClearMemoriesResult/3}).
+-dialyzer({nowarn_function,v_msg_ClearMemoriesResult/3}).
+v_msg_ClearMemoriesResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{ok := F1} -> v_type_bool(F1, [ok | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{count := F2} -> v_type_int32(F2, [count | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (count) -> ok;
+                      (ok) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ClearMemoriesResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ClearMemoriesResult'}, M, Path);
+v_msg_ClearMemoriesResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ClearMemoriesResult'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_CancelExecutionArgs/3}).
+-dialyzer({nowarn_function,v_msg_CancelExecutionArgs/3}).
+v_msg_CancelExecutionArgs(#{} = M, Path, TrUserData) ->
+    case M of
+        #{session_id := F1} -> v_type_string(F1, [session_id | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (session_id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_CancelExecutionArgs(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'CancelExecutionArgs'}, M, Path);
+v_msg_CancelExecutionArgs(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'CancelExecutionArgs'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_CancelExecutionResult/3}).
+-dialyzer({nowarn_function,v_msg_CancelExecutionResult/3}).
+v_msg_CancelExecutionResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{ok := F1} -> v_type_bool(F1, [ok | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (ok) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_CancelExecutionResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'CancelExecutionResult'}, M, Path);
+v_msg_CancelExecutionResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'CancelExecutionResult'}, X, Path).
 
 -compile({nowarn_unused_function,v_submsg_LlmChunk/3}).
 -dialyzer({nowarn_function,v_submsg_LlmChunk/3}).
@@ -6855,6 +11016,25 @@ v_msg_DeleteSessionResult(#{} = M, Path, TrUserData) ->
 v_msg_DeleteSessionResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'DeleteSessionResult'}, M, Path);
 v_msg_DeleteSessionResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'DeleteSessionResult'}, X, Path).
 
+-compile({nowarn_unused_function,v_enum_PlanStepStatus/3}).
+-dialyzer({nowarn_function,v_enum_PlanStepStatus/3}).
+v_enum_PlanStepStatus('PLAN_STEP_PENDING', _Path, _TrUserData) -> ok;
+v_enum_PlanStepStatus('PLAN_STEP_RUNNING', _Path, _TrUserData) -> ok;
+v_enum_PlanStepStatus('PLAN_STEP_DONE', _Path, _TrUserData) -> ok;
+v_enum_PlanStepStatus('PLAN_STEP_FAILED', _Path, _TrUserData) -> ok;
+v_enum_PlanStepStatus('PLAN_STEP_SKIPPED', _Path, _TrUserData) -> ok;
+v_enum_PlanStepStatus(V, _Path, _TrUserData) when -2147483648 =< V, V =< 2147483647, is_integer(V) -> ok;
+v_enum_PlanStepStatus(X, Path, _TrUserData) -> mk_type_error({invalid_enum, 'PlanStepStatus'}, X, Path).
+
+-compile({nowarn_unused_function,v_enum_MemoryTier/3}).
+-dialyzer({nowarn_function,v_enum_MemoryTier/3}).
+v_enum_MemoryTier('MEMORY_TIER_UNSPECIFIED', _Path, _TrUserData) -> ok;
+v_enum_MemoryTier('MEMORY_TIER_FACTS', _Path, _TrUserData) -> ok;
+v_enum_MemoryTier('MEMORY_TIER_PREFERENCES', _Path, _TrUserData) -> ok;
+v_enum_MemoryTier('MEMORY_TIER_WORKSPACE', _Path, _TrUserData) -> ok;
+v_enum_MemoryTier(V, _Path, _TrUserData) when -2147483648 =< V, V =< 2147483647, is_integer(V) -> ok;
+v_enum_MemoryTier(X, Path, _TrUserData) -> mk_type_error({invalid_enum, 'MemoryTier'}, X, Path).
+
 -compile({nowarn_unused_function,v_type_int32/3}).
 -dialyzer({nowarn_function,v_type_int32/3}).
 v_type_int32(N, _Path, _TrUserData) when is_integer(N), -2147483648 =< N, N =< 2147483647 -> ok;
@@ -6951,7 +11131,9 @@ cons(Elem, Acc, _TrUserData) -> [Elem | Acc].
 
 
 get_msg_defs() ->
-    [{{msg, 'PanelFrame'},
+    [{{enum, 'PlanStepStatus'}, [{'PLAN_STEP_PENDING', 0}, {'PLAN_STEP_RUNNING', 1}, {'PLAN_STEP_DONE', 2}, {'PLAN_STEP_FAILED', 3}, {'PLAN_STEP_SKIPPED', 4}]},
+     {{enum, 'MemoryTier'}, [{'MEMORY_TIER_UNSPECIFIED', 0}, {'MEMORY_TIER_FACTS', 1}, {'MEMORY_TIER_PREFERENCES', 2}, {'MEMORY_TIER_WORKSPACE', 3}]},
+     {{msg, 'PanelFrame'},
       [#{name => payload, rnum => 2,
          fields =>
              [#{name => request, fnum => 1, rnum => 2, type => {msg, 'PanelRequest'}, occurrence => optional, opts => []},
@@ -6981,7 +11163,9 @@ get_msg_defs() ->
               #{name => tool_event, fnum => 3, rnum => 3, type => {msg, 'ToolEvent'}, occurrence => optional, opts => []},
               #{name => final, fnum => 4, rnum => 3, type => {msg, 'FinalAnswer'}, occurrence => optional, opts => []},
               #{name => error, fnum => 5, rnum => 3, type => {msg, 'StreamError'}, occurrence => optional, opts => []},
-              #{name => approval_required, fnum => 6, rnum => 3, type => {msg, 'ApprovalRequired'}, occurrence => optional, opts => []}],
+              #{name => approval_required, fnum => 6, rnum => 3, type => {msg, 'ApprovalRequired'}, occurrence => optional, opts => []},
+              #{name => plan_generated, fnum => 7, rnum => 3, type => {msg, 'PlanGenerated'}, occurrence => optional, opts => []},
+              #{name => plan_step_update, fnum => 8, rnum => 3, type => {msg, 'PlanStepUpdate'}, occurrence => optional, opts => []}],
          opts => []}]},
      {{msg, 'ApprovalRequired'},
       [#{name => req_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
@@ -7000,6 +11184,74 @@ get_msg_defs() ->
        #{name => risk_level, fnum => 6, rnum => 7, type => string, occurrence => optional, opts => []},
        #{name => expire_ms, fnum => 7, rnum => 8, type => int32, occurrence => optional, opts => []},
        #{name => registered_at, fnum => 8, rnum => 9, type => int64, occurrence => optional, opts => []}]},
+     {{msg, 'PlanStep'},
+      [#{name => index, fnum => 1, rnum => 2, type => int32, occurrence => optional, opts => []},
+       #{name => description, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+       #{name => tool_hint, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+       #{name => risk_level, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'PlanGenerated'},
+      [#{name => goal, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => steps, fnum => 2, rnum => 3, type => {msg, 'PlanStep'}, occurrence => repeated, opts => []},
+       #{name => warnings, fnum => 3, rnum => 4, type => string, occurrence => repeated, opts => []},
+       #{name => suggestions, fnum => 4, rnum => 5, type => string, occurrence => repeated, opts => []}]},
+     {{msg, 'PlanStepUpdate'},
+      [#{name => step_index, fnum => 1, rnum => 2, type => int32, occurrence => optional, opts => []},
+       #{name => status, fnum => 2, rnum => 3, type => {enum, 'PlanStepStatus'}, occurrence => optional, opts => []},
+       #{name => result_summary, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'ProviderConfig'},
+      [#{name => id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => name, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+       #{name => api_base, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+       #{name => api_key, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []},
+       #{name => models, fnum => 5, rnum => 6, type => string, occurrence => repeated, opts => []},
+       #{name => enabled, fnum => 6, rnum => 7, type => bool, occurrence => optional, opts => []},
+       #{name => is_default, fnum => 7, rnum => 8, type => bool, occurrence => optional, opts => []},
+       #{name => latency_ms, fnum => 8, rnum => 9, type => int64, occurrence => optional, opts => []}]},
+     {{msg, 'ModelRoute'},
+      [#{name => model, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => provider_id, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+       #{name => provider_name, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'RiskPolicy'}, [#{name => risk_level, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => action, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'ListProvidersResult'}, [#{name => providers, fnum => 1, rnum => 2, type => {msg, 'ProviderConfig'}, occurrence => repeated, opts => []}]},
+     {{msg, 'UpsertProviderArgs'}, [#{name => provider, fnum => 1, rnum => 2, type => {msg, 'ProviderConfig'}, occurrence => optional, opts => []}]},
+     {{msg, 'UpsertProviderResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}, #{name => id, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'DeleteProviderArgs'}, [#{name => provider_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'DeleteProviderResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}]},
+     {{msg, 'SetDefaultProviderArgs'}, [#{name => provider_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'SetDefaultProviderResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}]},
+     {{msg, 'TestProviderArgs'}, [#{name => provider, fnum => 1, rnum => 2, type => {msg, 'ProviderConfig'}, occurrence => optional, opts => []}]},
+     {{msg, 'TestProviderResult'},
+      [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []},
+       #{name => latency_ms, fnum => 2, rnum => 3, type => int64, occurrence => optional, opts => []},
+       #{name => error, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'GetRiskPoliciesResult'}, [#{name => policies, fnum => 1, rnum => 2, type => {msg, 'RiskPolicy'}, occurrence => repeated, opts => []}]},
+     {{msg, 'SetRiskPolicyArgs'}, [#{name => risk_level, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => action, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'SetRiskPolicyResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}]},
+     {{msg, 'SetSessionProviderArgs'}, [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => provider_id, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'SetSessionProviderResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}]},
+     {{msg, 'MemoryEntry'},
+      [#{name => key, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => tier, fnum => 2, rnum => 3, type => {enum, 'MemoryTier'}, occurrence => optional, opts => []},
+       #{name => content, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+       #{name => source, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []},
+       #{name => created_at, fnum => 5, rnum => 6, type => int64, occurrence => optional, opts => []},
+       #{name => session_id, fnum => 6, rnum => 7, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'ListMemoriesArgs'}, [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => tier, fnum => 2, rnum => 3, type => {enum, 'MemoryTier'}, occurrence => optional, opts => []}]},
+     {{msg, 'ListMemoriesResult'}, [#{name => memories, fnum => 1, rnum => 2, type => {msg, 'MemoryEntry'}, occurrence => repeated, opts => []}]},
+     {{msg, 'AddMemoryArgs'},
+      [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => tier, fnum => 2, rnum => 3, type => {enum, 'MemoryTier'}, occurrence => optional, opts => []},
+       #{name => content, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'AddMemoryResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}, #{name => key, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'DeleteMemoryArgs'},
+      [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => tier, fnum => 2, rnum => 3, type => {enum, 'MemoryTier'}, occurrence => optional, opts => []},
+       #{name => key, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'DeleteMemoryResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}]},
+     {{msg, 'ClearMemoriesArgs'}, [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => tier, fnum => 2, rnum => 3, type => {enum, 'MemoryTier'}, occurrence => optional, opts => []}]},
+     {{msg, 'ClearMemoriesResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}, #{name => count, fnum => 2, rnum => 3, type => int32, occurrence => optional, opts => []}]},
+     {{msg, 'CancelExecutionArgs'}, [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}]},
+     {{msg, 'CancelExecutionResult'}, [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}]},
      {{msg, 'LlmChunk'}, [#{name => content, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => reasoning_content, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}]},
      {{msg, 'JsonField'}, [#{name => key, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => value, fnum => 2, rnum => 3, type => {msg, 'JsonValue'}, occurrence => optional, opts => []}]},
      {{msg, 'ToolParameter'},
@@ -7102,6 +11354,37 @@ get_msg_names() ->
      'PanelStream',
      'ApprovalRequired',
      'PendingApprovalEntry',
+     'PlanStep',
+     'PlanGenerated',
+     'PlanStepUpdate',
+     'ProviderConfig',
+     'ModelRoute',
+     'RiskPolicy',
+     'ListProvidersResult',
+     'UpsertProviderArgs',
+     'UpsertProviderResult',
+     'DeleteProviderArgs',
+     'DeleteProviderResult',
+     'SetDefaultProviderArgs',
+     'SetDefaultProviderResult',
+     'TestProviderArgs',
+     'TestProviderResult',
+     'GetRiskPoliciesResult',
+     'SetRiskPolicyArgs',
+     'SetRiskPolicyResult',
+     'SetSessionProviderArgs',
+     'SetSessionProviderResult',
+     'MemoryEntry',
+     'ListMemoriesArgs',
+     'ListMemoriesResult',
+     'AddMemoryArgs',
+     'AddMemoryResult',
+     'DeleteMemoryArgs',
+     'DeleteMemoryResult',
+     'ClearMemoriesArgs',
+     'ClearMemoriesResult',
+     'CancelExecutionArgs',
+     'CancelExecutionResult',
      'LlmChunk',
      'JsonField',
      'ToolParameter',
@@ -7149,6 +11432,37 @@ get_msg_or_group_names() ->
      'PanelStream',
      'ApprovalRequired',
      'PendingApprovalEntry',
+     'PlanStep',
+     'PlanGenerated',
+     'PlanStepUpdate',
+     'ProviderConfig',
+     'ModelRoute',
+     'RiskPolicy',
+     'ListProvidersResult',
+     'UpsertProviderArgs',
+     'UpsertProviderResult',
+     'DeleteProviderArgs',
+     'DeleteProviderResult',
+     'SetDefaultProviderArgs',
+     'SetDefaultProviderResult',
+     'TestProviderArgs',
+     'TestProviderResult',
+     'GetRiskPoliciesResult',
+     'SetRiskPolicyArgs',
+     'SetRiskPolicyResult',
+     'SetSessionProviderArgs',
+     'SetSessionProviderResult',
+     'MemoryEntry',
+     'ListMemoriesArgs',
+     'ListMemoriesResult',
+     'AddMemoryArgs',
+     'AddMemoryResult',
+     'DeleteMemoryArgs',
+     'DeleteMemoryResult',
+     'ClearMemoriesArgs',
+     'ClearMemoriesResult',
+     'CancelExecutionArgs',
+     'CancelExecutionResult',
      'LlmChunk',
      'JsonField',
      'ToolParameter',
@@ -7184,7 +11498,7 @@ get_msg_or_group_names() ->
      'DeleteSessionResult'].
 
 
-get_enum_names() -> [].
+get_enum_names() -> ['PlanStepStatus', 'MemoryTier'].
 
 
 fetch_msg_def(MsgName) ->
@@ -7194,8 +11508,11 @@ fetch_msg_def(MsgName) ->
     end.
 
 
--spec fetch_enum_def(_) -> no_return().
-fetch_enum_def(EnumName) -> erlang:error({no_such_enum, EnumName}).
+fetch_enum_def(EnumName) ->
+    case find_enum_def(EnumName) of
+        Es when is_list(Es) -> Es;
+        error -> erlang:error({no_such_enum, EnumName})
+    end.
 
 
 find_msg_def('PanelFrame') ->
@@ -7228,7 +11545,9 @@ find_msg_def('PanelStream') ->
             #{name => tool_event, fnum => 3, rnum => 3, type => {msg, 'ToolEvent'}, occurrence => optional, opts => []},
             #{name => final, fnum => 4, rnum => 3, type => {msg, 'FinalAnswer'}, occurrence => optional, opts => []},
             #{name => error, fnum => 5, rnum => 3, type => {msg, 'StreamError'}, occurrence => optional, opts => []},
-            #{name => approval_required, fnum => 6, rnum => 3, type => {msg, 'ApprovalRequired'}, occurrence => optional, opts => []}],
+            #{name => approval_required, fnum => 6, rnum => 3, type => {msg, 'ApprovalRequired'}, occurrence => optional, opts => []},
+            #{name => plan_generated, fnum => 7, rnum => 3, type => {msg, 'PlanGenerated'}, occurrence => optional, opts => []},
+            #{name => plan_step_update, fnum => 8, rnum => 3, type => {msg, 'PlanStepUpdate'}, occurrence => optional, opts => []}],
        opts => []}];
 find_msg_def('ApprovalRequired') ->
     [#{name => req_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
@@ -7247,6 +11566,74 @@ find_msg_def('PendingApprovalEntry') ->
      #{name => risk_level, fnum => 6, rnum => 7, type => string, occurrence => optional, opts => []},
      #{name => expire_ms, fnum => 7, rnum => 8, type => int32, occurrence => optional, opts => []},
      #{name => registered_at, fnum => 8, rnum => 9, type => int64, occurrence => optional, opts => []}];
+find_msg_def('PlanStep') ->
+    [#{name => index, fnum => 1, rnum => 2, type => int32, occurrence => optional, opts => []},
+     #{name => description, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+     #{name => tool_hint, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+     #{name => risk_level, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []}];
+find_msg_def('PlanGenerated') ->
+    [#{name => goal, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => steps, fnum => 2, rnum => 3, type => {msg, 'PlanStep'}, occurrence => repeated, opts => []},
+     #{name => warnings, fnum => 3, rnum => 4, type => string, occurrence => repeated, opts => []},
+     #{name => suggestions, fnum => 4, rnum => 5, type => string, occurrence => repeated, opts => []}];
+find_msg_def('PlanStepUpdate') ->
+    [#{name => step_index, fnum => 1, rnum => 2, type => int32, occurrence => optional, opts => []},
+     #{name => status, fnum => 2, rnum => 3, type => {enum, 'PlanStepStatus'}, occurrence => optional, opts => []},
+     #{name => result_summary, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []}];
+find_msg_def('ProviderConfig') ->
+    [#{name => id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => name, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+     #{name => api_base, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+     #{name => api_key, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []},
+     #{name => models, fnum => 5, rnum => 6, type => string, occurrence => repeated, opts => []},
+     #{name => enabled, fnum => 6, rnum => 7, type => bool, occurrence => optional, opts => []},
+     #{name => is_default, fnum => 7, rnum => 8, type => bool, occurrence => optional, opts => []},
+     #{name => latency_ms, fnum => 8, rnum => 9, type => int64, occurrence => optional, opts => []}];
+find_msg_def('ModelRoute') ->
+    [#{name => model, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => provider_id, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+     #{name => provider_name, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []}];
+find_msg_def('RiskPolicy') -> [#{name => risk_level, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => action, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}];
+find_msg_def('ListProvidersResult') -> [#{name => providers, fnum => 1, rnum => 2, type => {msg, 'ProviderConfig'}, occurrence => repeated, opts => []}];
+find_msg_def('UpsertProviderArgs') -> [#{name => provider, fnum => 1, rnum => 2, type => {msg, 'ProviderConfig'}, occurrence => optional, opts => []}];
+find_msg_def('UpsertProviderResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}, #{name => id, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}];
+find_msg_def('DeleteProviderArgs') -> [#{name => provider_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];
+find_msg_def('DeleteProviderResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}];
+find_msg_def('SetDefaultProviderArgs') -> [#{name => provider_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];
+find_msg_def('SetDefaultProviderResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}];
+find_msg_def('TestProviderArgs') -> [#{name => provider, fnum => 1, rnum => 2, type => {msg, 'ProviderConfig'}, occurrence => optional, opts => []}];
+find_msg_def('TestProviderResult') ->
+    [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []},
+     #{name => latency_ms, fnum => 2, rnum => 3, type => int64, occurrence => optional, opts => []},
+     #{name => error, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []}];
+find_msg_def('GetRiskPoliciesResult') -> [#{name => policies, fnum => 1, rnum => 2, type => {msg, 'RiskPolicy'}, occurrence => repeated, opts => []}];
+find_msg_def('SetRiskPolicyArgs') -> [#{name => risk_level, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => action, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}];
+find_msg_def('SetRiskPolicyResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}];
+find_msg_def('SetSessionProviderArgs') -> [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => provider_id, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}];
+find_msg_def('SetSessionProviderResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}];
+find_msg_def('MemoryEntry') ->
+    [#{name => key, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => tier, fnum => 2, rnum => 3, type => {enum, 'MemoryTier'}, occurrence => optional, opts => []},
+     #{name => content, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+     #{name => source, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []},
+     #{name => created_at, fnum => 5, rnum => 6, type => int64, occurrence => optional, opts => []},
+     #{name => session_id, fnum => 6, rnum => 7, type => string, occurrence => optional, opts => []}];
+find_msg_def('ListMemoriesArgs') -> [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => tier, fnum => 2, rnum => 3, type => {enum, 'MemoryTier'}, occurrence => optional, opts => []}];
+find_msg_def('ListMemoriesResult') -> [#{name => memories, fnum => 1, rnum => 2, type => {msg, 'MemoryEntry'}, occurrence => repeated, opts => []}];
+find_msg_def('AddMemoryArgs') ->
+    [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => tier, fnum => 2, rnum => 3, type => {enum, 'MemoryTier'}, occurrence => optional, opts => []},
+     #{name => content, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []}];
+find_msg_def('AddMemoryResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}, #{name => key, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}];
+find_msg_def('DeleteMemoryArgs') ->
+    [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => tier, fnum => 2, rnum => 3, type => {enum, 'MemoryTier'}, occurrence => optional, opts => []},
+     #{name => key, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []}];
+find_msg_def('DeleteMemoryResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}];
+find_msg_def('ClearMemoriesArgs') -> [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => tier, fnum => 2, rnum => 3, type => {enum, 'MemoryTier'}, occurrence => optional, opts => []}];
+find_msg_def('ClearMemoriesResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}, #{name => count, fnum => 2, rnum => 3, type => int32, occurrence => optional, opts => []}];
+find_msg_def('CancelExecutionArgs') -> [#{name => session_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}];
+find_msg_def('CancelExecutionResult') -> [#{name => ok, fnum => 1, rnum => 2, type => bool, occurrence => optional, opts => []}];
 find_msg_def('LlmChunk') -> [#{name => content, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => reasoning_content, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}];
 find_msg_def('JsonField') -> [#{name => key, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => value, fnum => 2, rnum => 3, type => {msg, 'JsonValue'}, occurrence => optional, opts => []}];
 find_msg_def('ToolParameter') ->
@@ -7341,16 +11728,42 @@ find_msg_def('DeleteSessionResult') -> [#{name => ok, fnum => 1, rnum => 2, type
 find_msg_def(_) -> error.
 
 
+find_enum_def('PlanStepStatus') -> [{'PLAN_STEP_PENDING', 0}, {'PLAN_STEP_RUNNING', 1}, {'PLAN_STEP_DONE', 2}, {'PLAN_STEP_FAILED', 3}, {'PLAN_STEP_SKIPPED', 4}];
+find_enum_def('MemoryTier') -> [{'MEMORY_TIER_UNSPECIFIED', 0}, {'MEMORY_TIER_FACTS', 1}, {'MEMORY_TIER_PREFERENCES', 2}, {'MEMORY_TIER_WORKSPACE', 3}];
 find_enum_def(_) -> error.
 
 
--spec enum_symbol_by_value(_, _) -> no_return().
-enum_symbol_by_value(E, V) -> erlang:error({no_enum_defs, E, V}).
+enum_symbol_by_value('PlanStepStatus', Value) -> enum_symbol_by_value_PlanStepStatus(Value);
+enum_symbol_by_value('MemoryTier', Value) -> enum_symbol_by_value_MemoryTier(Value).
 
 
--spec enum_value_by_symbol(_, _) -> no_return().
-enum_value_by_symbol(E, V) -> erlang:error({no_enum_defs, E, V}).
+enum_value_by_symbol('PlanStepStatus', Sym) -> enum_value_by_symbol_PlanStepStatus(Sym);
+enum_value_by_symbol('MemoryTier', Sym) -> enum_value_by_symbol_MemoryTier(Sym).
 
+
+enum_symbol_by_value_PlanStepStatus(0) -> 'PLAN_STEP_PENDING';
+enum_symbol_by_value_PlanStepStatus(1) -> 'PLAN_STEP_RUNNING';
+enum_symbol_by_value_PlanStepStatus(2) -> 'PLAN_STEP_DONE';
+enum_symbol_by_value_PlanStepStatus(3) -> 'PLAN_STEP_FAILED';
+enum_symbol_by_value_PlanStepStatus(4) -> 'PLAN_STEP_SKIPPED'.
+
+
+enum_value_by_symbol_PlanStepStatus('PLAN_STEP_PENDING') -> 0;
+enum_value_by_symbol_PlanStepStatus('PLAN_STEP_RUNNING') -> 1;
+enum_value_by_symbol_PlanStepStatus('PLAN_STEP_DONE') -> 2;
+enum_value_by_symbol_PlanStepStatus('PLAN_STEP_FAILED') -> 3;
+enum_value_by_symbol_PlanStepStatus('PLAN_STEP_SKIPPED') -> 4.
+
+enum_symbol_by_value_MemoryTier(0) -> 'MEMORY_TIER_UNSPECIFIED';
+enum_symbol_by_value_MemoryTier(1) -> 'MEMORY_TIER_FACTS';
+enum_symbol_by_value_MemoryTier(2) -> 'MEMORY_TIER_PREFERENCES';
+enum_symbol_by_value_MemoryTier(3) -> 'MEMORY_TIER_WORKSPACE'.
+
+
+enum_value_by_symbol_MemoryTier('MEMORY_TIER_UNSPECIFIED') -> 0;
+enum_value_by_symbol_MemoryTier('MEMORY_TIER_FACTS') -> 1;
+enum_value_by_symbol_MemoryTier('MEMORY_TIER_PREFERENCES') -> 2;
+enum_value_by_symbol_MemoryTier('MEMORY_TIER_WORKSPACE') -> 3.
 
 
 get_service_names() -> [].
@@ -7404,6 +11817,37 @@ fqbin_to_msg_name(<<"panel.PanelResponse">>) -> 'PanelResponse';
 fqbin_to_msg_name(<<"panel.PanelStream">>) -> 'PanelStream';
 fqbin_to_msg_name(<<"panel.ApprovalRequired">>) -> 'ApprovalRequired';
 fqbin_to_msg_name(<<"panel.PendingApprovalEntry">>) -> 'PendingApprovalEntry';
+fqbin_to_msg_name(<<"panel.PlanStep">>) -> 'PlanStep';
+fqbin_to_msg_name(<<"panel.PlanGenerated">>) -> 'PlanGenerated';
+fqbin_to_msg_name(<<"panel.PlanStepUpdate">>) -> 'PlanStepUpdate';
+fqbin_to_msg_name(<<"panel.ProviderConfig">>) -> 'ProviderConfig';
+fqbin_to_msg_name(<<"panel.ModelRoute">>) -> 'ModelRoute';
+fqbin_to_msg_name(<<"panel.RiskPolicy">>) -> 'RiskPolicy';
+fqbin_to_msg_name(<<"panel.ListProvidersResult">>) -> 'ListProvidersResult';
+fqbin_to_msg_name(<<"panel.UpsertProviderArgs">>) -> 'UpsertProviderArgs';
+fqbin_to_msg_name(<<"panel.UpsertProviderResult">>) -> 'UpsertProviderResult';
+fqbin_to_msg_name(<<"panel.DeleteProviderArgs">>) -> 'DeleteProviderArgs';
+fqbin_to_msg_name(<<"panel.DeleteProviderResult">>) -> 'DeleteProviderResult';
+fqbin_to_msg_name(<<"panel.SetDefaultProviderArgs">>) -> 'SetDefaultProviderArgs';
+fqbin_to_msg_name(<<"panel.SetDefaultProviderResult">>) -> 'SetDefaultProviderResult';
+fqbin_to_msg_name(<<"panel.TestProviderArgs">>) -> 'TestProviderArgs';
+fqbin_to_msg_name(<<"panel.TestProviderResult">>) -> 'TestProviderResult';
+fqbin_to_msg_name(<<"panel.GetRiskPoliciesResult">>) -> 'GetRiskPoliciesResult';
+fqbin_to_msg_name(<<"panel.SetRiskPolicyArgs">>) -> 'SetRiskPolicyArgs';
+fqbin_to_msg_name(<<"panel.SetRiskPolicyResult">>) -> 'SetRiskPolicyResult';
+fqbin_to_msg_name(<<"panel.SetSessionProviderArgs">>) -> 'SetSessionProviderArgs';
+fqbin_to_msg_name(<<"panel.SetSessionProviderResult">>) -> 'SetSessionProviderResult';
+fqbin_to_msg_name(<<"panel.MemoryEntry">>) -> 'MemoryEntry';
+fqbin_to_msg_name(<<"panel.ListMemoriesArgs">>) -> 'ListMemoriesArgs';
+fqbin_to_msg_name(<<"panel.ListMemoriesResult">>) -> 'ListMemoriesResult';
+fqbin_to_msg_name(<<"panel.AddMemoryArgs">>) -> 'AddMemoryArgs';
+fqbin_to_msg_name(<<"panel.AddMemoryResult">>) -> 'AddMemoryResult';
+fqbin_to_msg_name(<<"panel.DeleteMemoryArgs">>) -> 'DeleteMemoryArgs';
+fqbin_to_msg_name(<<"panel.DeleteMemoryResult">>) -> 'DeleteMemoryResult';
+fqbin_to_msg_name(<<"panel.ClearMemoriesArgs">>) -> 'ClearMemoriesArgs';
+fqbin_to_msg_name(<<"panel.ClearMemoriesResult">>) -> 'ClearMemoriesResult';
+fqbin_to_msg_name(<<"panel.CancelExecutionArgs">>) -> 'CancelExecutionArgs';
+fqbin_to_msg_name(<<"panel.CancelExecutionResult">>) -> 'CancelExecutionResult';
 fqbin_to_msg_name(<<"panel.LlmChunk">>) -> 'LlmChunk';
 fqbin_to_msg_name(<<"panel.JsonField">>) -> 'JsonField';
 fqbin_to_msg_name(<<"panel.ToolParameter">>) -> 'ToolParameter';
@@ -7448,6 +11892,37 @@ msg_name_to_fqbin('PanelResponse') -> <<"panel.PanelResponse">>;
 msg_name_to_fqbin('PanelStream') -> <<"panel.PanelStream">>;
 msg_name_to_fqbin('ApprovalRequired') -> <<"panel.ApprovalRequired">>;
 msg_name_to_fqbin('PendingApprovalEntry') -> <<"panel.PendingApprovalEntry">>;
+msg_name_to_fqbin('PlanStep') -> <<"panel.PlanStep">>;
+msg_name_to_fqbin('PlanGenerated') -> <<"panel.PlanGenerated">>;
+msg_name_to_fqbin('PlanStepUpdate') -> <<"panel.PlanStepUpdate">>;
+msg_name_to_fqbin('ProviderConfig') -> <<"panel.ProviderConfig">>;
+msg_name_to_fqbin('ModelRoute') -> <<"panel.ModelRoute">>;
+msg_name_to_fqbin('RiskPolicy') -> <<"panel.RiskPolicy">>;
+msg_name_to_fqbin('ListProvidersResult') -> <<"panel.ListProvidersResult">>;
+msg_name_to_fqbin('UpsertProviderArgs') -> <<"panel.UpsertProviderArgs">>;
+msg_name_to_fqbin('UpsertProviderResult') -> <<"panel.UpsertProviderResult">>;
+msg_name_to_fqbin('DeleteProviderArgs') -> <<"panel.DeleteProviderArgs">>;
+msg_name_to_fqbin('DeleteProviderResult') -> <<"panel.DeleteProviderResult">>;
+msg_name_to_fqbin('SetDefaultProviderArgs') -> <<"panel.SetDefaultProviderArgs">>;
+msg_name_to_fqbin('SetDefaultProviderResult') -> <<"panel.SetDefaultProviderResult">>;
+msg_name_to_fqbin('TestProviderArgs') -> <<"panel.TestProviderArgs">>;
+msg_name_to_fqbin('TestProviderResult') -> <<"panel.TestProviderResult">>;
+msg_name_to_fqbin('GetRiskPoliciesResult') -> <<"panel.GetRiskPoliciesResult">>;
+msg_name_to_fqbin('SetRiskPolicyArgs') -> <<"panel.SetRiskPolicyArgs">>;
+msg_name_to_fqbin('SetRiskPolicyResult') -> <<"panel.SetRiskPolicyResult">>;
+msg_name_to_fqbin('SetSessionProviderArgs') -> <<"panel.SetSessionProviderArgs">>;
+msg_name_to_fqbin('SetSessionProviderResult') -> <<"panel.SetSessionProviderResult">>;
+msg_name_to_fqbin('MemoryEntry') -> <<"panel.MemoryEntry">>;
+msg_name_to_fqbin('ListMemoriesArgs') -> <<"panel.ListMemoriesArgs">>;
+msg_name_to_fqbin('ListMemoriesResult') -> <<"panel.ListMemoriesResult">>;
+msg_name_to_fqbin('AddMemoryArgs') -> <<"panel.AddMemoryArgs">>;
+msg_name_to_fqbin('AddMemoryResult') -> <<"panel.AddMemoryResult">>;
+msg_name_to_fqbin('DeleteMemoryArgs') -> <<"panel.DeleteMemoryArgs">>;
+msg_name_to_fqbin('DeleteMemoryResult') -> <<"panel.DeleteMemoryResult">>;
+msg_name_to_fqbin('ClearMemoriesArgs') -> <<"panel.ClearMemoriesArgs">>;
+msg_name_to_fqbin('ClearMemoriesResult') -> <<"panel.ClearMemoriesResult">>;
+msg_name_to_fqbin('CancelExecutionArgs') -> <<"panel.CancelExecutionArgs">>;
+msg_name_to_fqbin('CancelExecutionResult') -> <<"panel.CancelExecutionResult">>;
 msg_name_to_fqbin('LlmChunk') -> <<"panel.LlmChunk">>;
 msg_name_to_fqbin('JsonField') -> <<"panel.JsonField">>;
 msg_name_to_fqbin('ToolParameter') -> <<"panel.ToolParameter">>;
@@ -7484,11 +11959,13 @@ msg_name_to_fqbin('DeleteSessionResult') -> <<"panel.DeleteSessionResult">>;
 msg_name_to_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 
 
--spec fqbin_to_enum_name(_) -> no_return().
+fqbin_to_enum_name(<<"panel.PlanStepStatus">>) -> 'PlanStepStatus';
+fqbin_to_enum_name(<<"panel.MemoryTier">>) -> 'MemoryTier';
 fqbin_to_enum_name(E) -> error({gpb_error, {badenum, E}}).
 
 
--spec enum_name_to_fqbin(_) -> no_return().
+enum_name_to_fqbin('PlanStepStatus') -> <<"panel.PlanStepStatus">>;
+enum_name_to_fqbin('MemoryTier') -> <<"panel.MemoryTier">>;
 enum_name_to_fqbin(E) -> error({gpb_error, {badenum, E}}).
 
 
@@ -7520,28 +11997,44 @@ get_all_proto_names() -> ["panel"].
 
 
 get_msg_containment("panel") ->
-    ['ApprovalRequired',
+    ['AddMemoryArgs',
+     'AddMemoryResult',
+     'ApprovalRequired',
      'ApproveArgs',
      'ApproveResult',
      'BrainStatusArgs',
      'BrainStatusResult',
+     'CancelExecutionArgs',
+     'CancelExecutionResult',
      'CapabilityDesc',
+     'ClearMemoriesArgs',
+     'ClearMemoriesResult',
      'DebugCapabilityArgs',
      'DebugCapabilityResult',
+     'DeleteMemoryArgs',
+     'DeleteMemoryResult',
+     'DeleteProviderArgs',
+     'DeleteProviderResult',
      'DeleteSessionArgs',
      'DeleteSessionResult',
      'FinalAnswer',
      'GetHistoryArgs',
      'GetHistoryResult',
+     'GetRiskPoliciesResult',
      'HistoryEntry',
      'JsonArray',
      'JsonField',
      'JsonObject',
      'JsonValue',
      'ListCapabilitiesResult',
+     'ListMemoriesArgs',
+     'ListMemoriesResult',
      'ListPendingApprovalsResult',
+     'ListProvidersResult',
      'ListToolsResult',
      'LlmChunk',
+     'MemoryEntry',
+     'ModelRoute',
      'PanelExec',
      'PanelExecResult',
      'PanelFrame',
@@ -7549,18 +12042,33 @@ get_msg_containment("panel") ->
      'PanelResponse',
      'PanelStream',
      'PendingApprovalEntry',
+     'PlanGenerated',
+     'PlanStep',
+     'PlanStepUpdate',
+     'ProviderConfig',
+     'RiskPolicy',
      'SendArgs',
      'SendResult',
+     'SetDefaultProviderArgs',
+     'SetDefaultProviderResult',
+     'SetRiskPolicyArgs',
+     'SetRiskPolicyResult',
+     'SetSessionProviderArgs',
+     'SetSessionProviderResult',
      'StartSessionArgs',
      'StartSessionResult',
      'StopResult',
      'StreamError',
+     'TestProviderArgs',
+     'TestProviderResult',
      'ToolCall',
      'ToolDesc',
      'ToolEvent',
      'ToolFunction',
      'ToolParameter',
-     'ToolParameters'];
+     'ToolParameters',
+     'UpsertProviderArgs',
+     'UpsertProviderResult'];
 get_msg_containment(P) -> error({gpb_error, {badproto, P}}).
 
 
@@ -7576,51 +12084,82 @@ get_rpc_containment("panel") -> [];
 get_rpc_containment(P) -> error({gpb_error, {badproto, P}}).
 
 
-get_enum_containment("panel") -> [];
+get_enum_containment("panel") -> ['MemoryTier', 'PlanStepStatus'];
 get_enum_containment(P) -> error({gpb_error, {badproto, P}}).
 
 
-get_proto_by_msg_name_as_fqbin(<<"panel.JsonValue">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ListCapabilitiesResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolFunction">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelResponse">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.JsonObject">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.CapabilityDesc">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.SendResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.DebugCapabilityArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ApprovalRequired">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ToolDesc">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelFrame">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.DebugCapabilityResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.HistoryEntry">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ListToolsResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PendingApprovalEntry">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolEvent">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelExec">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelExecResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.FinalAnswer">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SetSessionProviderArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.JsonArray">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ApproveResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelStream">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ApproveArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.CapabilityDesc">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.PanelRequest">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameters">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StreamError">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.SendArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.StopResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.LlmChunk">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.JsonField">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameter">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.TestProviderResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SetDefaultProviderArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ListCapabilitiesResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DeleteMemoryResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.FinalAnswer">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelResponse">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ModelRoute">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ClearMemoriesResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameters">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.CancelExecutionArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SendArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PlanStep">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SetSessionProviderResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.CancelExecutionResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ClearMemoriesArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.HistoryEntry">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ApproveArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelExec">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DeleteMemoryArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.UpsertProviderResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ProviderConfig">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonValue">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolCall">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SendResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelFrame">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelExecResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ListMemoriesArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.UpsertProviderArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolEvent">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PlanStepUpdate">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.AddMemoryResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DeleteProviderResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SetDefaultProviderResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ListProvidersResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ApprovalRequired">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelStream">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.TestProviderArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SetRiskPolicyResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonField">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DeleteProviderArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StreamError">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.AddMemoryArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PendingApprovalEntry">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ListMemoriesResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.GetRiskPoliciesResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ApproveResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DebugCapabilityResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.LlmChunk">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ListToolsResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DebugCapabilityArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.MemoryEntry">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolFunction">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PlanGenerated">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.ListPendingApprovalsResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.RiskPolicy">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SetRiskPolicyArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolCall">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonObject">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 
 
@@ -7628,7 +12167,8 @@ get_proto_by_msg_name_as_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 get_proto_by_service_name_as_fqbin(E) -> error({gpb_error, {badservice, E}}).
 
 
--spec get_proto_by_enum_name_as_fqbin(_) -> no_return().
+get_proto_by_enum_name_as_fqbin(<<"panel.PlanStepStatus">>) -> "panel";
+get_proto_by_enum_name_as_fqbin(<<"panel.MemoryTier">>) -> "panel";
 get_proto_by_enum_name_as_fqbin(E) -> error({gpb_error, {badenum, E}}).
 
 

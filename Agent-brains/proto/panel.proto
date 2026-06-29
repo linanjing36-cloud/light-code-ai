@@ -42,7 +42,7 @@ message PanelExecResult {
 // 一次性请求。
 message PanelRequest {
   uint64 id = 1;          // 请求 ID (用于 response 路由匹配, stream 不复用此 id)
-  string method = 2;      // start_session / send / list_tools / list_capabilities / list_pending_approvals / approve / brain_status / get_history / delete_session / stop
+  string method = 2;      // start_session / send / list_tools / list_capabilities / list_pending_approvals / approve / brain_status / get_history / delete_session / stop / list_providers / upsert_provider / delete_provider / set_default_provider / test_provider / get_risk_policies / set_risk_policy / set_session_provider / cancel_execution / list_memories / add_memory / delete_memory / clear_memories
   bytes args_bytes = 3;   // 方法对应 Args message 的 Protobuf 编码
 }
 
@@ -64,6 +64,8 @@ message PanelStream {
     FinalAnswer final = 4;    // 终态: 最终答案就绪
     StreamError error = 5;    // 终态: 流式错误
     ApprovalRequired approval_required = 6; // 非终态: 高风险能力需用户审批 (EXEC-P0-005)
+    PlanGenerated plan_generated = 7;       // 非终态: Planner生成执行计划 (EXEC-P2-001)
+    PlanStepUpdate plan_step_update = 8;    // 非终态: 计划步骤状态更新 (EXEC-P2-001)
   }
 }
 
@@ -91,7 +93,201 @@ message PendingApprovalEntry {
   int64 registered_at = 8;
 }
 
-// LLM 流式 chunk: 增量内容, 前端累加渲染。
+// ============================================================
+// EXEC-P2-001: Planner 计划相关消息
+// ============================================================
+
+message PlanStep {
+  int32 index = 1;             // 步骤序号 (从1开始)
+  string description = 2;      // 步骤描述
+  string tool_hint = 3;        // 预计调用的工具名 (空表示无特定工具)
+  string risk_level = 4;       // 风险等级 (safe/review/dangerous)
+}
+
+message PlanGenerated {
+  string goal = 1;             // 目标描述
+  repeated PlanStep steps = 2; // 步骤列表
+  repeated string warnings = 3; // 警告信息
+  repeated string suggestions = 4; // 建议
+}
+
+enum PlanStepStatus {
+  PLAN_STEP_PENDING = 0;   // 待执行
+  PLAN_STEP_RUNNING = 1;   // 执行中
+  PLAN_STEP_DONE = 2;      // 完成
+  PLAN_STEP_FAILED = 3;    // 失败
+  PLAN_STEP_SKIPPED = 4;   // 跳过
+}
+
+message PlanStepUpdate {
+  int32 step_index = 1;         // 步骤序号
+  PlanStepStatus status = 2;    // 新状态
+  string result_summary = 3;    // 结果摘要 (完成/失败时填)
+}
+
+// ============================================================
+// EXEC-P2-003: Provider 配置相关消息
+// ============================================================
+
+message ProviderConfig {
+  string id = 1;                // Provider唯一标识
+  string name = 2;              // 显示名称
+  string api_base = 3;          // API Base URL
+  string api_key = 4;           // API Key (返回时掩码)
+  repeated string models = 5;   // 支持的模型列表
+  bool enabled = 6;             // 是否启用
+  bool is_default = 7;          // 是否为默认Provider
+  int64 latency_ms = 8;         // 测试连接延迟 (仅test_provider时填充)
+}
+
+message ModelRoute {
+  string model = 1;
+  string provider_id = 2;
+  string provider_name = 3;
+}
+
+message RiskPolicy {
+  string risk_level = 1;        // safe/review/dangerous
+  string action = 2;            // allow/approve/deny
+}
+
+message ListProvidersResult {
+  repeated ProviderConfig providers = 1;
+}
+
+message UpsertProviderArgs {
+  ProviderConfig provider = 1;
+}
+
+message UpsertProviderResult {
+  bool ok = 1;
+  string id = 2;
+}
+
+message DeleteProviderArgs {
+  string provider_id = 1;
+}
+
+message DeleteProviderResult {
+  bool ok = 1;
+}
+
+message SetDefaultProviderArgs {
+  string provider_id = 1;
+}
+
+message SetDefaultProviderResult {
+  bool ok = 1;
+}
+
+message TestProviderArgs {
+  ProviderConfig provider = 1;
+}
+
+message TestProviderResult {
+  bool ok = 1;
+  int64 latency_ms = 2;
+  string error = 3;
+}
+
+message GetRiskPoliciesResult {
+  repeated RiskPolicy policies = 1;
+}
+
+message SetRiskPolicyArgs {
+  string risk_level = 1;
+  string action = 2;
+}
+
+message SetRiskPolicyResult {
+  bool ok = 1;
+}
+
+message SetSessionProviderArgs {
+  string session_id = 1;
+  string provider_id = 2;
+}
+
+message SetSessionProviderResult {
+  bool ok = 1;
+}
+
+// ============================================================
+// EXEC-P2-002: 分层记忆相关消息
+// ============================================================
+
+enum MemoryTier {
+  MEMORY_TIER_UNSPECIFIED = 0;
+  MEMORY_TIER_FACTS = 1;
+  MEMORY_TIER_PREFERENCES = 2;
+  MEMORY_TIER_WORKSPACE = 3;
+}
+
+message MemoryEntry {
+  string key = 1;               // 记忆唯一键 (内容哈希)
+  MemoryTier tier = 2;          // 记忆层级
+  string content = 3;           // 记忆内容
+  string source = 4;            // 来源: auto(LLM抽取)/manual(手动/工具写入)
+  int64 created_at = 5;         // 创建时间戳 (毫秒)
+  string session_id = 6;        // 所属会话ID (global表示全局记忆)
+}
+
+message ListMemoriesArgs {
+  string session_id = 1;        // 会话ID (空则当前全局)
+  MemoryTier tier = 2;          // 层级 (0=全部)
+}
+
+message ListMemoriesResult {
+  repeated MemoryEntry memories = 1;
+}
+
+message AddMemoryArgs {
+  string session_id = 1;        // 会话ID (空则global)
+  MemoryTier tier = 2;          // 层级
+  string content = 3;           // 记忆内容
+}
+
+message AddMemoryResult {
+  bool ok = 1;
+  string key = 2;
+}
+
+message DeleteMemoryArgs {
+  string session_id = 1;
+  MemoryTier tier = 2;
+  string key = 3;
+}
+
+message DeleteMemoryResult {
+  bool ok = 1;
+}
+
+message ClearMemoriesArgs {
+  string session_id = 1;        // 会话ID (空则当前会话)
+  MemoryTier tier = 2;          // 层级 (0=全部三层)
+}
+
+message ClearMemoriesResult {
+  bool ok = 1;
+  int32 count = 2;              // 删除条数
+}
+
+// ============================================================
+// EXEC-P2-003: 取消执行
+// ============================================================
+
+message CancelExecutionArgs {
+  string session_id = 1;
+}
+
+message CancelExecutionResult {
+  bool ok = 1;
+}
+
+// ============================================================
+// LLM 流式 chunk
+// ============================================================
+
 message LlmChunk {
   string content = 1;            // 增量正文 (与上一段拼接)
   string reasoning_content = 2;  // 增量推理过程 (v4-pro 等推理模型)

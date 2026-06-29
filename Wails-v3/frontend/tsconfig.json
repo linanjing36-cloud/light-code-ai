@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
     "allowJs": true,
 
     "noEmit": true,
@@ -14,7 +16,7 @@
     "lib": [
       "DOM",
       "DOM.Iterable",
-      "ESNext",
+      "ES2020",
     ],
 
     "strict": true,
@@ -24,5 +26,6 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
   },
-  "include": ["src", "bindings"]
+  "include": ["src"],
+  "exclude": ["bindings", "node_modules", "dist"]
 }

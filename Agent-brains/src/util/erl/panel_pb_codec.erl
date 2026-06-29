@@ -27,6 +27,8 @@
     pack_stream_final/2,      %% (StreamId, FinalMap) -> binary()
     pack_stream_err/2,        %% (StreamId, ErrMsg) -> binary()
     pack_stream_approval_required/2, %% (StreamId, ApprovalMap) -> binary()  EXEC-P0-005
+    pack_stream_plan_generated/2,    %% (StreamId, PlanMap) -> binary()     EXEC-P2-001
+    pack_stream_plan_step_update/2,  %% (StreamId, UpdateMap) -> binary()  EXEC-P2-001
     pack_exec/2,              %% (Id, AgentReqBin) -> binary()
     %% 解码: binary -> 业务级 tagged tuple
     unpack_frame/1            %% (Bin) -> {request, Id, Method, ArgsMap}
@@ -117,6 +119,28 @@ pack_stream_approval_required(StreamId, ApprovalMap) ->
     Inner = #{stream_id => StreamId, approval_required => Approval},
     ?PANEL_PB:encode_msg(#{stream => Inner}, 'PanelFrame').
 
+%% 计划生成帧 (非终态, EXEC-P2-001): Planner 生成执行计划后推送
+%% PlanMap: #{goal, steps => [#{index, description, tool_hint, risk_level}], warnings, suggestions}
+-spec pack_stream_plan_generated(binary(), map()) -> binary().
+pack_stream_plan_generated(StreamId, PlanMap) ->
+    Steps = [plan_step_to_pb(S) || S <- maps:get(steps, PlanMap, [])],
+    Plan = #{goal => maps:get(goal, PlanMap, <<>>),
+             steps => Steps,
+             warnings => [ensure_binary(W) || W <- maps:get(warnings, PlanMap, [])],
+             suggestions => [ensure_binary(S) || S <- maps:get(suggestions, PlanMap, [])]},
+    Inner = #{stream_id => StreamId, plan_generated => Plan},
+    ?PANEL_PB:encode_msg(#{stream => Inner}, 'PanelFrame').
+
+%% 计划步骤更新帧 (非终态, EXEC-P2-001): 工具执行时更新步骤状态
+%% UpdateMap: #{step_index, status => pending/running/done/failed/skipped, result_summary}
+-spec pack_stream_plan_step_update(binary(), map()) -> binary().
+pack_stream_plan_step_update(StreamId, UpdateMap) ->
+    Update = #{step_index => maps:get(step_index, UpdateMap, 0),
+               status => plan_status_to_atom(maps:get(status, UpdateMap, <<"pending">>)),
+               result_summary => maps:get(result_summary, UpdateMap, <<>>)},
+    Inner = #{stream_id => StreamId, plan_step_update => Update},
+    ?PANEL_PB:encode_msg(#{stream => Inner}, 'PanelFrame').
+
 %% Phase B: Erlang 经 panel 连接让 Wails 进程内执行 hermes AgentRequest
 -spec pack_exec(non_neg_integer(), binary()) -> binary().
 pack_exec(Id, AgentReqBin) ->
@@ -133,13 +157,13 @@ pack_exec(Id, AgentReqBin) ->
 %%   {request, Id, Method, ArgsMap}                 客户端请求
 %%   {response, Id, ok, ResultBytes}                成功响应 (client 侧需自维护 id->method 映射来 decode ResultBytes)
 %%   {response, Id, error, ErrMsg}                  失败响应
-%%   {stream, StreamId, {chunk|tool_event|final|error, Map}}  流式 push 帧
+%%   {stream, StreamId, {chunk|tool_event|final|error|... , Map}}  流式 push 帧
 %%   {error, Reason}                                 无法识别的帧
 -spec unpack_frame(binary()) ->
     {request, non_neg_integer(), binary(), map()} |
     {response, non_neg_integer(), ok, binary()} |
     {response, non_neg_integer(), error, binary()} |
-    {stream, binary(), {chunk | tool_event | final | error, map()}} |
+    {stream, binary(), {chunk | tool_event | final | error | approval_required | plan_generated | plan_step_update, map()}} |
     {exec_result, non_neg_integer(), binary(), binary(), boolean()} |
     {error, term()}.
 unpack_frame(Bin) ->
@@ -232,7 +256,27 @@ decode_stream(Stream) ->
                                                   risk_level => maps:get(risk_level, A, <<>>),
                                                   expire_ms => maps:get(expire_ms, A, 300000)}}};
                                         false ->
-                                            {stream, StreamId, {unknown, #{}}}
+                                            case maps:is_key(plan_generated, Stream) of
+                                                true ->
+                                                    P = maps:get(plan_generated, Stream),
+                                                    Steps = [plan_step_from_pb(S) || S <- maps:get(steps, P, [])],
+                                                    {stream, StreamId, {plan_generated,
+                                                        #{goal => maps:get(goal, P, <<>>),
+                                                          steps => Steps,
+                                                          warnings => maps:get(warnings, P, []),
+                                                          suggestions => maps:get(suggestions, P, [])}}};
+                                                false ->
+                                                    case maps:is_key(plan_step_update, Stream) of
+                                                        true ->
+                                                            U = maps:get(plan_step_update, Stream),
+                                                            {stream, StreamId, {plan_step_update,
+                                                                #{step_index => maps:get(step_index, U, 0),
+                                                                  status => plan_status_from_atom(maps:get(status, U, 'PLAN_STEP_PENDING')),
+                                                                  result_summary => maps:get(result_summary, U, <<>>)}}};
+                                                        false ->
+                                                            {stream, StreamId, {unknown, #{}}}
+                                                    end
+                                            end
                                     end
                             end
                     end
@@ -281,8 +325,53 @@ encode_args(<<"debug_capability">>, #{name := Name} = M) ->
         arguments_json => maps:get(arguments_json, M, <<>>),
         timeout_ms => maps:get(timeout_ms, M, 5000)},
       'DebugCapabilityArgs');
+
+%% ---- Provider RPC args ----
+encode_args(<<"list_providers">>, _Args) ->
+    <<>>;
+encode_args(<<"upsert_provider">>, #{provider := Provider}) ->
+    ?PANEL_PB:encode_msg(#{provider => provider_config_to_pb(Provider)}, 'UpsertProviderArgs');
+encode_args(<<"delete_provider">>, #{provider_id := Id}) ->
+    ?PANEL_PB:encode_msg(#{provider_id => Id}, 'DeleteProviderArgs');
+encode_args(<<"set_default_provider">>, #{provider_id := Id}) ->
+    ?PANEL_PB:encode_msg(#{provider_id => Id}, 'SetDefaultProviderArgs');
+encode_args(<<"test_provider">>, #{provider := Provider}) ->
+    ?PANEL_PB:encode_msg(#{provider => provider_config_to_pb(Provider)}, 'TestProviderArgs');
+encode_args(<<"get_risk_policies">>, _Args) ->
+    <<>>;
+encode_args(<<"set_risk_policy">>, #{risk_level := Level, action := Action}) ->
+    ?PANEL_PB:encode_msg(#{risk_level => Level, action => Action}, 'SetRiskPolicyArgs');
+encode_args(<<"set_session_provider">>, #{session_id := SessId, provider_id := ProvId}) ->
+    ?PANEL_PB:encode_msg(#{session_id => SessId, provider_id => ProvId}, 'SetSessionProviderArgs');
+
+%% ---- Memory RPC args ----
+encode_args(<<"list_memories">>, Args) ->
+    SessId = maps:get(session_id, Args, <<>>),
+    Tier = memory_tier_to_atom(maps:get(tier, Args, <<>>)),
+    ?PANEL_PB:encode_msg(#{session_id => SessId, tier => Tier}, 'ListMemoriesArgs');
+encode_args(<<"add_memory">>, #{session_id := SessId, tier := Tier, content := Content}) ->
+    ?PANEL_PB:encode_msg(#{session_id => SessId,
+                          tier => memory_tier_to_atom(Tier),
+                          content => Content}, 'AddMemoryArgs');
+encode_args(<<"add_memory">>, #{tier := Tier, content := Content}) ->
+    ?PANEL_PB:encode_msg(#{session_id => <<>>,
+                          tier => memory_tier_to_atom(Tier),
+                          content => Content}, 'AddMemoryArgs');
+encode_args(<<"delete_memory">>, #{session_id := SessId, tier := Tier, key := Key}) ->
+    ?PANEL_PB:encode_msg(#{session_id => SessId,
+                          tier => memory_tier_to_atom(Tier),
+                          key => Key}, 'DeleteMemoryArgs');
+encode_args(<<"clear_memories">>, Args) ->
+    SessId = maps:get(session_id, Args, <<>>),
+    Tier = memory_tier_to_atom(maps:get(tier, Args, <<>>)),
+    ?PANEL_PB:encode_msg(#{session_id => SessId, tier => Tier}, 'ClearMemoriesArgs');
+
+%% ---- Cancel args ----
+encode_args(<<"cancel_execution">>, #{session_id := SessId}) ->
+    ?PANEL_PB:encode_msg(#{session_id => SessId}, 'CancelExecutionArgs');
+
 encode_args(_NoArgsMethod, _ArgsMap) ->
-    %% list_tools / list_capabilities / stop 无参数, args_bytes 为空
+    %% list_tools / list_capabilities / list_pending_approvals / stop 无参数, args_bytes 为空
     <<>>.
 
 decode_args(<<"start_session">>, Bin) ->
@@ -313,6 +402,56 @@ decode_args(<<"debug_capability">>, Bin) ->
 decode_args(<<"delete_session">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'DeleteSessionArgs'),
     #{session_id => maps:get(session_id, M, <<>>)};
+
+%% ---- Provider RPC args ----
+decode_args(<<"upsert_provider">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'UpsertProviderArgs'),
+    Prov = provider_config_from_pb(maps:get(provider, M, #{})),
+    #{provider => Prov};
+decode_args(<<"delete_provider">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'DeleteProviderArgs'),
+    #{provider_id => maps:get(provider_id, M, <<>>)};
+decode_args(<<"set_default_provider">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'SetDefaultProviderArgs'),
+    #{provider_id => maps:get(provider_id, M, <<>>)};
+decode_args(<<"test_provider">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'TestProviderArgs'),
+    Prov = provider_config_from_pb(maps:get(provider, M, #{})),
+    #{provider => Prov};
+decode_args(<<"set_risk_policy">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'SetRiskPolicyArgs'),
+    #{risk_level => maps:get(risk_level, M, <<>>),
+      action => maps:get(action, M, <<>>)};
+decode_args(<<"set_session_provider">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'SetSessionProviderArgs'),
+    #{session_id => maps:get(session_id, M, <<>>),
+      provider_id => maps:get(provider_id, M, <<>>)};
+
+%% ---- Memory RPC args ----
+decode_args(<<"list_memories">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'ListMemoriesArgs'),
+    #{session_id => maps:get(session_id, M, <<>>),
+      tier => memory_tier_from_atom(maps:get(tier, M, 'MEMORY_TIER_UNSPECIFIED'))};
+decode_args(<<"add_memory">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'AddMemoryArgs'),
+    #{session_id => maps:get(session_id, M, <<>>),
+      tier => memory_tier_from_atom(maps:get(tier, M, 'MEMORY_TIER_FACTS')),
+      content => maps:get(content, M, <<>>)};
+decode_args(<<"delete_memory">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'DeleteMemoryArgs'),
+    #{session_id => maps:get(session_id, M, <<>>),
+      tier => memory_tier_from_atom(maps:get(tier, M, 'MEMORY_TIER_FACTS')),
+      key => maps:get(key, M, <<>>)};
+decode_args(<<"clear_memories">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'ClearMemoriesArgs'),
+    #{session_id => maps:get(session_id, M, <<>>),
+      tier => memory_tier_from_atom(maps:get(tier, M, 'MEMORY_TIER_UNSPECIFIED'))};
+
+%% ---- Cancel args ----
+decode_args(<<"cancel_execution">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'CancelExecutionArgs'),
+    #{session_id => maps:get(session_id, M, <<>>)};
+
 decode_args(_NoArgsMethod, _Bin) ->
     #{}.
 
@@ -352,6 +491,48 @@ encode_result(<<"stop">>, #{ok := Ok}) ->
     ?PANEL_PB:encode_msg(#{ok => Ok}, 'StopResult');
 encode_result(<<"delete_session">>, #{ok := Ok}) ->
     ?PANEL_PB:encode_msg(#{ok => Ok}, 'DeleteSessionResult');
+
+%% ---- Provider RPC results ----
+encode_result(<<"list_providers">>, #{providers := Providers}) ->
+    PbProviders = [provider_config_to_pb(P) || P <- Providers],
+    ?PANEL_PB:encode_msg(#{providers => PbProviders}, 'ListProvidersResult');
+encode_result(<<"upsert_provider">>, M) ->
+    ?PANEL_PB:encode_msg(#{ok => maps:get(ok, M, true),
+                          id => maps:get(id, M, <<>>)}, 'UpsertProviderResult');
+encode_result(<<"delete_provider">>, #{ok := Ok}) ->
+    ?PANEL_PB:encode_msg(#{ok => Ok}, 'DeleteProviderResult');
+encode_result(<<"set_default_provider">>, #{ok := Ok}) ->
+    ?PANEL_PB:encode_msg(#{ok => Ok}, 'SetDefaultProviderResult');
+encode_result(<<"test_provider">>, M) ->
+    ?PANEL_PB:encode_msg(#{ok => maps:get(ok, M, false),
+                          latency_ms => maps:get(latency_ms, M, 0),
+                          error => maps:get(error, M, <<>>)}, 'TestProviderResult');
+encode_result(<<"get_risk_policies">>, #{policies := Policies}) ->
+    PbPolicies = [#{risk_level => maps:get(risk_level, P, <<>>),
+                    action => maps:get(action, P, <<>>)} || P <- Policies],
+    ?PANEL_PB:encode_msg(#{policies => PbPolicies}, 'GetRiskPoliciesResult');
+encode_result(<<"set_risk_policy">>, #{ok := Ok}) ->
+    ?PANEL_PB:encode_msg(#{ok => Ok}, 'SetRiskPolicyResult');
+encode_result(<<"set_session_provider">>, #{ok := Ok}) ->
+    ?PANEL_PB:encode_msg(#{ok => Ok}, 'SetSessionProviderResult');
+
+%% ---- Memory RPC results ----
+encode_result(<<"list_memories">>, #{memories := Memories}) ->
+    PbMems = [memory_entry_to_pb(M) || M <- Memories],
+    ?PANEL_PB:encode_msg(#{memories => PbMems}, 'ListMemoriesResult');
+encode_result(<<"add_memory">>, M) ->
+    ?PANEL_PB:encode_msg(#{ok => maps:get(ok, M, true),
+                          key => maps:get(key, M, <<>>)}, 'AddMemoryResult');
+encode_result(<<"delete_memory">>, #{ok := Ok}) ->
+    ?PANEL_PB:encode_msg(#{ok => Ok}, 'DeleteMemoryResult');
+encode_result(<<"clear_memories">>, M) ->
+    ?PANEL_PB:encode_msg(#{ok => maps:get(ok, M, true),
+                          count => maps:get(count, M, 0)}, 'ClearMemoriesResult');
+
+%% ---- Cancel result ----
+encode_result(<<"cancel_execution">>, #{ok := Ok}) ->
+    ?PANEL_PB:encode_msg(#{ok => Ok}, 'CancelExecutionResult');
+
 encode_result(_Method, _ResultMap) ->
     <<>>.
 
@@ -394,6 +575,58 @@ decode_result(<<"stop">>, Bin) ->
 decode_result(<<"delete_session">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'DeleteSessionResult'),
     #{ok => maps:get(ok, M, false)};
+
+%% ---- Provider RPC results ----
+decode_result(<<"list_providers">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'ListProvidersResult'),
+    #{providers => [provider_config_from_pb(P) || P <- maps:get(providers, M, [])]};
+decode_result(<<"upsert_provider">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'UpsertProviderResult'),
+    #{ok => maps:get(ok, M, false),
+      id => maps:get(id, M, <<>>)};
+decode_result(<<"delete_provider">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'DeleteProviderResult'),
+    #{ok => maps:get(ok, M, false)};
+decode_result(<<"set_default_provider">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'SetDefaultProviderResult'),
+    #{ok => maps:get(ok, M, false)};
+decode_result(<<"test_provider">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'TestProviderResult'),
+    #{ok => maps:get(ok, M, false),
+      latency_ms => maps:get(latency_ms, M, 0),
+      error => maps:get(error, M, <<>>)};
+decode_result(<<"get_risk_policies">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'GetRiskPoliciesResult'),
+    #{policies => [#{risk_level => maps:get(risk_level, P, <<>>),
+                     action => maps:get(action, P, <<>>)} || P <- maps:get(policies, M, [])]};
+decode_result(<<"set_risk_policy">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'SetRiskPolicyResult'),
+    #{ok => maps:get(ok, M, false)};
+decode_result(<<"set_session_provider">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'SetSessionProviderResult'),
+    #{ok => maps:get(ok, M, false)};
+
+%% ---- Memory RPC results ----
+decode_result(<<"list_memories">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'ListMemoriesResult'),
+    #{memories => [memory_entry_from_pb(Me) || Me <- maps:get(memories, M, [])]};
+decode_result(<<"add_memory">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'AddMemoryResult'),
+    #{ok => maps:get(ok, M, false),
+      key => maps:get(key, M, <<>>)};
+decode_result(<<"delete_memory">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'DeleteMemoryResult'),
+    #{ok => maps:get(ok, M, false)};
+decode_result(<<"clear_memories">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'ClearMemoriesResult'),
+    #{ok => maps:get(ok, M, false),
+      count => maps:get(count, M, 0)};
+
+%% ---- Cancel result ----
+decode_result(<<"cancel_execution">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'CancelExecutionResult'),
+    #{ok => maps:get(ok, M, false)};
+
 decode_result(_Method, _Bin) ->
     #{}.
 
@@ -401,6 +634,10 @@ encode_state_bin(S) when is_atom(S) -> atom_to_binary(S, utf8);
 encode_state_bin(S) when is_binary(S) -> S;
 encode_state_bin(S) when is_list(S) -> list_to_binary(S);
 encode_state_bin(_) -> <<>>.
+
+%%%===================================================================
+%%% 类型转换辅助函数
+%%%===================================================================
 
 history_entry_to_pb(M) ->
     Role = ensure_binary(maps:get(role, M, <<>>)),
@@ -495,6 +732,109 @@ tool_call_from_pb(TC) ->
     Base = #{id => maps:get(id, TC, <<>>),
              name => maps:get(name, Fun, <<>>)},
     maybe_put_json_binary(arguments, maps:get(arguments, Fun, undefined), Base).
+
+%% ---- Provider 转换 ----
+provider_config_to_pb(P) when is_map(P) ->
+    #{id => maps:get(id, P, <<>>),
+      name => maps:get(name, P, <<>>),
+      api_base => maps:get(api_base, P, <<>>),
+      api_key => maps:get(api_key, P, <<>>),
+      models => [ensure_binary(M) || M <- maps:get(models, P, [])],
+      enabled => maps:get(enabled, P, true),
+      is_default => maps:get(is_default, P, false),
+      latency_ms => maps:get(latency_ms, P, 0)}.
+
+provider_config_from_pb(P) when is_map(P) ->
+    #{id => maps:get(id, P, <<>>),
+      name => maps:get(name, P, <<>>),
+      api_base => maps:get(api_base, P, <<>>),
+      api_key => maps:get(api_key, P, <<>>),
+      models => maps:get(models, P, []),
+      enabled => maps:get(enabled, P, true),
+      is_default => maps:get(is_default, P, false),
+      latency_ms => maps:get(latency_ms, P, 0)}.
+
+%% ---- Memory 转换 ----
+memory_entry_to_pb(M) when is_map(M) ->
+    #{key => maps:get(key, M, <<>>),
+      tier => memory_tier_to_atom(maps:get(tier, M, facts)),
+      content => maps:get(content, M, <<>>),
+      source => maps:get(source, M, <<"manual">>),
+      created_at => maps:get(created_at, M, 0),
+      session_id => maps:get(session_id, M, <<"global">>)}.
+
+memory_entry_from_pb(M) when is_map(M) ->
+    #{key => maps:get(key, M, <<>>),
+      tier => memory_tier_from_atom(maps:get(tier, M, 'MEMORY_TIER_FACTS')),
+      content => maps:get(content, M, <<>>),
+      source => maps:get(source, M, <<"manual">>),
+      created_at => maps:get(created_at, M, 0),
+      session_id => maps:get(session_id, M, <<"global">>)}.
+
+%% tier 在业务层用 binary: <<"facts">>, <<"preferences">>, <<"workspace">>
+%% gpb 层用 atom: 'MEMORY_TIER_FACTS', 'MEMORY_TIER_PREFERENCES', 'MEMORY_TIER_WORKSPACE'
+memory_tier_to_atom(<<"facts">>) -> 'MEMORY_TIER_FACTS';
+memory_tier_to_atom(<<"preferences">>) -> 'MEMORY_TIER_PREFERENCES';
+memory_tier_to_atom(<<"workspace">>) -> 'MEMORY_TIER_WORKSPACE';
+memory_tier_to_atom(facts) -> 'MEMORY_TIER_FACTS';
+memory_tier_to_atom(preferences) -> 'MEMORY_TIER_PREFERENCES';
+memory_tier_to_atom(workspace) -> 'MEMORY_TIER_WORKSPACE';
+memory_tier_to_atom('MEMORY_TIER_FACTS') -> 'MEMORY_TIER_FACTS';
+memory_tier_to_atom('MEMORY_TIER_PREFERENCES') -> 'MEMORY_TIER_PREFERENCES';
+memory_tier_to_atom('MEMORY_TIER_WORKSPACE') -> 'MEMORY_TIER_WORKSPACE';
+memory_tier_to_atom(_) -> 'MEMORY_TIER_UNSPECIFIED'.
+
+memory_tier_from_atom('MEMORY_TIER_FACTS') -> <<"facts">>;
+memory_tier_from_atom('MEMORY_TIER_PREFERENCES') -> <<"preferences">>;
+memory_tier_from_atom('MEMORY_TIER_WORKSPACE') -> <<"workspace">>;
+memory_tier_from_atom(_) -> <<"unspecified">>.
+
+%% ---- Plan 转换 ----
+plan_step_to_pb(S) when is_map(S) ->
+    RawRisk = maps:get(risk_level, S, <<"safe">>),
+    Risk = case RawRisk of
+               <<"high">> -> <<"dangerous">>;
+               R when R =:= <<"中风险">> -> <<"review">>;
+               R when is_binary(R) -> R;
+               R when is_atom(R) -> atom_to_binary(R, utf8);
+               _ -> <<"safe">>
+           end,
+    #{index => maps:get(index, S, 0),
+      description => maps:get(description, S, <<>>),
+      tool_hint => maps:get(tool_hint, S, <<>>),
+      risk_level => Risk}.
+
+plan_step_from_pb(S) when is_map(S) ->
+    #{index => maps:get(index, S, 0),
+      description => maps:get(description, S, <<>>),
+      tool_hint => maps:get(tool_hint, S, <<>>),
+      risk_level => maps:get(risk_level, S, <<"safe">>)}.
+
+%% status 在业务层用 binary: <<"pending">>, <<"running">>, <<"done">>, <<"failed">>, <<"skipped">>
+%% gpb 层用 atom: 'PLAN_STEP_PENDING', 'PLAN_STEP_RUNNING', etc.
+plan_status_to_atom(<<"pending">>) -> 'PLAN_STEP_PENDING';
+plan_status_to_atom(<<"running">>) -> 'PLAN_STEP_RUNNING';
+plan_status_to_atom(<<"done">>) -> 'PLAN_STEP_DONE';
+plan_status_to_atom(<<"failed">>) -> 'PLAN_STEP_FAILED';
+plan_status_to_atom(<<"skipped">>) -> 'PLAN_STEP_SKIPPED';
+plan_status_to_atom(pending) -> 'PLAN_STEP_PENDING';
+plan_status_to_atom(running) -> 'PLAN_STEP_RUNNING';
+plan_status_to_atom(done) -> 'PLAN_STEP_DONE';
+plan_status_to_atom(failed) -> 'PLAN_STEP_FAILED';
+plan_status_to_atom(skipped) -> 'PLAN_STEP_SKIPPED';
+plan_status_to_atom(A) when is_atom(A) -> A;
+plan_status_to_atom(_) -> 'PLAN_STEP_PENDING'.
+
+plan_status_from_atom('PLAN_STEP_PENDING') -> <<"pending">>;
+plan_status_from_atom('PLAN_STEP_RUNNING') -> <<"running">>;
+plan_status_from_atom('PLAN_STEP_DONE') -> <<"done">>;
+plan_status_from_atom('PLAN_STEP_FAILED') -> <<"failed">>;
+plan_status_from_atom('PLAN_STEP_SKIPPED') -> <<"skipped">>;
+plan_status_from_atom(_) -> <<"pending">>.
+
+%%%===================================================================
+%%% JSON 辅助函数
+%%%===================================================================
 
 maybe_put_json_value(_Key, <<>>, Map) ->
     Map;

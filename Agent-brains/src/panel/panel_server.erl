@@ -58,7 +58,7 @@
 -export([start_link/0, serve/0, exec_agent/2,
          %% 流式 push API (供 agent_fsm cast)
          push_chunk/2, push_tool_event/2, push_final/2, push_stream_err/2,
-         push_approval_required/2,
+         push_approval_required/2, push_plan_generated/2, push_plan_step_update/2,
          unregister_stream/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
@@ -117,6 +117,14 @@ push_stream_err(SessionId, ErrMsg) ->
 %% ApprovalMap: #{req_id, session_id, tool_call_id, tool_name, arguments_json, risk_level, expire_ms}
 push_approval_required(SessionId, ApprovalMap) ->
     gen_server:cast(?MODULE, {push_approval_required, SessionId, ApprovalMap}).
+
+%% 计划生成推送 (EXEC-P2-001): Planner 生成执行计划后推送给前端
+push_plan_generated(SessionId, PlanMap) ->
+    gen_server:cast(?MODULE, {push_plan_generated, SessionId, PlanMap}).
+
+%% 计划步骤更新推送 (EXEC-P2-001): 工具执行时更新步骤状态
+push_plan_step_update(SessionId, UpdateMap) ->
+    gen_server:cast(?MODULE, {push_plan_step_update, SessionId, UpdateMap}).
 
 %% session 结束或 client 断开时清理 stream 注册
 unregister_stream(SessionId) ->
@@ -208,6 +216,16 @@ handle_cast({push_approval_required, SessionId, ApprovalMap}, State) ->
     %% 审批请求 (非终态): 不清理 stream 注册, FSM 等待 approve RPC 唤醒
     forward_stream(SessionId, fun(StreamId) ->
         panel_pb_codec:pack_stream_approval_required(StreamId, ApprovalMap)
+    end),
+    {noreply, State};
+handle_cast({push_plan_generated, SessionId, PlanMap}, State) ->
+    forward_stream(SessionId, fun(StreamId) ->
+        panel_pb_codec:pack_stream_plan_generated(StreamId, PlanMap)
+    end),
+    {noreply, State};
+handle_cast({push_plan_step_update, SessionId, UpdateMap}, State) ->
+    forward_stream(SessionId, fun(StreamId) ->
+        panel_pb_codec:pack_stream_plan_step_update(StreamId, UpdateMap)
     end),
     {noreply, State};
 handle_cast({unregister_stream, SessionId}, State) ->
@@ -539,6 +557,7 @@ handle_method(<<"delete_session">>, ArgsMap, _ConnPid) ->
     SessionId = maps:get(session_id, ArgsMap),
     ok = panel_server:unregister_stream(SessionId),
     ok = memory_summarizer:purge_session(SessionId),
+    ok = memory_tier:purge_session(SessionId),
     purge_vector_memory(SessionId),
     case state_store:lookup_session(SessionId) of
         {ok, Pid} ->
@@ -550,6 +569,178 @@ handle_method(<<"delete_session">>, ArgsMap, _ConnPid) ->
     ok = state_store:delete_session(SessionId),
     ?log("session deleted: id=~p", [SessionId]),
     {ok, #{ok => true}};
+
+%% ---- Provider 配置中心 (EXEC-P2-003) ----
+
+handle_method(<<"list_providers">>, _ArgsMap, _ConnPid) ->
+    Providers = provider_store:list_providers(),
+    {ok, #{providers => Providers}};
+
+handle_method(<<"upsert_provider">>, ArgsMap, _ConnPid) ->
+    Provider = maps:get(provider, ArgsMap, #{}),
+    case provider_store:upsert_provider(Provider) of
+        ok ->
+            {ok, #{ok => true, id => maps:get(id, Provider, <<>>)}};
+        {error, Reason} ->
+            {error, iolist_to_binary(io_lib:format("~p", [Reason]))}
+    end;
+
+handle_method(<<"delete_provider">>, ArgsMap, _ConnPid) ->
+    Id = maps:get(provider_id, ArgsMap, <<>>),
+    case provider_store:delete_provider(Id) of
+        ok ->
+            {ok, #{ok => true}};
+        {error, Reason} ->
+            {error, iolist_to_binary(io_lib:format("~p", [Reason]))}
+    end;
+
+handle_method(<<"set_default_provider">>, ArgsMap, _ConnPid) ->
+    Id = maps:get(provider_id, ArgsMap, <<>>),
+    case provider_store:set_default_provider(Id) of
+        ok ->
+            {ok, #{ok => true}};
+        {error, Reason} ->
+            {error, iolist_to_binary(io_lib:format("~p", [Reason]))}
+    end;
+
+handle_method(<<"test_provider">>, _ArgsMap, _ConnPid) ->
+    %% Provider 连通性测试: 简单返回成功 (后续可接入真实LLM ping)
+    {ok, #{ok => true, latency_ms => 0, error => <<>>}};
+
+handle_method(<<"get_risk_policies">>, _ArgsMap, _ConnPid) ->
+    case mnesia:transaction(fun() ->
+        mnesia:match_object(risk_policies, {risk_policies, '_', '_'}, read)
+    end) of
+        {atomic, Rows} ->
+            Policies = [#{risk_level => L, action => A}
+                        || {risk_policies, L, A} <- Rows],
+            {ok, #{policies => Policies}};
+        _ ->
+            {ok, #{policies => [
+                #{risk_level => <<"safe">>, action => <<"allow">>},
+                #{risk_level => <<"review">>, action => <<"approve">>},
+                #{risk_level => <<"dangerous">>, action => <<"deny">>}
+            ]}}
+    end;
+
+handle_method(<<"set_risk_policy">>, ArgsMap, _ConnPid) ->
+    Level = maps:get(risk_level, ArgsMap, <<>>),
+    Action = maps:get(action, ArgsMap, <<>>),
+    case provider_store:set_risk_policy(Level, Action) of
+        ok ->
+            {ok, #{ok => true}};
+        {error, Reason} ->
+            {error, iolist_to_binary(io_lib:format("~p", [Reason]))}
+    end;
+
+handle_method(<<"set_session_provider">>, ArgsMap, _ConnPid) ->
+    SessionId = maps:get(session_id, ArgsMap, <<>>),
+    ProviderId = maps:get(provider_id, ArgsMap, <<>>),
+    case provider_store:set_session_provider(SessionId, ProviderId) of
+        ok ->
+            {ok, #{ok => true}};
+        {error, Reason} ->
+            {error, iolist_to_binary(io_lib:format("~p", [Reason]))}
+    end;
+
+%% ---- 记忆管理 RPC (EXEC-P2-002) ----
+
+handle_method(<<"list_memories">>, ArgsMap, _ConnPid) ->
+    SessionId = maps:get(session_id, ArgsMap, <<"global">>),
+    TierBin = maps:get(tier, ArgsMap, <<"unspecified">>),
+    Tier = case TierBin of
+               <<"facts">> -> facts;
+               <<"preferences">> -> preferences;
+               <<"workspace">> -> workspace;
+               _ -> all
+           end,
+    Memories = case Tier of
+                   all ->
+                       All = memory_tier:get_all(SessionId),
+                       lists:append([mem_to_pb_list(T, Ms) || {T, Ms} <- maps:to_list(All)]);
+                   T ->
+                       Ms = memory_tier:get_tier(SessionId, T),
+                       mem_to_pb_list(T, Ms)
+               end,
+    {ok, #{memories => Memories}};
+
+handle_method(<<"add_memory">>, ArgsMap, _ConnPid) ->
+    SessionId0 = maps:get(session_id, ArgsMap, <<"global">>),
+    SessionId = case SessionId0 of
+                    <<>> -> <<"global">>;
+                    S -> S
+                end,
+    TierBin = maps:get(tier, ArgsMap, <<"facts">>),
+    Tier = case TierBin of
+               <<"preferences">> -> preferences;
+               <<"workspace">> -> workspace;
+               _ -> facts
+           end,
+    Content = maps:get(content, ArgsMap, <<>>),
+    case memory_tier:put(SessionId, Tier, Content, <<"manual">>) of
+        ok ->
+            Key = make_memory_key(Content),
+            {ok, #{ok => true, key => Key}};
+        {error, Reason} ->
+            {error, iolist_to_binary(io_lib:format("~p", [Reason]))}
+    end;
+
+handle_method(<<"delete_memory">>, ArgsMap, _ConnPid) ->
+    SessionId0 = maps:get(session_id, ArgsMap, <<"global">>),
+    SessionId = case SessionId0 of
+                    <<>> -> <<"global">>;
+                    S -> S
+                end,
+    TierBin = maps:get(tier, ArgsMap, <<"facts">>),
+    Tier = case TierBin of
+               <<"preferences">> -> preferences;
+               <<"workspace">> -> workspace;
+               _ -> facts
+           end,
+    Key = maps:get(key, ArgsMap, <<>>),
+    case memory_tier:delete(SessionId, Tier, Key) of
+        ok ->
+            {ok, #{ok => true}};
+        {error, Reason} ->
+            {error, iolist_to_binary(io_lib:format("~p", [Reason]))}
+    end;
+
+handle_method(<<"clear_memories">>, ArgsMap, _ConnPid) ->
+    SessionId0 = maps:get(session_id, ArgsMap, <<"global">>),
+    SessionId = case SessionId0 of
+                    <<>> -> <<"global">>;
+                    S -> S
+                end,
+    TierBin = maps:get(tier, ArgsMap, <<"unspecified">>),
+    Count = case TierBin of
+                <<"facts">> ->
+                    clear_tier_memories(SessionId, facts);
+                <<"preferences">> ->
+                    clear_tier_memories(SessionId, preferences);
+                <<"workspace">> ->
+                    clear_tier_memories(SessionId, workspace);
+                _ ->
+                    C1 = clear_tier_memories(SessionId, facts),
+                    C2 = clear_tier_memories(SessionId, preferences),
+                    C3 = clear_tier_memories(SessionId, workspace),
+                    C1 + C2 + C3
+            end,
+    {ok, #{ok => true, count => Count}};
+
+%% ---- 取消执行 (EXEC-P2-001) ----
+
+handle_method(<<"cancel_execution">>, ArgsMap, _ConnPid) ->
+    SessionId = maps:get(session_id, ArgsMap, <<>>),
+    case state_store:lookup_session(SessionId) of
+        {ok, Pid} ->
+            try erlang:send(Pid, {cancel_execution}) of
+                _ -> {ok, #{ok => true}}
+            catch
+                _:_ -> {ok, #{ok => false}}
+            end;
+        not_found ->
+            {ok, #{ok => false}}
+    end;
 
 %% ---- stop: 优雅退出整个 erl 节点 ----
 handle_method(<<"stop">>, _ArgsMap, _ConnPid) ->
@@ -719,3 +910,36 @@ finish_exec(ConnPid, Id, State) ->
         wails_conns = mark_wails_busy(State#state.wails_conns, ConnPid, false),
         exec_pending = maps:remove(Id, State#state.exec_pending)
     }.
+
+%%====================================================================
+%% 内部: Memory RPC 辅助
+%%====================================================================
+
+mem_to_pb_list(Tier, Items) ->
+    TierBin = tier_to_bin(Tier),
+    [#{key => maps:get(key, I, <<>>),
+       tier => TierBin,
+       content => maps:get(content, I, <<>>),
+       source => maps:get(source, I, <<"auto">>),
+       created_at => maps:get(ts, I, 0),
+       session_id => <<"global">>} || I <- Items].
+
+tier_to_bin(facts) -> <<"facts">>;
+tier_to_bin(preferences) -> <<"preferences">>;
+tier_to_bin(workspace) -> <<"workspace">>;
+tier_to_bin(_) -> <<"facts">>.
+
+make_memory_key(Content) when is_binary(Content) ->
+    <<Hash:160, _/binary>> = crypto:hash(sha, Content),
+    iolist_to_binary(io_lib:format("~40.16.0b", [Hash])).
+
+clear_tier_memories(SessionId, Tier) ->
+    Items = memory_tier:get_tier(SessionId, Tier),
+    lists:foreach(fun(I) ->
+        Key = maps:get(key, I, <<>>),
+        case Key of
+            <<>> -> ok;
+            _ -> memory_tier:delete(SessionId, Tier, Key)
+        end
+    end, Items),
+    length(Items).

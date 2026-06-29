@@ -24,14 +24,23 @@ fetch_tool_descs() ->
     end.
 
 fetch_capability_descs() ->
+    NativeCaps = native_tools:list_native_capabilities(),
     try bridge_manager:list_capabilities(?LIST_TOOLS_TIMEOUT) of
         {ok, Caps} when is_list(Caps), Caps =/= [] ->
-            [normalize_capability_desc(C) || C <- Caps, not is_internal_capability(C)];
+            GoCaps = [normalize_capability_desc(C) || C <- Caps, not is_internal_capability(C)],
+            merge_caps(NativeCaps, GoCaps);
         _ ->
-            default_capability_descs()
+            default_capability_descs() ++ NativeCaps
     catch _:_ ->
-        default_capability_descs()
+        default_capability_descs() ++ NativeCaps
     end.
+
+merge_caps(NativeCaps, GoCaps) ->
+    NativeNames = lists:foldl(fun(C, Acc) ->
+        sets:add_element(maps:get(name, C, <<>>), Acc)
+    end, sets:new(), NativeCaps),
+    FilteredGo = [C || C <- GoCaps, not sets:is_element(maps:get(name, C, <<>>), NativeNames)],
+    NativeCaps ++ FilteredGo.
 
 is_internal_tool(T) when is_map(T) ->
     maps:get(name, T, <<>>) =:= <<"memory_purge_session">>;
