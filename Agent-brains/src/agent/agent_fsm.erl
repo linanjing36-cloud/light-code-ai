@@ -230,6 +230,7 @@ thinking(enter, _OldState, Data) ->
     Cases = query_cases(),
     Summaries = query_session_summaries(Data#data.session_id),
     Snippets = query_memory_snippets(Data#data.session_id, Data#data.history),
+    TieredMemories = query_tiered_memories(Data#data.session_id),
     Phase = detect_prompt_phase(Data),
     SelectionCtx = #{
         history => Data#data.history,
@@ -243,12 +244,16 @@ thinking(enter, _OldState, Data) ->
     lager:info("capability_selector selected=~p hidden=~p",
                [[maps:get(name, T, <<>>) || T <- VisibleTools], HiddenTools]),
     maybe_schedule_mid_session_summary(Data#data.session_id, length(Data#data.history)),
+    %% EXEC-P2-001: 复杂任务首轮触发 planner/verifier/critic 计划链
+    PlanSection = maybe_build_plan(Data#data.history, VisibleTools, Data#data.loop_count),
     Req = context_assembler:build(Data#data.model, #{
         history => Data#data.history,
         tools => VisibleTools,
         failure_cases => Cases,
         session_summaries => Summaries,
         memory_snippets => Snippets,
+        tiered_memories => TieredMemories,
+        plan_section => PlanSection,
         prompt_phase => Phase,
         session_prompt => Data#data.session_prompt
     }),
@@ -295,6 +300,7 @@ thinking(cast, {llm_response, Ref, Response},
                 loop_count => Data1#data.loop_count
             }),
             schedule_session_summary(Data1#data.session_id),
+            schedule_memory_extract(Data1#data.session_id, Data1#data.history),
             {next_state, idle, Data1};
         {_ToolCalls, true} ->
             %% 仍有工具调用但已达循环上限 -> 强制结束 (防 Eino 控制权泄漏/死循环)
@@ -312,6 +318,7 @@ thinking(cast, {llm_response, Ref, Response},
                 Data1#data.session_id,
                 util:u("ReAct 循环达到上限, 已强制结束")),
             schedule_session_summary(Data1#data.session_id),
+            schedule_memory_extract(Data1#data.session_id, Data1#data.history),
             {next_state, idle, Data1};
         {ToolCalls, false} ->
             %% 进入执行阶段: 并行派发
@@ -666,6 +673,13 @@ query_memory_snippets(SessionId, History) ->
     catch _:_ -> []
     end.
 
+query_tiered_memories(SessionId) ->
+    try memory_tier:get_all(SessionId) of
+        Map when is_map(Map) -> Map;
+        _ -> #{}
+    catch _:_ -> #{}
+    end.
+
 reload_history(SessionId, Fallback) ->
     case state_store:get_history(SessionId) of
         {ok, H} when H =/= [] -> H;
@@ -675,6 +689,40 @@ reload_history(SessionId, Fallback) ->
 schedule_session_summary(SessionId) ->
     try memory_summarizer:schedule(SessionId)
     catch _:_ -> ok
+    end.
+
+schedule_memory_extract(SessionId, History) ->
+    try memory_tier:schedule_extract(SessionId, History)
+    catch _:_ -> ok
+    end.
+
+maybe_build_plan(History, VisibleTools, LoopCount) ->
+    case last_user_message(History) of
+        <<>> -> <<>>;
+        UserMsg ->
+            Ctx = #{loop_count => LoopCount, has_tool_calls => false},
+            case planner_chain:should_plan(UserMsg, Ctx) of
+                true ->
+                    lager:info("planner_chain triggered for complex task, msg_size=~p",
+                               [byte_size(UserMsg)]),
+                    case planner_chain:run(UserMsg, History, VisibleTools) of
+                        {ok, PlanBin} ->
+                            PlanBin;
+                        {skip, Reason} ->
+                            lager:info("planner_chain skipped: ~p", [Reason]),
+                            <<>>
+                    end;
+                false ->
+                    <<>>
+            end
+    end.
+
+last_user_message(History) ->
+    UserMsgs = [C || #{role := <<"user">>, content := C} <- History,
+                      is_binary(C), C =/= <<>>],
+    case lists:reverse(UserMsgs) of
+        [Last | _] -> Last;
+        _ -> <<>>
     end.
 
 maybe_schedule_mid_session_summary(SessionId, Len)

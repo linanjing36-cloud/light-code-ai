@@ -21,11 +21,13 @@ build(Model, Ctx) ->
     Cases = maps:get(failure_cases, Ctx, []),
     Summaries = maps:get(session_summaries, Ctx, []),
     Snippets = maps:get(memory_snippets, Ctx, []),
+    TieredMemories = maps:get(tiered_memories, Ctx, #{}),
+    PlanSection = maps:get(plan_section, Ctx, <<>>),
     Phase = maps:get(prompt_phase, Ctx, thinking),
     SessionPrompt = maps:get(session_prompt, Ctx, <<>>),
     MaxHist = maps:get(max_history_msgs, Ctx, ?DEFAULT_MAX_HISTORY_MSGS),
     History = normalize_history(trim_history(filter_llm_history(RawHistory), MaxHist)),
-    SysContent = system_prompt(Phase, SessionPrompt, Cases, Summaries, Snippets),
+    SysContent = system_prompt(Phase, SessionPrompt, Cases, Summaries, Snippets, TieredMemories, PlanSection),
     Messages = [#{role => <<"system">>, content => SysContent} | History],
     #{
         model => Model,
@@ -110,10 +112,20 @@ trim_history(History, Max) when is_list(History), is_integer(Max), Max > 0 ->
 trim_history(History, _Max) ->
     History.
 
-system_prompt(Phase, SessionPrompt, Cases, Summaries, Snippets) ->
+system_prompt(Phase, SessionPrompt, Cases, Summaries, Snippets, TieredMemories, PlanSection) ->
     Base = iolist_to_binary([prompt_templates:core(), phase_section(Phase)]),
     WithSession = append_section(Base, SessionPrompt, util:u("## 会话指令\n")),
-    WithSum = append_list_section(WithSession, Summaries,
+    WithPlan = append_section(WithSession, PlanSection, <<>>),
+    WithFacts = append_list_section(WithPlan, maps:get(facts, TieredMemories, []),
+                                    util:u("## 用户事实记忆\n"),
+                                    fun format_tier_items/1),
+    WithPrefs = append_list_section(WithFacts, maps:get(preferences, TieredMemories, []),
+                                    util:u("## 用户偏好\n"),
+                                    fun format_tier_items/1),
+    WithWs = append_list_section(WithPrefs, maps:get(workspace, TieredMemories, []),
+                                 util:u("## 工作区上下文\n"),
+                                 fun format_tier_items/1),
+    WithSum = append_list_section(WithWs, Summaries,
                                   util:u("## 会话摘要 (长期记忆)\n"),
                                   fun format_summaries/1),
     WithRag = append_list_section(WithSum, Snippets,
@@ -153,6 +165,15 @@ format_snippet(_) ->
 format_summaries(Summaries) ->
     Lines = [format_summary(S) || S <- Summaries],
     iolist_to_binary(lists:join(<<"\n">>, Lines)).
+
+format_tier_items(Items) ->
+    Lines = [format_tier_item(I) || I <- Items],
+    iolist_to_binary(lists:join(<<"\n">>, Lines)).
+
+format_tier_item(#{content := Text}) when is_binary(Text), Text =/= <<>> ->
+    iolist_to_binary([<<"- ">>, truncate(Text, 300)]);
+format_tier_item(_) ->
+    <<>>.
 
 format_summary(#{text := Text}) when is_binary(Text), Text =/= <<>> ->
     iolist_to_binary([<<"- ">>, truncate(Text, 400)]);

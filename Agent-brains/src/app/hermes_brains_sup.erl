@@ -7,7 +7,7 @@
 
 %% 顶层监督者: rest_for_one 策略。
 %%
-%% 子进程顺序: timing_wheel -> mnesia_store -> state_store -> approval_store -> bridge_manager -> agent_sup -> case_store -> memory_summarizer
+%% 子进程顺序: timing_wheel -> mnesia_store -> state_store -> approval_store -> provider_store -> bridge_manager -> agent_sup -> case_store -> memory_summarizer -> memory_tier
 %% 选择 rest_for_one 的理由:
 %%   - timing_wheel 崩溃 → 所有周期/一次性事件丢失, mnesia_store 的 snapshot tick
 %%     也来自这里, 所以后续全部要重启重新注册 timer。
@@ -22,6 +22,8 @@
 %%   - case_store 置于末尾: 它崩溃仅自重启 (其 Mnesia 表 disc_copies 持久化,
 %%     重启不丢数据), 不影响 agent_sup 下面的 FSM。agent_fsm 查询 case_store
 %%     走防御性匹配 ({error,_} -> 跳过注入), 所以 case_store 短暂不可用不影响 ReAct。
+%%   - memory_summarizer / memory_tier 置于末尾: Mnesia disc_copies 自持久化,
+%%     崩溃仅自重启, 不影响 FSM; 查询走防御性 try/catch, 短暂不可用不阻断主流程。
 
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
@@ -68,6 +70,16 @@ init([]) ->
                       type => worker,
                       modules => [approval_store]},
 
+    %% Provider_Store: 多 provider 配置/API key 管理/风险策略 (EXEC-P2-003)
+    %% Mnesia disc_copies, 放在 mnesia_store 之后、bridge_manager 之前
+    %% (bridge_manager 凭证注入优先走 provider_store, 降级到 app env)
+    ProviderStore = #{id => provider_store,
+                      start => {provider_store, start_link, []},
+                      restart => permanent,
+                      shutdown => 5000,
+                      type => worker,
+                      modules => [provider_store]},
+
     %% Bridge_Manager: 与 Go 侧 Eion-tools 的端口连接管理器
     %% 必须在 agent_sup 之前启动 —— FSM 一旦启动就要 call_llm/call_tool
     BridgeManager = #{id => bridge_manager,
@@ -102,4 +114,11 @@ init([]) ->
                          type => worker,
                          modules => [memory_summarizer]},
 
-    {ok, {SupFlags, [TimingWheel, MnesiaStore, StateStore, ApprovalStore, BridgeManager, AgentSup, CaseStore, MemorySummarizer]}}.
+    MemoryTier = #{id => memory_tier,
+                   start => {memory_tier, start_link, []},
+                   restart => permanent,
+                   shutdown => 5000,
+                   type => worker,
+                   modules => [memory_tier]},
+
+    {ok, {SupFlags, [TimingWheel, MnesiaStore, StateStore, ApprovalStore, ProviderStore, BridgeManager, AgentSup, CaseStore, MemorySummarizer, MemoryTier]}}.

@@ -648,6 +648,21 @@ index_of_conn([_ | Rest], Sock, Idx) -> index_of_conn(Rest, Sock, Idx + 1);
 index_of_conn([], _Sock, _Idx) -> 0.
 
 inject_llm_creds(Req) when is_map(Req) ->
+    Model = maps:get(model, Req, <<>>),
+    %% EXEC-P2-003: 优先从 provider_store 解析凭证, 降级到 app env
+    case whereis(provider_store) of
+        undefined ->
+            inject_llm_creds_fallback(Req);
+        _ ->
+            case provider_store:resolve_creds(Model) of
+                {ok, #{api_base := Base, api_key := Key}} when Base =/= <<>>; Key =/= <<>> ->
+                    Req#{kind => llm_infer, api_base => Base, api_key => Key};
+                _ ->
+                    inject_llm_creds_fallback(Req)
+            end
+    end.
+
+inject_llm_creds_fallback(Req) ->
     DefaultBase = application:get_env(hermes_brains, api_base, <<>>),
     DefaultKey = application:get_env(hermes_brains, api_key, <<>>),
     Base = case maps:get(api_base, Req, <<>>) of
