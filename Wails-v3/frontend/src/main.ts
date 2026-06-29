@@ -377,6 +377,12 @@ const cfgApiKey = $("cfg-api-key") as HTMLInputElement;
 const cfgSystemPrompt = $("cfg-system-prompt") as HTMLTextAreaElement;
 const modelBadgeText = $("model-badge-text")!;
 const ctxTools = $("ctx-tools")!;
+const capabilitySearch = $("capability-search") as HTMLInputElement;
+const capabilityRiskFilter = $("capability-risk-filter") as HTMLSelectElement;
+const capabilitySourceFilter = $("capability-source-filter") as HTMLSelectElement;
+const capabilityKindFilter = $("capability-kind-filter") as HTMLSelectElement;
+const capabilityMarketMeta = $("capability-market-meta")!;
+const capabilityMarketDetail = $("capability-market-detail")!;
 const capabilitySelect = $("capability-select") as HTMLSelectElement;
 const capabilityArgs = $("capability-args") as HTMLTextAreaElement;
 const capabilityRun = $("capability-run") as HTMLButtonElement;
@@ -457,6 +463,23 @@ approvalScope.addEventListener("change", () => {
 
 capabilitySelect.addEventListener("change", () => {
     applyCapabilityPreset(capabilitySelect.value);
+    renderCapabilityDetails(selectedCapability());
+});
+
+capabilitySearch.addEventListener("input", () => {
+    renderCapabilityMarketplace();
+});
+
+capabilityRiskFilter.addEventListener("change", () => {
+    renderCapabilityMarketplace();
+});
+
+capabilitySourceFilter.addEventListener("change", () => {
+    renderCapabilityMarketplace();
+});
+
+capabilityKindFilter.addEventListener("change", () => {
+    renderCapabilityMarketplace();
 });
 
 capabilityRun.addEventListener("click", async () => {
@@ -508,33 +531,166 @@ function normalizeCapability(raw: Record<string, unknown>): CapabilityView {
 
 function renderCapabilities(caps: CapabilityView[]): void {
     capabilityCatalog = caps;
-    if (!caps.length) {
+    renderCapabilityFilterOptions();
+    renderCapabilityMarketplace();
+}
+
+function filteredCapabilities(): CapabilityView[] {
+    const q = capabilitySearch.value.trim().toLowerCase();
+    const risk = capabilityRiskFilter.value;
+    const source = capabilitySourceFilter.value;
+    const kind = capabilityKindFilter.value;
+    return capabilityCatalog.filter((cap) => {
+        if (risk !== "all" && cap.risk_level !== risk) {
+            return false;
+        }
+        if (source !== "all" && cap.source !== source) {
+            return false;
+        }
+        if (kind !== "all" && cap.kind !== kind) {
+            return false;
+        }
+        if (!q) {
+            return true;
+        }
+        const haystack = [
+            cap.name,
+            cap.description,
+            cap.kind,
+            cap.source,
+            cap.risk_level,
+            cap.cost_hint,
+            ...(cap.tags ?? []),
+        ]
+            .join(" ")
+            .toLowerCase();
+        return haystack.includes(q);
+    });
+}
+
+function renderCapabilityFilterOptions(): void {
+    const previousSource = capabilitySourceFilter.value || "all";
+    const previousKind = capabilityKindFilter.value || "all";
+    const sources = [...new Set(capabilityCatalog.map((cap) => cap.source).filter(Boolean))].sort();
+    const kinds = [...new Set(capabilityCatalog.map((cap) => cap.kind).filter(Boolean))].sort();
+    capabilitySourceFilter.innerHTML = [
+        `<option value="all">全部来源</option>`,
+        ...sources.map((source) => `<option value="${escapeHtml(source)}">${escapeHtml(source)}</option>`),
+    ].join("");
+    capabilityKindFilter.innerHTML = [
+        `<option value="all">全部类型</option>`,
+        ...kinds.map((kind) => `<option value="${escapeHtml(kind)}">${escapeHtml(kind)}</option>`),
+    ].join("");
+    capabilitySourceFilter.value = sources.includes(previousSource) ? previousSource : "all";
+    capabilityKindFilter.value = kinds.includes(previousKind) ? previousKind : "all";
+}
+
+function capabilityByName(name: string | null | undefined): CapabilityView | undefined {
+    if (!name) return undefined;
+    return capabilityCatalog.find((cap) => cap.name === name);
+}
+
+function selectedCapability(): CapabilityView | undefined {
+    return capabilityByName(capabilitySelect.value);
+}
+
+function renderCapabilityDetails(cap?: CapabilityView): void {
+    if (!cap) {
+        capabilityMarketDetail.innerHTML = `<div class="cap-market-detail-empty">选择一个能力查看详情</div>`;
+        return;
+    }
+    const tags = cap.tags?.length
+        ? cap.tags.map((tag) => `<span class="cap-tag">${escapeHtml(tag)}</span>`).join("")
+        : `<span class="cap-tag muted">无标签</span>`;
+    const schema = cap.input_schema ? truncate(JSON.stringify(cap.input_schema, null, 2), 480) : "";
+    capabilityMarketDetail.innerHTML = `
+        <div class="cap-market-detail-card">
+            <div class="cap-market-detail-head">
+                <div>
+                    <div class="cap-market-detail-name">${escapeHtml(cap.name)}</div>
+                    <div class="cap-market-detail-desc">${escapeHtml(cap.description || "暂无描述")}</div>
+                </div>
+                <div class="cap-market-risk">${escapeHtml(cap.risk_level)}</div>
+            </div>
+            <div class="cap-market-detail-grid">
+                <div class="cap-market-stat"><span>来源</span><b>${escapeHtml(cap.source)}</b></div>
+                <div class="cap-market-stat"><span>类型</span><b>${escapeHtml(cap.kind)}</b></div>
+                <div class="cap-market-stat"><span>流式</span><b>${escapeHtml(cap.streaming ? "stream" : "non-stream")}</b></div>
+                <div class="cap-market-stat"><span>成本</span><b>${escapeHtml(cap.cost_hint || "unknown")}</b></div>
+            </div>
+            <div class="cap-market-tags">${tags}</div>
+            ${schema ? `<pre class="cap-market-schema">${escapeHtml(schema)}</pre>` : ""}
+        </div>
+    `;
+}
+
+function renderCapabilityMarketplace(): void {
+    const caps = filteredCapabilities();
+    const meta: string[] = [`${caps.length} / ${capabilityCatalog.length}`];
+    if (capabilitySourceFilter.value !== "all") meta.push(`source:${capabilitySourceFilter.value}`);
+    if (capabilityKindFilter.value !== "all") meta.push(`kind:${capabilityKindFilter.value}`);
+    if (capabilityRiskFilter.value !== "all") meta.push(`risk:${capabilityRiskFilter.value}`);
+    if (capabilitySearch.value.trim()) meta.push(`q:${capabilitySearch.value.trim()}`);
+    capabilityMarketMeta.textContent = meta.join(" · ");
+    if (!capabilityCatalog.length) {
         ctxTools.innerHTML = `<div class="tool-mini"><span class="dot off"></span>无可用能力</div>`;
+        capabilityMarketMeta.textContent = "0 / 0";
+        capabilityMarketDetail.innerHTML = `<div class="cap-market-detail-empty">暂无能力详情</div>`;
         capabilitySelect.innerHTML = `<option value="">暂无能力</option>`;
         capabilityArgs.value = "{}";
         capabilityResult.textContent = "";
         capabilityRun.disabled = true;
         return;
     }
+    if (!caps.length) {
+        ctxTools.innerHTML = `<div class="tool-mini"><span class="dot off"></span>无匹配能力</div>`;
+        renderCapabilityDetails(selectedCapability());
+        capabilitySelect.innerHTML = `<option value="">无匹配能力</option>`;
+        capabilityRun.disabled = true;
+        return;
+    }
+    const previous = capabilitySelect.value;
+    capabilitySelect.innerHTML = caps
+        .map((cap) => `<option value="${escapeHtml(cap.name)}">${escapeHtml(cap.name)} · ${escapeHtml(cap.kind)}</option>`)
+        .join("");
+    let selectionChanged = false;
+    if (previous && caps.some((cap) => cap.name === previous)) {
+        capabilitySelect.value = previous;
+    }
+    if (!capabilitySelect.value && caps[0]) {
+        capabilitySelect.value = caps[0].name;
+        selectionChanged = capabilitySelect.value !== previous;
+    } else {
+        selectionChanged = capabilitySelect.value !== previous;
+    }
+    if (selectionChanged) {
+        applyCapabilityPreset(capabilitySelect.value);
+    }
     ctxTools.innerHTML = caps
         .map(
             (cap) =>
-                `<div class="tool-mini" title="${escapeHtml(cap.description || "")}">
+                `<button class="tool-mini capability-card${cap.name === capabilitySelect.value ? " selected" : ""}" data-capability="${escapeHtml(cap.name)}" title="${escapeHtml(cap.description || "")}">
                     <span class="dot"></span>
                     <div class="tool-mini-body">
                         <span class="tool-name">${escapeHtml(cap.name)}</span>
                         <span class="tool-meta">${escapeHtml(cap.kind)} · ${escapeHtml(cap.source)} · ${escapeHtml(cap.streaming ? "stream" : "non-stream")} · ${escapeHtml(cap.risk_level)}</span>
                     </div>
-                </div>`
+                </button>`
         )
         .join("");
-    capabilitySelect.innerHTML = caps
-        .map((cap) => `<option value="${escapeHtml(cap.name)}">${escapeHtml(cap.name)} · ${escapeHtml(cap.kind)}</option>`)
-        .join("");
-    if (!capabilitySelect.value && caps[0]) {
-        capabilitySelect.value = caps[0].name;
-    }
-    applyCapabilityPreset(capabilitySelect.value);
+    renderCapabilityDetails(selectedCapability());
+    ctxTools.querySelectorAll<HTMLButtonElement>("[data-capability]").forEach((el) => {
+        el.addEventListener("click", () => {
+            const name = String(el.dataset.capability ?? "");
+            if (!name) return;
+            const changed = capabilitySelect.value !== name;
+            capabilitySelect.value = name;
+            if (changed) {
+                applyCapabilityPreset(name);
+            }
+            renderCapabilityMarketplace();
+        });
+    });
     capabilityRun.disabled = false;
 }
 

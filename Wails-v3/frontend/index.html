@@ -189,6 +189,29 @@
 
       <div class="ctx-section">
         <div class="ctx-label">能力集</div>
+        <div class="cap-market-toolbar">
+          <input id="capability-search" type="text" placeholder="搜索能力 / 来源 / 标签" spellcheck="false" />
+          <div class="cap-market-filters">
+            <select id="capability-source-filter">
+              <option value="all">全部来源</option>
+            </select>
+            <select id="capability-kind-filter">
+              <option value="all">全部类型</option>
+            </select>
+            <select id="capability-risk-filter">
+              <option value="all">全部风险</option>
+              <option value="safe">safe</option>
+              <option value="review">review</option>
+              <option value="dangerous">dangerous</option>
+              <option value="high">high</option>
+              <option value="critical">critical</option>
+            </select>
+          </div>
+        </div>
+        <div class="cap-market-meta" id="capability-market-meta">0 / 0</div>
+        <div class="cap-market-detail" id="capability-market-detail">
+          <div class="cap-market-detail-empty">选择一个能力查看详情</div>
+        </div>
         <div class="tools-mini" id="ctx-tools">
           <div class="tool-mini"><span class="dot off"></span>(待能力目录加载)</div>
         </div>

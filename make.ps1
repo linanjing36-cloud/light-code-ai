@@ -830,6 +830,10 @@ function Invoke-PanelFullE2E {
     Invoke-PanelGoE2E -Label "panel full e2e" -CommandPath "./cmd/panel_full_e2e"
 }
 
+function Invoke-PanelApprovalE2E {
+    Invoke-PanelGoE2E -Label "panel approval e2e" -CommandPath "./cmd/panel_approval_e2e"
+}
+
 function Invoke-Test {
     Apply-MemoryEnv
 
@@ -852,6 +856,7 @@ function Invoke-Test {
 
     Invoke-PanelCapabilityE2E
     Invoke-PanelFullE2E
+    Invoke-PanelApprovalE2E
 }
 
 # 清理编译产物与 bin\erl_bin\
