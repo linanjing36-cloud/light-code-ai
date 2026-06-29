@@ -681,7 +681,10 @@ function Invoke-Stop {
     } finally {
         $ErrorActionPreference = $prevEAP
     }
-    if ($exitCode -eq 0) { return }
+    if ($exitCode -eq 0) {
+        $global:LASTEXITCODE = 0
+        return
+    }
 
     # stop.bat 失败兜底: 强杀 erl/beam.smp/epmd 进程, 保证后续 erl_bin 可被删除/重装.
     # epmd 是 Erlang 端口映射守护进程, erl 退出后 epmd 可能继续存活并持有 erl_bin 的 CWD 句柄.
@@ -700,7 +703,10 @@ function Invoke-Stop {
     Start-Sleep -Seconds 1
     # 等待 erl 进程退出 (最多 5s)
     for ($i = 0; $i -lt 5; $i++) {
-        if (-not (Test-ErlProcessRunning)) { return }
+        if (-not (Test-ErlProcessRunning)) {
+            $global:LASTEXITCODE = 0
+            return
+        }
         Start-Sleep -Seconds 1
     }
     $still = Get-Process -Name "erl","beam.smp" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name -Unique

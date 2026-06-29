@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700&family=Martian+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/style.css" />
 <title>Hermes — Agent Workbench</title>
-  <script type="module" crossorigin src="/assets/index-BspLBiEe.js"></script>
+  <script type="module" crossorigin src="/assets/index-DF9pUkB8.js"></script>
 </head>
 <body>
 <div class="grain"></div>
@@ -139,6 +139,22 @@
             <span class="k">连接</span>
             <span class="v danger" id="ctx-conn">disconnected</span>
           </div>
+        </div>
+      </div>
+
+      <div class="ctx-section">
+        <div class="approval-head">
+          <div class="ctx-label approval-label">审批中心</div>
+          <span class="count" id="approval-count">0</span>
+        </div>
+        <div class="approval-toolbar">
+          <select id="approval-scope">
+            <option value="all">全部会话</option>
+            <option value="current">当前会话</option>
+          </select>
+        </div>
+        <div class="approval-center" id="approval-center">
+          <div class="approval-empty">暂无待审批项</div>
         </div>
       </div>
 

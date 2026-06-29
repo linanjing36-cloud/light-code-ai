@@ -5,17 +5,40 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/light-code-ai/eion-tools/internal/capability"
 	"github.com/light-code-ai/eion-tools/internal/memory"
 )
 
 // RegisterMemoryTools 注册 memory_store / memory_search / memory_import / memory_purge_session 工具。
 func RegisterMemoryTools(w *Eino_Tool_Wrapper, svc memory.Backend) {
 	name, desc, params, storeH := MemoryStoreHandler(svc)
-	w.Register(name, desc, params, storeH)
+	w.RegisterCapability(capability.Desc{
+		Name:        name,
+		Kind:        capability.KindTool,
+		Source:      "builtin",
+		Version:     "v1",
+		Description: desc,
+		InputSchema: params,
+		Streaming:   false,
+		RiskLevel:   capability.RiskReview,
+		CostHint:    capability.CostLow,
+		Tags:        []string{"tool", "memory", "store"},
+	}, storeH)
 	name, desc, params, searchH := MemorySearchHandler(svc)
 	w.Register(name, desc, params, searchH)
 	name, desc, params, importH := MemoryImportHandler(svc)
-	w.Register(name, desc, params, importH)
+	w.RegisterCapability(capability.Desc{
+		Name:        name,
+		Kind:        capability.KindTool,
+		Source:      "builtin",
+		Version:     "v1",
+		Description: desc,
+		InputSchema: params,
+		Streaming:   false,
+		RiskLevel:   capability.RiskReview,
+		CostHint:    capability.CostMedium,
+		Tags:        []string{"tool", "memory", "import"},
+	}, importH)
 	name, desc, params, purgeH := MemoryPurgeSessionHandler(svc)
 	w.Register(name, desc, params, purgeH)
 }

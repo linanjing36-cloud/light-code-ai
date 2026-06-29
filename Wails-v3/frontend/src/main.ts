@@ -35,7 +35,24 @@ const DEFAULT_CONFIG: LLMConfig = {
 const STATUS_POLL_INTERVAL_MS = 2500;
 
 // ---- 类型 ----
-type BrainState = "idle" | "thinking" | "acting" | "unknown" | "not_found" | "error";
+type BrainState = "idle" | "thinking" | "acting" | "waiting_approval" | "unknown" | "not_found" | "error";
+
+interface ApprovalRequest {
+    req_id: string;
+    session_id: string;
+    tool_call_id: string;
+    tool_name: string;
+    arguments_json?: string;
+    risk_level: string;
+    expire_ms: number;
+    createdAt: number;
+}
+
+interface ApprovalCenterEntry extends ApprovalRequest {
+    session_title: string;
+    session_model: string;
+    is_current: boolean;
+}
 
 interface Session {
     id: string;
@@ -48,6 +65,7 @@ interface Session {
     lastHistoryLen: number;
     history: HistoryEntry[];
     toolEvents: ToolEvent[]; // EXEC-P1-005: 执行轨迹 (开始/结束/失败)
+    pendingApprovals: ApprovalRequest[]; // EXEC-P0-005: 等待用户审批的高风险能力
 }
 
 // EXEC-P1-005: 工具执行轨迹条目, 由后端 panel:stream tool_event 帧驱动。
@@ -71,6 +89,7 @@ let statusTimer: number | null = null;
 let isSending = false;
 const sessionStreamIds = new Map<string, string>();
 const sessionHistoryDirty = new Set<string>();
+let backendPendingApprovals: ApprovalRequest[] = [];
 let capabilityCatalog: CapabilityView[] = [];
 let streamingMsgEl: HTMLElement | null = null;
 let streamingMsgText: Text | null = null;
@@ -95,7 +114,7 @@ interface ToolCall {
 
 interface PanelStreamEvent {
     stream_id: string;
-    kind: "chunk" | "tool_event" | "final" | "error" | "unknown";
+    kind: "chunk" | "tool_event" | "final" | "error" | "approval_required" | "unknown";
     payload: Record<string, unknown>;
 }
 
@@ -135,7 +154,16 @@ function handlePanelStream(ev: PanelStreamEvent): void {
             sessionHistoryDirty.add(targetSessionId);
             applySessionState(targetSessionId, "acting", { updateCurrentUI: false });
         }
+        if (ev.kind === "approval_required") {
+            handleApprovalRequired(targetSessionId, ev.payload, false);
+        }
         if (ev.kind === "final" || ev.kind === "error") {
+            const sess = sessions.get(targetSessionId);
+            if (sess) {
+                sess.pendingApprovals = [];
+            }
+            renderApprovalCenter();
+            void refreshPendingApprovalsFromBrain();
             if (ev.kind === "final") {
                 void finalizeSessionUI(targetSessionId, String(ev.payload.content ?? ""));
             } else {
@@ -186,6 +214,10 @@ function handlePanelStream(ev: PanelStreamEvent): void {
                     renderTracePanel(sess);
                 }
             }
+            break;
+        }
+        case "approval_required": {
+            handleApprovalRequired(targetSessionId, ev.payload, true);
             break;
         }
     }
@@ -293,12 +325,15 @@ async function finalizeSessionUI(sessionId: string, finalContent: string): Promi
     const sess = sessions.get(sessionId);
     const needsHistoryRefresh = sessionHistoryDirty.has(sessionId) || !finalContent;
     if (sess) {
+        sess.pendingApprovals = [];
         if (!needsHistoryRefresh) {
             appendCachedHistoryEntry(sess, { role: "assistant", content: finalContent });
         }
         applySessionState(sessionId, "idle", {
             historyLen: needsHistoryRefresh ? sess.lastHistoryLen + 1 : sess.history.length,
         });
+        renderApprovalCenter();
+        void refreshPendingApprovalsFromBrain();
     }
 
     if (sessionId !== currentSessionId) {
@@ -360,6 +395,9 @@ const ctxFsmState = $("ctx-fsm-state")!;
 const ctxLoop = $("ctx-loop")!;
 const ctxHistory = $("ctx-history")!;
 const ctxConn = $("ctx-conn")!;
+const approvalCount = $("approval-count")!;
+const approvalScope = $("approval-scope") as HTMLSelectElement;
+const approvalCenter = $("approval-center")!;
 
 // ============================================================
 // 启动: Bridge.ServiceStartup 已由 Wails 自动调用 (连接 panel_server)
@@ -411,6 +449,10 @@ btnSaveConfig.addEventListener("click", () => {
     const cfg = getConfigFromUI();
     saveConfig(cfg);
     toast("LLM 配置已保存");
+});
+
+approvalScope.addEventListener("change", () => {
+    renderApprovalCenter();
 });
 
 capabilitySelect.addEventListener("change", () => {
@@ -545,6 +587,7 @@ async function checkBrainReady(): Promise<void> {
         if (sessions.size === 0) {
             await createNewSession();
         }
+        void refreshPendingApprovalsFromBrain();
         console.log("[hermes] brain connected");
     } catch (e) {
         console.log("[hermes] brain not ready, retry in 1s:", e);
@@ -568,8 +611,10 @@ function setBrainConnected(connected: boolean): void {
         ctxConn.textContent = "disconnected";
         ctxConn.classList.remove("live");
         ctxConn.classList.add("danger");
+        backendPendingApprovals = [];
         disableComposer();
         stopStatusPolling();
+        renderApprovalCenter();
     }
 }
 
@@ -600,10 +645,12 @@ async function createNewSession(): Promise<void> {
         lastHistoryLen: 0,
         history: [],
         toolEvents: [],
+        pendingApprovals: [],
     };
     sessions.set(pendingId, placeholder);
     currentSessionId = pendingId;
     renderSessionList({ animateId: pendingId });
+    renderApprovalCenter();
     renderConversation(placeholder);
     disableComposer();
 
@@ -621,6 +668,7 @@ async function createNewSession(): Promise<void> {
             sessions.delete(pendingId);
             currentSessionId = null;
             renderSessionList();
+            renderApprovalCenter();
             return;
         }
         sessions.delete(pendingId);
@@ -635,10 +683,12 @@ async function createNewSession(): Promise<void> {
             lastHistoryLen: 0,
             history: [],
             toolEvents: [],
+            pendingApprovals: [],
         };
         sessions.set(sess.id, sess);
         currentSessionId = sess.id;
         renderSessionList({ animateId: sess.id });
+        renderApprovalCenter();
         renderConversation(sess);
         enableComposer();
         void pollBrainStatus();
@@ -658,6 +708,7 @@ async function createNewSession(): Promise<void> {
             canvasMeta.innerHTML = "";
         }
         renderSessionList();
+        renderApprovalCenter();
     } finally {
         btnNewSession.disabled = false;
     }
@@ -744,7 +795,7 @@ function shouldPollBrainStatus(): boolean {
     if (!currentSessionId || !brainConnected) return false;
     if (isSending || getStreamIdForSession(currentSessionId)) return true;
     const sess = sessions.get(currentSessionId);
-    return sess?.lastState === "thinking" || sess?.lastState === "acting";
+    return sess?.lastState === "thinking" || sess?.lastState === "acting" || sess?.lastState === "waiting_approval";
 }
 
 /** 根据当前是否有待观察任务, 启动或停止轮询 */
@@ -803,7 +854,8 @@ function updateBrainStatusUI(sessionId: string, st: Record<string, unknown>): vo
     const sess = sessions.get(sessionId);
     if (sess) {
         const prevState = sess.lastState;
-        sess.lastState = state as BrainState;
+        const nextState = sess.pendingApprovals.length > 0 ? "waiting_approval" : (state as BrainState);
+        sess.lastState = nextState;
         sess.lastHistoryLen = hist;
         if (prevState !== sess.lastState) {
             updateSessionInList(sess.id);
@@ -813,9 +865,11 @@ function updateBrainStatusUI(sessionId: string, st: Record<string, unknown>): vo
             return;
         }
 
-        if (state === "thinking" || state === "acting") {
+        if (nextState === "thinking" || nextState === "acting") {
             if (!hasThinking()) appendThinking();
-        } else if (state === "idle") {
+        } else if (nextState === "waiting_approval") {
+            removeThinking();
+        } else if (nextState === "idle") {
             const hasActiveStream = Boolean(getStreamIdForSession(sessionId));
             if (sessionHistoryDirty.has(sessionId) && !streamingMsgEl && !hasActiveStream) {
                 removeThinking();
@@ -833,6 +887,7 @@ function stateClass(state: string): string {
         case "idle": return "s-idle";
         case "thinking": return "s-thinking";
         case "acting": return "s-acting";
+        case "waiting_approval": return "s-acting";
         case "error": return "s-error";
         default: return "s-unknown";
     }
@@ -844,6 +899,7 @@ function stateClass(state: string): string {
 
 function sessionStatusLabel(sess: Session): string | null {
     const isCurrent = sess.id === currentSessionId;
+    if (sess.pendingApprovals.length > 0) return "approve";
     if (isCurrent && (isSending || getStreamIdForSession(sess.id))) return "...";
     if (getStreamIdForSession(sess.id)) return "...";
     if (sess.lastState === "thinking" || sess.lastState === "acting") return "...";
@@ -947,6 +1003,7 @@ function renderSessionList(opts?: { animateId?: string }): void {
         const id = (child as HTMLElement).dataset.id;
         if (id && !alive.has(id)) child.remove();
     }
+    renderApprovalCenter();
 }
 
 async function deleteSession(id: string): Promise<void> {
@@ -986,6 +1043,8 @@ async function deleteSession(id: string): Promise<void> {
         }
     }
     renderSessionList();
+    renderApprovalCenter();
+    void refreshPendingApprovalsFromBrain();
     toast("会话已删除");
 }
 
@@ -1012,6 +1071,8 @@ function switchSession(id: string): void {
         const el = child as HTMLElement;
         el.classList.toggle("active", el.dataset.id === id);
     }
+    renderApprovalCenter();
+    void refreshPendingApprovalsFromBrain();
     void pollBrainStatus();
     syncStatusPolling();
 }
@@ -1086,7 +1147,226 @@ function renderConversation(sess: Session): void {
 }
 
 function updateCanvasMeta(sess: Session): void {
-    canvasMeta.innerHTML = `<b>${sess.msgCount} 条消息</b> · <b>${sess.toolCalls} 次工具调用</b>`;
+    const approvalMeta = sess.pendingApprovals.length > 0
+        ? ` · <b>${sess.pendingApprovals.length} 条待审批</b>`
+        : "";
+    canvasMeta.innerHTML = `<b>${sess.msgCount} 条消息</b> · <b>${sess.toolCalls} 次工具调用</b>${approvalMeta}`;
+}
+
+function normalizeApprovalRequest(raw: Record<string, unknown>): ApprovalRequest {
+    const registeredAt = Number(raw.registered_at ?? raw.createdAt ?? Date.now());
+    return {
+        req_id: String(raw.req_id ?? ""),
+        session_id: String(raw.session_id ?? ""),
+        tool_call_id: String(raw.tool_call_id ?? raw.req_id ?? ""),
+        tool_name: String(raw.tool_name ?? "unknown"),
+        arguments_json: raw.arguments_json ? String(raw.arguments_json) : undefined,
+        risk_level: String(raw.risk_level ?? "review"),
+        expire_ms: Number(raw.expire_ms ?? 300000),
+        createdAt: Number.isFinite(registeredAt) ? registeredAt : Date.now(),
+    };
+}
+
+function syncPendingApprovalsToSessions(serverApprovals: ApprovalRequest[]): void {
+    const bySession = new Map<string, ApprovalRequest[]>();
+    for (const item of serverApprovals) {
+        const list = bySession.get(item.session_id) ?? [];
+        list.push({ ...item });
+        bySession.set(item.session_id, list);
+    }
+    for (const sess of sessions.values()) {
+        if (sess.id.startsWith("__pending__")) continue;
+        sess.pendingApprovals = bySession.get(sess.id) ?? [];
+        if (sess.pendingApprovals.length === 0 && sess.lastState === "waiting_approval") {
+            sess.lastState = getStreamIdForSession(sess.id) ? "acting" : "idle";
+        }
+    }
+}
+
+async function refreshPendingApprovalsFromBrain(): Promise<void> {
+    if (!brainConnected) return;
+    try {
+        const raw = (await RouterBinding.CallPanel("list_pending_approvals", {})) as Record<string, unknown>[];
+        backendPendingApprovals = Array.isArray(raw) ? raw.map((item) => normalizeApprovalRequest(item)) : [];
+        syncPendingApprovalsToSessions(backendPendingApprovals);
+        renderSessionList();
+        const current = currentSessionId ? sessions.get(currentSessionId) : null;
+        if (current) {
+            updateCanvasMeta(current);
+            renderTracePanel(current);
+        }
+    } catch (e) {
+        console.warn("[hermes] list_pending_approvals:", e);
+    }
+}
+
+function listApprovalCenterEntries(): ApprovalCenterEntry[] {
+    const entries = new Map<string, ApprovalCenterEntry>();
+    for (const item of backendPendingApprovals) {
+        const sess = sessions.get(item.session_id);
+        entries.set(item.req_id, {
+            ...item,
+            session_title: sess?.title ?? item.session_id,
+            session_model: sess?.model ?? "unknown",
+            is_current: item.session_id === currentSessionId,
+        });
+    }
+    for (const sess of sessions.values()) {
+        if (sess.id.startsWith("__pending__")) continue;
+        for (const item of sess.pendingApprovals) {
+            if (entries.has(item.req_id)) continue;
+            entries.set(item.req_id, {
+                ...item,
+                session_title: sess.title,
+                session_model: sess.model,
+                is_current: sess.id === currentSessionId,
+            });
+        }
+    }
+    return [...entries.values()].sort((a, b) => a.createdAt - b.createdAt);
+}
+
+function approvalTTL(item: ApprovalRequest): string {
+    const age = Math.max(Date.now() - item.createdAt, 0);
+    if (item.expire_ms <= 0) return "—";
+    return `${Math.max(Math.floor((item.expire_ms - age) / 1000), 0)}s`;
+}
+
+function removeApprovalByReqId(reqId: string): string[] {
+    const affected: string[] = [];
+    backendPendingApprovals = backendPendingApprovals.filter((item) => item.req_id !== reqId);
+    for (const sess of sessions.values()) {
+        if (!sess.pendingApprovals.some((item) => item.req_id === reqId)) continue;
+        sess.pendingApprovals = sess.pendingApprovals.filter((item) => item.req_id !== reqId);
+        affected.push(sess.id);
+    }
+    return affected;
+}
+
+function renderApprovalCenter(): void {
+    const allApprovals = listApprovalCenterEntries();
+    approvalCount.textContent = String(allApprovals.length);
+    const scope = approvalScope.value;
+    const approvals = scope === "current"
+        ? allApprovals.filter((item) => item.session_id === currentSessionId)
+        : allApprovals;
+
+    if (approvals.length === 0) {
+        const emptyText = scope === "current"
+            ? (currentSessionId ? "当前会话暂无待审批项" : "请先选择会话")
+            : "暂无待审批项";
+        approvalCenter.innerHTML = `<div class="approval-empty">${escapeHtml(emptyText)}</div>`;
+        return;
+    }
+
+    approvalCenter.innerHTML = approvals.map((item) => {
+        const args = item.arguments_json ? truncate(item.arguments_json, 120) : "";
+        const currentClass = item.is_current ? " current" : "";
+        return `
+            <div class="approval-card${currentClass}">
+                <div class="approval-card-head">
+                    <div class="approval-tool">${escapeHtml(item.tool_name)}</div>
+                    <div class="approval-risk">${escapeHtml(item.risk_level)}</div>
+                </div>
+                <div class="approval-meta">
+                    会话: <b>${escapeHtml(item.session_title)}</b> · ${escapeHtml(item.session_model)} · 剩余 ${approvalTTL(item)}
+                </div>
+                ${args ? `<div class="approval-args">入参: <code>${escapeHtml(args)}</code></div>` : ""}
+                <div class="approval-actions">
+                    <button class="approval-btn" data-action="jump" data-session-id="${escapeHtml(item.session_id)}">跳转会话</button>
+                    <button class="approval-btn primary" data-action="approve" data-session-id="${escapeHtml(item.session_id)}" data-req-id="${escapeHtml(item.req_id)}">批准</button>
+                    <button class="approval-btn danger" data-action="reject" data-session-id="${escapeHtml(item.session_id)}" data-req-id="${escapeHtml(item.req_id)}">拒绝</button>
+                </div>
+            </div>
+        `;
+    }).join("");
+
+    approvalCenter.querySelectorAll<HTMLButtonElement>(".approval-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const action = String(btn.dataset.action ?? "");
+            const sessionId = String(btn.dataset.sessionId ?? "");
+            const reqId = String(btn.dataset.reqId ?? "");
+            if (action === "jump") {
+                if (sessionId) switchSession(sessionId);
+                return;
+            }
+            btn.disabled = true;
+            void resolveApproval(sessionId, reqId, action === "approve").finally(() => {
+                btn.disabled = false;
+            });
+        });
+    });
+}
+
+function handleApprovalRequired(sessionId: string, payload: Record<string, unknown>, updateCurrentUI: boolean): void {
+    const sess = sessions.get(sessionId);
+    if (!sess) return;
+    const reqId = String(payload.req_id ?? "");
+    if (!reqId || sess.pendingApprovals.some((item) => item.req_id === reqId)) {
+        return;
+    }
+    const req: ApprovalRequest = {
+        req_id: reqId,
+        session_id: String(payload.session_id ?? sessionId),
+        tool_call_id: String(payload.tool_call_id ?? reqId),
+        tool_name: String(payload.tool_name ?? "unknown"),
+        arguments_json: payload.arguments_json ? String(payload.arguments_json) : undefined,
+        risk_level: String(payload.risk_level ?? "review"),
+        expire_ms: Number(payload.expire_ms ?? 300000),
+        createdAt: Date.now(),
+    };
+    sess.pendingApprovals.push(req);
+    applySessionState(sessionId, "waiting_approval", { updateCurrentUI });
+    updateCanvasMeta(sess);
+    renderTracePanel(sess);
+    renderApprovalCenter();
+    updateSessionInList(sessionId);
+    if (updateCurrentUI && sessionId === currentSessionId) {
+        removeThinking();
+        appendAgentMsg(
+            `<p><small>approval required</small><br>` +
+            `能力 <b>${escapeHtml(req.tool_name)}</b> 需要审批，风险等级：${escapeHtml(req.risk_level)}。</p>`
+        );
+    }
+    toast(`待审批能力: ${req.tool_name} (${req.risk_level})`);
+    void refreshPendingApprovalsFromBrain();
+    syncStatusPolling();
+}
+
+async function resolveApproval(sessionId: string, reqId: string, allow: boolean): Promise<void> {
+    const sess = sessions.get(sessionId);
+    if (!sess && !reqId) return;
+    try {
+        const out = (await RouterBinding.CallPanel("approve", {
+            req_id: reqId,
+            allow,
+        })) as Record<string, unknown>;
+        const ok = Boolean(out?.ok ?? out?.OK);
+        if (!ok) {
+            throw new Error(String(out?.error ?? "approve failed"));
+        }
+        const affectedSessionIds = removeApprovalByReqId(reqId);
+        for (const affectedId of affectedSessionIds) {
+            updateSessionInList(affectedId);
+        }
+        const activeSessionId = affectedSessionIds[0] ?? sessionId;
+        const activeSession = sessions.get(activeSessionId);
+        if (activeSession) {
+            const nextState: BrainState = activeSession.pendingApprovals.length > 0 ? "waiting_approval" : "acting";
+            applySessionState(activeSessionId, nextState);
+            if (activeSessionId === currentSessionId) {
+                updateCanvasMeta(activeSession);
+                renderTracePanel(activeSession);
+            }
+        }
+        renderApprovalCenter();
+        void refreshPendingApprovalsFromBrain();
+        toast(allow ? "已批准能力执行" : "已拒绝能力执行");
+    } catch (e) {
+        toast("审批失败: " + e);
+    } finally {
+        syncStatusPolling();
+    }
 }
 
 // EXEC-P1-005: 处理 tool_event 帧 payload。
@@ -1149,12 +1429,34 @@ function renderTracePanel(sess: Session): void {
         conv.insertAdjacentElement("afterend", panel);
     }
     const events = sess.toolEvents;
-    if (events.length === 0) {
+    const approvals = sess.pendingApprovals;
+    if (events.length === 0 && approvals.length === 0) {
         panel.classList.remove("visible");
         panel.innerHTML = "";
         return;
     }
     panel.classList.add("visible");
+    const approvalItems = approvals.map((item) => {
+        const age = Math.max(Date.now() - item.createdAt, 0);
+        const ttl = item.expire_ms > 0 ? `${Math.max(Math.floor((item.expire_ms - age) / 1000), 0)}s` : "—";
+        const args = item.arguments_json ? truncate(item.arguments_json, 160) : "";
+        return `
+            <div class="trace-item trace-failed">
+                <div class="trace-head">
+                    <span class="trace-status trace-status-failed">待审批</span>
+                    <span class="trace-name">${escapeHtml(item.tool_name)}</span>
+                    <span class="trace-id">#${escapeHtml(item.tool_call_id.slice(0, 8))}</span>
+                    <span class="trace-duration">${ttl}</span>
+                </div>
+                <div class="trace-error"><span class="trace-label">风险:</span> <code>${escapeHtml(item.risk_level)}</code></div>
+                ${args ? `<div class="trace-args"><span class="trace-label">入参:</span> <code>${escapeHtml(args)}</code></div>` : ""}
+                <div class="trace-actions">
+                    <button class="trace-approve" data-session-id="${escapeHtml(sess.id)}" data-req-id="${escapeHtml(item.req_id)}">批准</button>
+                    <button class="trace-reject" data-session-id="${escapeHtml(sess.id)}" data-req-id="${escapeHtml(item.req_id)}">拒绝</button>
+                </div>
+            </div>
+        `;
+    }).join("");
     const items = events.map((ev) => {
         const status = ev.finished
             ? (ev.error ? "failed" : "done")
@@ -1184,10 +1486,10 @@ function renderTracePanel(sess: Session): void {
     }).join("");
     panel.innerHTML = `
         <div class="trace-header">
-            <span class="trace-title">执行轨迹 (${events.length})</span>
+            <span class="trace-title">执行轨迹 (${events.length}${approvals.length > 0 ? ` + ${approvals.length} 待审批` : ""})</span>
             <button class="trace-clear" id="trace-clear" title="清空轨迹">×</button>
         </div>
-        <div class="trace-list">${items}</div>
+        <div class="trace-list">${approvalItems}${items}</div>
     `;
     const clearBtn = panel.querySelector("#trace-clear") as HTMLButtonElement | null;
     if (clearBtn) {
@@ -1196,6 +1498,32 @@ function renderTracePanel(sess: Session): void {
             renderTracePanel(sess);
         });
     }
+    panel.querySelectorAll(".trace-approve").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const el = btn as HTMLButtonElement;
+            el.disabled = true;
+            void resolveApproval(
+                String(el.dataset.sessionId ?? sess.id),
+                String(el.dataset.reqId ?? ""),
+                true
+            ).finally(() => {
+                el.disabled = false;
+            });
+        });
+    });
+    panel.querySelectorAll(".trace-reject").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const el = btn as HTMLButtonElement;
+            el.disabled = true;
+            void resolveApproval(
+                String(el.dataset.sessionId ?? sess.id),
+                String(el.dataset.reqId ?? ""),
+                false
+            ).finally(() => {
+                el.disabled = false;
+            });
+        });
+    });
 }
 
 function truncate(s: string, max: number): string {
@@ -1303,7 +1631,10 @@ btnClear.addEventListener("click", () => {
         sess.msgCount = 0;
         sess.toolCalls = 0;
         sess.lastHistoryLen = 0;
+        sess.pendingApprovals = [];
         renderConversation(sess);
+        renderApprovalCenter();
+        void refreshPendingApprovalsFromBrain();
     }
 });
 

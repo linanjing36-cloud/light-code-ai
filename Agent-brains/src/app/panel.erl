@@ -103,6 +103,17 @@
         expire_ms               => integer()        % = 7, optional, 32 bits
        }.
 
+-type 'PendingApprovalEntry'() ::
+      #{req_id                  => unicode:chardata(), % = 1, optional
+        session_id              => unicode:chardata(), % = 2, optional
+        tool_call_id            => unicode:chardata(), % = 3, optional
+        tool_name               => unicode:chardata(), % = 4, optional
+        arguments_json          => unicode:chardata(), % = 5, optional
+        risk_level              => unicode:chardata(), % = 6, optional
+        expire_ms               => integer(),       % = 7, optional, 32 bits
+        registered_at           => integer()        % = 8, optional, 64 bits
+       }.
+
 -type 'LlmChunk'() ::
       #{content                 => unicode:chardata(), % = 1, optional
         reasoning_content       => unicode:chardata() % = 2, optional
@@ -224,6 +235,10 @@
       #{capabilities            => ['CapabilityDesc'()] % = 1, repeated
        }.
 
+-type 'ListPendingApprovalsResult'() ::
+      #{approvals               => ['PendingApprovalEntry'()] % = 1, repeated
+       }.
+
 -type 'CapabilityDesc'() ::
       #{name                    => unicode:chardata(), % = 1, optional
         kind                    => unicode:chardata(), % = 2, optional
@@ -280,9 +295,9 @@
       #{ok                      => boolean() | 0 | 1 % = 1, optional
        }.
 
--export_type(['PanelFrame'/0, 'PanelExec'/0, 'PanelExecResult'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'ApprovalRequired'/0, 'LlmChunk'/0, 'JsonField'/0, 'ToolParameter'/0, 'ToolParameters'/0, 'JsonObject'/0, 'JsonArray'/0, 'JsonValue'/0, 'ToolFunction'/0, 'ToolCall'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ListCapabilitiesResult'/0, 'CapabilityDesc'/0, 'DebugCapabilityArgs'/0, 'DebugCapabilityResult'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
--type '$msg_name'() :: 'PanelFrame' | 'PanelExec' | 'PanelExecResult' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'ApprovalRequired' | 'LlmChunk' | 'JsonField' | 'ToolParameter' | 'ToolParameters' | 'JsonObject' | 'JsonArray' | 'JsonValue' | 'ToolFunction' | 'ToolCall' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ListCapabilitiesResult' | 'CapabilityDesc' | 'DebugCapabilityArgs' | 'DebugCapabilityResult' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
--type '$msg'() :: 'PanelFrame'() | 'PanelExec'() | 'PanelExecResult'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'ApprovalRequired'() | 'LlmChunk'() | 'JsonField'() | 'ToolParameter'() | 'ToolParameters'() | 'JsonObject'() | 'JsonArray'() | 'JsonValue'() | 'ToolFunction'() | 'ToolCall'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ListCapabilitiesResult'() | 'CapabilityDesc'() | 'DebugCapabilityArgs'() | 'DebugCapabilityResult'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
+-export_type(['PanelFrame'/0, 'PanelExec'/0, 'PanelExecResult'/0, 'PanelRequest'/0, 'PanelResponse'/0, 'PanelStream'/0, 'ApprovalRequired'/0, 'PendingApprovalEntry'/0, 'LlmChunk'/0, 'JsonField'/0, 'ToolParameter'/0, 'ToolParameters'/0, 'JsonObject'/0, 'JsonArray'/0, 'JsonValue'/0, 'ToolFunction'/0, 'ToolCall'/0, 'ToolEvent'/0, 'FinalAnswer'/0, 'StreamError'/0, 'StartSessionArgs'/0, 'SendArgs'/0, 'ApproveArgs'/0, 'BrainStatusArgs'/0, 'GetHistoryArgs'/0, 'DeleteSessionArgs'/0, 'StartSessionResult'/0, 'SendResult'/0, 'ListToolsResult'/0, 'ToolDesc'/0, 'ListCapabilitiesResult'/0, 'ListPendingApprovalsResult'/0, 'CapabilityDesc'/0, 'DebugCapabilityArgs'/0, 'DebugCapabilityResult'/0, 'ApproveResult'/0, 'BrainStatusResult'/0, 'HistoryEntry'/0, 'GetHistoryResult'/0, 'StopResult'/0, 'DeleteSessionResult'/0]).
+-type '$msg_name'() :: 'PanelFrame' | 'PanelExec' | 'PanelExecResult' | 'PanelRequest' | 'PanelResponse' | 'PanelStream' | 'ApprovalRequired' | 'PendingApprovalEntry' | 'LlmChunk' | 'JsonField' | 'ToolParameter' | 'ToolParameters' | 'JsonObject' | 'JsonArray' | 'JsonValue' | 'ToolFunction' | 'ToolCall' | 'ToolEvent' | 'FinalAnswer' | 'StreamError' | 'StartSessionArgs' | 'SendArgs' | 'ApproveArgs' | 'BrainStatusArgs' | 'GetHistoryArgs' | 'DeleteSessionArgs' | 'StartSessionResult' | 'SendResult' | 'ListToolsResult' | 'ToolDesc' | 'ListCapabilitiesResult' | 'ListPendingApprovalsResult' | 'CapabilityDesc' | 'DebugCapabilityArgs' | 'DebugCapabilityResult' | 'ApproveResult' | 'BrainStatusResult' | 'HistoryEntry' | 'GetHistoryResult' | 'StopResult' | 'DeleteSessionResult'.
+-type '$msg'() :: 'PanelFrame'() | 'PanelExec'() | 'PanelExecResult'() | 'PanelRequest'() | 'PanelResponse'() | 'PanelStream'() | 'ApprovalRequired'() | 'PendingApprovalEntry'() | 'LlmChunk'() | 'JsonField'() | 'ToolParameter'() | 'ToolParameters'() | 'JsonObject'() | 'JsonArray'() | 'JsonValue'() | 'ToolFunction'() | 'ToolCall'() | 'ToolEvent'() | 'FinalAnswer'() | 'StreamError'() | 'StartSessionArgs'() | 'SendArgs'() | 'ApproveArgs'() | 'BrainStatusArgs'() | 'GetHistoryArgs'() | 'DeleteSessionArgs'() | 'StartSessionResult'() | 'SendResult'() | 'ListToolsResult'() | 'ToolDesc'() | 'ListCapabilitiesResult'() | 'ListPendingApprovalsResult'() | 'CapabilityDesc'() | 'DebugCapabilityArgs'() | 'DebugCapabilityResult'() | 'ApproveResult'() | 'BrainStatusResult'() | 'HistoryEntry'() | 'GetHistoryResult'() | 'StopResult'() | 'DeleteSessionResult'().
 -export_type(['$msg_name'/0, '$msg'/0]).
 
 -if(?OTP_RELEASE >= 24).
@@ -309,6 +324,7 @@ encode_msg(Msg, MsgName, Opts) ->
         'PanelResponse' -> encode_msg_PanelResponse(id(Msg, TrUserData), TrUserData);
         'PanelStream' -> encode_msg_PanelStream(id(Msg, TrUserData), TrUserData);
         'ApprovalRequired' -> encode_msg_ApprovalRequired(id(Msg, TrUserData), TrUserData);
+        'PendingApprovalEntry' -> encode_msg_PendingApprovalEntry(id(Msg, TrUserData), TrUserData);
         'LlmChunk' -> encode_msg_LlmChunk(id(Msg, TrUserData), TrUserData);
         'JsonField' -> encode_msg_JsonField(id(Msg, TrUserData), TrUserData);
         'ToolParameter' -> encode_msg_ToolParameter(id(Msg, TrUserData), TrUserData);
@@ -332,6 +348,7 @@ encode_msg(Msg, MsgName, Opts) ->
         'ListToolsResult' -> encode_msg_ListToolsResult(id(Msg, TrUserData), TrUserData);
         'ToolDesc' -> encode_msg_ToolDesc(id(Msg, TrUserData), TrUserData);
         'ListCapabilitiesResult' -> encode_msg_ListCapabilitiesResult(id(Msg, TrUserData), TrUserData);
+        'ListPendingApprovalsResult' -> encode_msg_ListPendingApprovalsResult(id(Msg, TrUserData), TrUserData);
         'CapabilityDesc' -> encode_msg_CapabilityDesc(id(Msg, TrUserData), TrUserData);
         'DebugCapabilityArgs' -> encode_msg_DebugCapabilityArgs(id(Msg, TrUserData), TrUserData);
         'DebugCapabilityResult' -> encode_msg_DebugCapabilityResult(id(Msg, TrUserData), TrUserData);
@@ -590,6 +607,97 @@ encode_msg_ApprovalRequired(#{} = M, Bin, TrUserData) ->
                 end
             end;
         _ -> B6
+    end.
+
+encode_msg_PendingApprovalEntry(Msg, TrUserData) -> encode_msg_PendingApprovalEntry(Msg, <<>>, TrUserData).
+
+
+encode_msg_PendingApprovalEntry(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{req_id := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case is_empty_string(TrF1) of
+                         true -> Bin;
+                         false -> e_type_string(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{session_id := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     case is_empty_string(TrF2) of
+                         true -> B1;
+                         false -> e_type_string(TrF2, <<B1/binary, 18>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    B3 = case M of
+             #{tool_call_id := F3} ->
+                 begin
+                     TrF3 = id(F3, TrUserData),
+                     case is_empty_string(TrF3) of
+                         true -> B2;
+                         false -> e_type_string(TrF3, <<B2/binary, 26>>, TrUserData)
+                     end
+                 end;
+             _ -> B2
+         end,
+    B4 = case M of
+             #{tool_name := F4} ->
+                 begin
+                     TrF4 = id(F4, TrUserData),
+                     case is_empty_string(TrF4) of
+                         true -> B3;
+                         false -> e_type_string(TrF4, <<B3/binary, 34>>, TrUserData)
+                     end
+                 end;
+             _ -> B3
+         end,
+    B5 = case M of
+             #{arguments_json := F5} ->
+                 begin
+                     TrF5 = id(F5, TrUserData),
+                     case is_empty_string(TrF5) of
+                         true -> B4;
+                         false -> e_type_string(TrF5, <<B4/binary, 42>>, TrUserData)
+                     end
+                 end;
+             _ -> B4
+         end,
+    B6 = case M of
+             #{risk_level := F6} ->
+                 begin
+                     TrF6 = id(F6, TrUserData),
+                     case is_empty_string(TrF6) of
+                         true -> B5;
+                         false -> e_type_string(TrF6, <<B5/binary, 50>>, TrUserData)
+                     end
+                 end;
+             _ -> B5
+         end,
+    B7 = case M of
+             #{expire_ms := F7} ->
+                 begin
+                     TrF7 = id(F7, TrUserData),
+                     if TrF7 =:= 0 -> B6;
+                        true -> e_type_int32(TrF7, <<B6/binary, 56>>, TrUserData)
+                     end
+                 end;
+             _ -> B6
+         end,
+    case M of
+        #{registered_at := F8} ->
+            begin
+                TrF8 = id(F8, TrUserData),
+                if TrF8 =:= 0 -> B7;
+                   true -> e_type_int64(TrF8, <<B7/binary, 64>>, TrUserData)
+                end
+            end;
+        _ -> B7
     end.
 
 encode_msg_LlmChunk(Msg, TrUserData) -> encode_msg_LlmChunk(Msg, <<>>, TrUserData).
@@ -1196,6 +1304,19 @@ encode_msg_ListCapabilitiesResult(#{} = M, Bin, TrUserData) ->
         _ -> Bin
     end.
 
+encode_msg_ListPendingApprovalsResult(Msg, TrUserData) -> encode_msg_ListPendingApprovalsResult(Msg, <<>>, TrUserData).
+
+
+encode_msg_ListPendingApprovalsResult(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{approvals := F1} ->
+            TrF1 = id(F1, TrUserData),
+            if TrF1 == [] -> Bin;
+               true -> e_field_ListPendingApprovalsResult_approvals(TrF1, Bin, TrUserData)
+            end;
+        _ -> Bin
+    end.
+
 encode_msg_CapabilityDesc(Msg, TrUserData) -> encode_msg_CapabilityDesc(Msg, <<>>, TrUserData).
 
 
@@ -1683,6 +1804,17 @@ e_field_ListCapabilitiesResult_capabilities([Elem | Rest], Bin, TrUserData) ->
     e_field_ListCapabilitiesResult_capabilities(Rest, Bin3, TrUserData);
 e_field_ListCapabilitiesResult_capabilities([], Bin, _TrUserData) -> Bin.
 
+e_mfield_ListPendingApprovalsResult_approvals(Msg, Bin, TrUserData) ->
+    SubBin = encode_msg_PendingApprovalEntry(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_ListPendingApprovalsResult_approvals([Elem | Rest], Bin, TrUserData) ->
+    Bin2 = <<Bin/binary, 10>>,
+    Bin3 = e_mfield_ListPendingApprovalsResult_approvals(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_ListPendingApprovalsResult_approvals(Rest, Bin3, TrUserData);
+e_field_ListPendingApprovalsResult_approvals([], Bin, _TrUserData) -> Bin.
+
 e_field_CapabilityDesc_tags([Elem | Rest], Bin, TrUserData) ->
     Bin2 = <<Bin/binary, 90>>,
     Bin3 = e_type_string(id(Elem, TrUserData), Bin2, TrUserData),
@@ -1847,6 +1979,7 @@ decode_msg_2_doit('PanelRequest', Bin, TrUserData) -> id(decode_msg_PanelRequest
 decode_msg_2_doit('PanelResponse', Bin, TrUserData) -> id(decode_msg_PanelResponse(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PanelStream', Bin, TrUserData) -> id(decode_msg_PanelStream(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ApprovalRequired', Bin, TrUserData) -> id(decode_msg_ApprovalRequired(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('PendingApprovalEntry', Bin, TrUserData) -> id(decode_msg_PendingApprovalEntry(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('LlmChunk', Bin, TrUserData) -> id(decode_msg_LlmChunk(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('JsonField', Bin, TrUserData) -> id(decode_msg_JsonField(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ToolParameter', Bin, TrUserData) -> id(decode_msg_ToolParameter(Bin, TrUserData), TrUserData);
@@ -1870,6 +2003,7 @@ decode_msg_2_doit('SendResult', Bin, TrUserData) -> id(decode_msg_SendResult(Bin
 decode_msg_2_doit('ListToolsResult', Bin, TrUserData) -> id(decode_msg_ListToolsResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ToolDesc', Bin, TrUserData) -> id(decode_msg_ToolDesc(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ListCapabilitiesResult', Bin, TrUserData) -> id(decode_msg_ListCapabilitiesResult(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ListPendingApprovalsResult', Bin, TrUserData) -> id(decode_msg_ListPendingApprovalsResult(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('CapabilityDesc', Bin, TrUserData) -> id(decode_msg_CapabilityDesc(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('DebugCapabilityArgs', Bin, TrUserData) -> id(decode_msg_DebugCapabilityArgs(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('DebugCapabilityResult', Bin, TrUserData) -> id(decode_msg_DebugCapabilityResult(Bin, TrUserData), TrUserData);
@@ -2491,6 +2625,120 @@ skip_group_ApprovalRequired(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6
 skip_32_ApprovalRequired(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) -> dfp_read_field_def_ApprovalRequired(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData).
 
 skip_64_ApprovalRequired(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData) -> dfp_read_field_def_ApprovalRequired(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, TrUserData).
+
+decode_msg_PendingApprovalEntry(Bin, TrUserData) ->
+    dfp_read_field_def_PendingApprovalEntry(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(0, TrUserData), id(0, TrUserData), TrUserData).
+
+dfp_read_field_def_PendingApprovalEntry(<<10, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> d_field_PendingApprovalEntry_req_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_PendingApprovalEntry(<<18, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    d_field_PendingApprovalEntry_session_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_PendingApprovalEntry(<<26, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    d_field_PendingApprovalEntry_tool_call_id(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_PendingApprovalEntry(<<34, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    d_field_PendingApprovalEntry_tool_name(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_PendingApprovalEntry(<<42, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    d_field_PendingApprovalEntry_arguments_json(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_PendingApprovalEntry(<<50, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    d_field_PendingApprovalEntry_risk_level(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_PendingApprovalEntry(<<56, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    d_field_PendingApprovalEntry_expire_ms(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_PendingApprovalEntry(<<64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    d_field_PendingApprovalEntry_registered_at(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dfp_read_field_def_PendingApprovalEntry(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, _) ->
+    #{req_id => F@_1, session_id => F@_2, tool_call_id => F@_3, tool_name => F@_4, arguments_json => F@_5, risk_level => F@_6, expire_ms => F@_7, registered_at => F@_8};
+dfp_read_field_def_PendingApprovalEntry(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> dg_read_field_def_PendingApprovalEntry(Other, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+dg_read_field_def_PendingApprovalEntry(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 32 - 7 ->
+    dg_read_field_def_PendingApprovalEntry(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+dg_read_field_def_PendingApprovalEntry(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_PendingApprovalEntry_req_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        18 -> d_field_PendingApprovalEntry_session_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        26 -> d_field_PendingApprovalEntry_tool_call_id(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        34 -> d_field_PendingApprovalEntry_tool_name(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        42 -> d_field_PendingApprovalEntry_arguments_json(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        50 -> d_field_PendingApprovalEntry_risk_level(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        56 -> d_field_PendingApprovalEntry_expire_ms(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        64 -> d_field_PendingApprovalEntry_registered_at(Rest, 0, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_PendingApprovalEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+                1 -> skip_64_PendingApprovalEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+                2 -> skip_length_delimited_PendingApprovalEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+                3 -> skip_group_PendingApprovalEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+                5 -> skip_32_PendingApprovalEntry(Rest, 0, 0, Key bsr 3, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData)
+            end
+    end;
+dg_read_field_def_PendingApprovalEntry(<<>>, 0, 0, _, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, _) ->
+    #{req_id => F@_1, session_id => F@_2, tool_call_id => F@_3, tool_name => F@_4, arguments_json => F@_5, risk_level => F@_6, expire_ms => F@_7, registered_at => F@_8}.
+
+d_field_PendingApprovalEntry_req_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_PendingApprovalEntry_req_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_PendingApprovalEntry_req_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, _, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PendingApprovalEntry(RestF, 0, 0, F, NewFValue, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+d_field_PendingApprovalEntry_session_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_PendingApprovalEntry_session_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_PendingApprovalEntry_session_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, _, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PendingApprovalEntry(RestF, 0, 0, F, F@_1, NewFValue, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+d_field_PendingApprovalEntry_tool_call_id(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_PendingApprovalEntry_tool_call_id(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_PendingApprovalEntry_tool_call_id(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, _, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PendingApprovalEntry(RestF, 0, 0, F, F@_1, F@_2, NewFValue, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+d_field_PendingApprovalEntry_tool_name(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_PendingApprovalEntry_tool_name(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_PendingApprovalEntry_tool_name(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, _, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PendingApprovalEntry(RestF, 0, 0, F, F@_1, F@_2, F@_3, NewFValue, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+d_field_PendingApprovalEntry_arguments_json(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_PendingApprovalEntry_arguments_json(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_PendingApprovalEntry_arguments_json(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, _, F@_6, F@_7, F@_8, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PendingApprovalEntry(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, NewFValue, F@_6, F@_7, F@_8, TrUserData).
+
+d_field_PendingApprovalEntry_risk_level(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_PendingApprovalEntry_risk_level(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_PendingApprovalEntry_risk_level(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, _, F@_7, F@_8, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, Bytes2 = binary:copy(Bytes), {id(Bytes2, TrUserData), Rest2} end,
+    dfp_read_field_def_PendingApprovalEntry(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, NewFValue, F@_7, F@_8, TrUserData).
+
+d_field_PendingApprovalEntry_expire_ms(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_PendingApprovalEntry_expire_ms(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_PendingApprovalEntry_expire_ms(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, _, F@_8, TrUserData) ->
+    {NewFValue, RestF} = {begin <<Res:32/signed-native>> = <<(X bsl N + Acc):32/unsigned-native>>, id(Res, TrUserData) end, Rest},
+    dfp_read_field_def_PendingApprovalEntry(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, NewFValue, F@_8, TrUserData).
+
+d_field_PendingApprovalEntry_registered_at(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    d_field_PendingApprovalEntry_registered_at(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+d_field_PendingApprovalEntry_registered_at(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, _, TrUserData) ->
+    {NewFValue, RestF} = {begin <<Res:64/signed-native>> = <<(X bsl N + Acc):64/unsigned-native>>, id(Res, TrUserData) end, Rest},
+    dfp_read_field_def_PendingApprovalEntry(RestF, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, NewFValue, TrUserData).
+
+skip_varint_PendingApprovalEntry(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> skip_varint_PendingApprovalEntry(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+skip_varint_PendingApprovalEntry(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    dfp_read_field_def_PendingApprovalEntry(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+skip_length_delimited_PendingApprovalEntry(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) when N < 57 ->
+    skip_length_delimited_PendingApprovalEntry(Rest, N + 7, X bsl N + Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData);
+skip_length_delimited_PendingApprovalEntry(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_PendingApprovalEntry(Rest2, 0, 0, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+skip_group_PendingApprovalEntry(Bin, _, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_PendingApprovalEntry(Rest, 0, Z2, FNum, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+skip_32_PendingApprovalEntry(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> dfp_read_field_def_PendingApprovalEntry(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
+
+skip_64_PendingApprovalEntry(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData) -> dfp_read_field_def_PendingApprovalEntry(Rest, Z1, Z2, F, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, F@_7, F@_8, TrUserData).
 
 decode_msg_LlmChunk(Bin, TrUserData) -> dfp_read_field_def_LlmChunk(Bin, 0, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
 
@@ -3864,6 +4112,58 @@ skip_32_ListCapabilitiesResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserDat
 
 skip_64_ListCapabilitiesResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_ListCapabilitiesResult(Rest, Z1, Z2, F, F@_1, TrUserData).
 
+decode_msg_ListPendingApprovalsResult(Bin, TrUserData) -> dfp_read_field_def_ListPendingApprovalsResult(Bin, 0, 0, 0, id([], TrUserData), TrUserData).
+
+dfp_read_field_def_ListPendingApprovalsResult(<<10, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> d_field_ListPendingApprovalsResult_approvals(Rest, Z1, Z2, F, F@_1, TrUserData);
+dfp_read_field_def_ListPendingApprovalsResult(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{approvals => lists_reverse(R1, TrUserData)}
+    end;
+dfp_read_field_def_ListPendingApprovalsResult(Other, Z1, Z2, F, F@_1, TrUserData) -> dg_read_field_def_ListPendingApprovalsResult(Other, Z1, Z2, F, F@_1, TrUserData).
+
+dg_read_field_def_ListPendingApprovalsResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_ListPendingApprovalsResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+dg_read_field_def_ListPendingApprovalsResult(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_ListPendingApprovalsResult_approvals(Rest, 0, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_ListPendingApprovalsResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                1 -> skip_64_ListPendingApprovalsResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                2 -> skip_length_delimited_ListPendingApprovalsResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                3 -> skip_group_ListPendingApprovalsResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData);
+                5 -> skip_32_ListPendingApprovalsResult(Rest, 0, 0, Key bsr 3, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_ListPendingApprovalsResult(<<>>, 0, 0, _, R1, TrUserData) ->
+    S1 = #{},
+    if R1 == '$undef' -> S1;
+       true -> S1#{approvals => lists_reverse(R1, TrUserData)}
+    end.
+
+d_field_ListPendingApprovalsResult_approvals(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> d_field_ListPendingApprovalsResult_approvals(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+d_field_ListPendingApprovalsResult_approvals(<<0:1, X:7, Rest/binary>>, N, Acc, F, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id(decode_msg_PendingApprovalEntry(Bs, TrUserData), TrUserData), Rest2} end,
+    dfp_read_field_def_ListPendingApprovalsResult(RestF, 0, 0, F, cons(NewFValue, Prev, TrUserData), TrUserData).
+
+skip_varint_ListPendingApprovalsResult(<<1:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> skip_varint_ListPendingApprovalsResult(Rest, Z1, Z2, F, F@_1, TrUserData);
+skip_varint_ListPendingApprovalsResult(<<0:1, _:7, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_ListPendingApprovalsResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_length_delimited_ListPendingApprovalsResult(<<1:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) when N < 57 -> skip_length_delimited_ListPendingApprovalsResult(Rest, N + 7, X bsl N + Acc, F, F@_1, TrUserData);
+skip_length_delimited_ListPendingApprovalsResult(<<0:1, X:7, Rest/binary>>, N, Acc, F, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ListPendingApprovalsResult(Rest2, 0, 0, F, F@_1, TrUserData).
+
+skip_group_ListPendingApprovalsResult(Bin, _, Z2, FNum, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ListPendingApprovalsResult(Rest, 0, Z2, FNum, F@_1, TrUserData).
+
+skip_32_ListPendingApprovalsResult(<<_:32, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_ListPendingApprovalsResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
+skip_64_ListPendingApprovalsResult(<<_:64, Rest/binary>>, Z1, Z2, F, F@_1, TrUserData) -> dfp_read_field_def_ListPendingApprovalsResult(Rest, Z1, Z2, F, F@_1, TrUserData).
+
 decode_msg_CapabilityDesc(Bin, TrUserData) ->
     dfp_read_field_def_CapabilityDesc(Bin,
                                       0,
@@ -4533,6 +4833,7 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'PanelResponse' -> merge_msg_PanelResponse(Prev, New, TrUserData);
         'PanelStream' -> merge_msg_PanelStream(Prev, New, TrUserData);
         'ApprovalRequired' -> merge_msg_ApprovalRequired(Prev, New, TrUserData);
+        'PendingApprovalEntry' -> merge_msg_PendingApprovalEntry(Prev, New, TrUserData);
         'LlmChunk' -> merge_msg_LlmChunk(Prev, New, TrUserData);
         'JsonField' -> merge_msg_JsonField(Prev, New, TrUserData);
         'ToolParameter' -> merge_msg_ToolParameter(Prev, New, TrUserData);
@@ -4556,6 +4857,7 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'ListToolsResult' -> merge_msg_ListToolsResult(Prev, New, TrUserData);
         'ToolDesc' -> merge_msg_ToolDesc(Prev, New, TrUserData);
         'ListCapabilitiesResult' -> merge_msg_ListCapabilitiesResult(Prev, New, TrUserData);
+        'ListPendingApprovalsResult' -> merge_msg_ListPendingApprovalsResult(Prev, New, TrUserData);
         'CapabilityDesc' -> merge_msg_CapabilityDesc(Prev, New, TrUserData);
         'DebugCapabilityArgs' -> merge_msg_DebugCapabilityArgs(Prev, New, TrUserData);
         'DebugCapabilityResult' -> merge_msg_DebugCapabilityResult(Prev, New, TrUserData);
@@ -4726,6 +5028,50 @@ merge_msg_ApprovalRequired(PMsg, NMsg, _) ->
         {_, #{expire_ms := NFexpire_ms}} -> S7#{expire_ms => NFexpire_ms};
         {#{expire_ms := PFexpire_ms}, _} -> S7#{expire_ms => PFexpire_ms};
         _ -> S7
+    end.
+
+-compile({nowarn_unused_function,merge_msg_PendingApprovalEntry/3}).
+merge_msg_PendingApprovalEntry(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{req_id := NFreq_id}} -> S1#{req_id => NFreq_id};
+             {#{req_id := PFreq_id}, _} -> S1#{req_id => PFreq_id};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{session_id := NFsession_id}} -> S2#{session_id => NFsession_id};
+             {#{session_id := PFsession_id}, _} -> S2#{session_id => PFsession_id};
+             _ -> S2
+         end,
+    S4 = case {PMsg, NMsg} of
+             {_, #{tool_call_id := NFtool_call_id}} -> S3#{tool_call_id => NFtool_call_id};
+             {#{tool_call_id := PFtool_call_id}, _} -> S3#{tool_call_id => PFtool_call_id};
+             _ -> S3
+         end,
+    S5 = case {PMsg, NMsg} of
+             {_, #{tool_name := NFtool_name}} -> S4#{tool_name => NFtool_name};
+             {#{tool_name := PFtool_name}, _} -> S4#{tool_name => PFtool_name};
+             _ -> S4
+         end,
+    S6 = case {PMsg, NMsg} of
+             {_, #{arguments_json := NFarguments_json}} -> S5#{arguments_json => NFarguments_json};
+             {#{arguments_json := PFarguments_json}, _} -> S5#{arguments_json => PFarguments_json};
+             _ -> S5
+         end,
+    S7 = case {PMsg, NMsg} of
+             {_, #{risk_level := NFrisk_level}} -> S6#{risk_level => NFrisk_level};
+             {#{risk_level := PFrisk_level}, _} -> S6#{risk_level => PFrisk_level};
+             _ -> S6
+         end,
+    S8 = case {PMsg, NMsg} of
+             {_, #{expire_ms := NFexpire_ms}} -> S7#{expire_ms => NFexpire_ms};
+             {#{expire_ms := PFexpire_ms}, _} -> S7#{expire_ms => PFexpire_ms};
+             _ -> S7
+         end,
+    case {PMsg, NMsg} of
+        {_, #{registered_at := NFregistered_at}} -> S8#{registered_at => NFregistered_at};
+        {#{registered_at := PFregistered_at}, _} -> S8#{registered_at => PFregistered_at};
+        _ -> S8
     end.
 
 -compile({nowarn_unused_function,merge_msg_LlmChunk/3}).
@@ -5077,6 +5423,16 @@ merge_msg_ListCapabilitiesResult(PMsg, NMsg, TrUserData) ->
         {_, _} -> S1
     end.
 
+-compile({nowarn_unused_function,merge_msg_ListPendingApprovalsResult/3}).
+merge_msg_ListPendingApprovalsResult(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {#{approvals := PFapprovals}, #{approvals := NFapprovals}} -> S1#{approvals => 'erlang_++'(PFapprovals, NFapprovals, TrUserData)};
+        {_, #{approvals := NFapprovals}} -> S1#{approvals => NFapprovals};
+        {#{approvals := PFapprovals}, _} -> S1#{approvals => PFapprovals};
+        {_, _} -> S1
+    end.
+
 -compile({nowarn_unused_function,merge_msg_CapabilityDesc/3}).
 merge_msg_CapabilityDesc(PMsg, NMsg, TrUserData) ->
     S1 = #{},
@@ -5274,6 +5630,7 @@ verify_msg(Msg, MsgName, Opts) ->
         'PanelResponse' -> v_msg_PanelResponse(Msg, [MsgName], TrUserData);
         'PanelStream' -> v_msg_PanelStream(Msg, [MsgName], TrUserData);
         'ApprovalRequired' -> v_msg_ApprovalRequired(Msg, [MsgName], TrUserData);
+        'PendingApprovalEntry' -> v_msg_PendingApprovalEntry(Msg, [MsgName], TrUserData);
         'LlmChunk' -> v_msg_LlmChunk(Msg, [MsgName], TrUserData);
         'JsonField' -> v_msg_JsonField(Msg, [MsgName], TrUserData);
         'ToolParameter' -> v_msg_ToolParameter(Msg, [MsgName], TrUserData);
@@ -5297,6 +5654,7 @@ verify_msg(Msg, MsgName, Opts) ->
         'ListToolsResult' -> v_msg_ListToolsResult(Msg, [MsgName], TrUserData);
         'ToolDesc' -> v_msg_ToolDesc(Msg, [MsgName], TrUserData);
         'ListCapabilitiesResult' -> v_msg_ListCapabilitiesResult(Msg, [MsgName], TrUserData);
+        'ListPendingApprovalsResult' -> v_msg_ListPendingApprovalsResult(Msg, [MsgName], TrUserData);
         'CapabilityDesc' -> v_msg_CapabilityDesc(Msg, [MsgName], TrUserData);
         'DebugCapabilityArgs' -> v_msg_DebugCapabilityArgs(Msg, [MsgName], TrUserData);
         'DebugCapabilityResult' -> v_msg_DebugCapabilityResult(Msg, [MsgName], TrUserData);
@@ -5586,6 +5944,60 @@ v_msg_ApprovalRequired(#{} = M, Path, TrUserData) ->
     ok;
 v_msg_ApprovalRequired(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ApprovalRequired'}, M, Path);
 v_msg_ApprovalRequired(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ApprovalRequired'}, X, Path).
+
+-compile({nowarn_unused_function,v_submsg_PendingApprovalEntry/3}).
+-dialyzer({nowarn_function,v_submsg_PendingApprovalEntry/3}).
+v_submsg_PendingApprovalEntry(Msg, Path, TrUserData) -> v_msg_PendingApprovalEntry(Msg, Path, TrUserData).
+
+-compile({nowarn_unused_function,v_msg_PendingApprovalEntry/3}).
+-dialyzer({nowarn_function,v_msg_PendingApprovalEntry/3}).
+v_msg_PendingApprovalEntry(#{} = M, Path, TrUserData) ->
+    case M of
+        #{req_id := F1} -> v_type_string(F1, [req_id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{session_id := F2} -> v_type_string(F2, [session_id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{tool_call_id := F3} -> v_type_string(F3, [tool_call_id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{tool_name := F4} -> v_type_string(F4, [tool_name | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{arguments_json := F5} -> v_type_string(F5, [arguments_json | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{risk_level := F6} -> v_type_string(F6, [risk_level | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{expire_ms := F7} -> v_type_int32(F7, [expire_ms | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{registered_at := F8} -> v_type_int64(F8, [registered_at | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (registered_at) -> ok;
+                      (expire_ms) -> ok;
+                      (risk_level) -> ok;
+                      (arguments_json) -> ok;
+                      (tool_name) -> ok;
+                      (tool_call_id) -> ok;
+                      (session_id) -> ok;
+                      (req_id) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_PendingApprovalEntry(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PendingApprovalEntry'}, M, Path);
+v_msg_PendingApprovalEntry(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PendingApprovalEntry'}, X, Path).
 
 -compile({nowarn_unused_function,v_submsg_LlmChunk/3}).
 -dialyzer({nowarn_function,v_submsg_LlmChunk/3}).
@@ -6165,6 +6577,26 @@ v_msg_ListCapabilitiesResult(#{} = M, Path, TrUserData) ->
 v_msg_ListCapabilitiesResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ListCapabilitiesResult'}, M, Path);
 v_msg_ListCapabilitiesResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ListCapabilitiesResult'}, X, Path).
 
+-compile({nowarn_unused_function,v_msg_ListPendingApprovalsResult/3}).
+-dialyzer({nowarn_function,v_msg_ListPendingApprovalsResult/3}).
+v_msg_ListPendingApprovalsResult(#{} = M, Path, TrUserData) ->
+    case M of
+        #{approvals := F1} ->
+            if is_list(F1) ->
+                   _ = [v_submsg_PendingApprovalEntry(Elem, [approvals | Path], TrUserData) || Elem <- F1],
+                   ok;
+               true -> mk_type_error({invalid_list_of, {msg, 'PendingApprovalEntry'}}, F1, [approvals | Path])
+            end;
+        _ -> ok
+    end,
+    lists:foreach(fun (approvals) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_ListPendingApprovalsResult(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ListPendingApprovalsResult'}, M, Path);
+v_msg_ListPendingApprovalsResult(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ListPendingApprovalsResult'}, X, Path).
+
 -compile({nowarn_unused_function,v_submsg_CapabilityDesc/3}).
 -dialyzer({nowarn_function,v_submsg_CapabilityDesc/3}).
 v_submsg_CapabilityDesc(Msg, Path, TrUserData) -> v_msg_CapabilityDesc(Msg, Path, TrUserData).
@@ -6429,6 +6861,12 @@ v_type_int32(N, _Path, _TrUserData) when is_integer(N), -2147483648 =< N, N =< 2
 v_type_int32(N, Path, _TrUserData) when is_integer(N) -> mk_type_error({value_out_of_range, int32, signed, 32}, N, Path);
 v_type_int32(X, Path, _TrUserData) -> mk_type_error({bad_integer, int32, signed, 32}, X, Path).
 
+-compile({nowarn_unused_function,v_type_int64/3}).
+-dialyzer({nowarn_function,v_type_int64/3}).
+v_type_int64(N, _Path, _TrUserData) when is_integer(N), -9223372036854775808 =< N, N =< 9223372036854775807 -> ok;
+v_type_int64(N, Path, _TrUserData) when is_integer(N) -> mk_type_error({value_out_of_range, int64, signed, 64}, N, Path);
+v_type_int64(X, Path, _TrUserData) -> mk_type_error({bad_integer, int64, signed, 64}, X, Path).
+
 -compile({nowarn_unused_function,v_type_uint32/3}).
 -dialyzer({nowarn_function,v_type_uint32/3}).
 v_type_uint32(N, _Path, _TrUserData) when is_integer(N), 0 =< N, N =< 4294967295 -> ok;
@@ -6553,6 +6991,15 @@ get_msg_defs() ->
        #{name => arguments_json, fnum => 5, rnum => 6, type => string, occurrence => optional, opts => []},
        #{name => risk_level, fnum => 6, rnum => 7, type => string, occurrence => optional, opts => []},
        #{name => expire_ms, fnum => 7, rnum => 8, type => int32, occurrence => optional, opts => []}]},
+     {{msg, 'PendingApprovalEntry'},
+      [#{name => req_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+       #{name => session_id, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+       #{name => tool_call_id, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+       #{name => tool_name, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []},
+       #{name => arguments_json, fnum => 5, rnum => 6, type => string, occurrence => optional, opts => []},
+       #{name => risk_level, fnum => 6, rnum => 7, type => string, occurrence => optional, opts => []},
+       #{name => expire_ms, fnum => 7, rnum => 8, type => int32, occurrence => optional, opts => []},
+       #{name => registered_at, fnum => 8, rnum => 9, type => int64, occurrence => optional, opts => []}]},
      {{msg, 'LlmChunk'}, [#{name => content, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => reasoning_content, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}]},
      {{msg, 'JsonField'}, [#{name => key, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => value, fnum => 2, rnum => 3, type => {msg, 'JsonValue'}, occurrence => optional, opts => []}]},
      {{msg, 'ToolParameter'},
@@ -6609,6 +7056,7 @@ get_msg_defs() ->
        #{name => description, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
        #{name => parameters_pb, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'ListCapabilitiesResult'}, [#{name => capabilities, fnum => 1, rnum => 2, type => {msg, 'CapabilityDesc'}, occurrence => repeated, opts => []}]},
+     {{msg, 'ListPendingApprovalsResult'}, [#{name => approvals, fnum => 1, rnum => 2, type => {msg, 'PendingApprovalEntry'}, occurrence => repeated, opts => []}]},
      {{msg, 'CapabilityDesc'},
       [#{name => name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
        #{name => kind, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
@@ -6653,6 +7101,7 @@ get_msg_names() ->
      'PanelResponse',
      'PanelStream',
      'ApprovalRequired',
+     'PendingApprovalEntry',
      'LlmChunk',
      'JsonField',
      'ToolParameter',
@@ -6676,6 +7125,7 @@ get_msg_names() ->
      'ListToolsResult',
      'ToolDesc',
      'ListCapabilitiesResult',
+     'ListPendingApprovalsResult',
      'CapabilityDesc',
      'DebugCapabilityArgs',
      'DebugCapabilityResult',
@@ -6698,6 +7148,7 @@ get_msg_or_group_names() ->
      'PanelResponse',
      'PanelStream',
      'ApprovalRequired',
+     'PendingApprovalEntry',
      'LlmChunk',
      'JsonField',
      'ToolParameter',
@@ -6721,6 +7172,7 @@ get_msg_or_group_names() ->
      'ListToolsResult',
      'ToolDesc',
      'ListCapabilitiesResult',
+     'ListPendingApprovalsResult',
      'CapabilityDesc',
      'DebugCapabilityArgs',
      'DebugCapabilityResult',
@@ -6786,6 +7238,15 @@ find_msg_def('ApprovalRequired') ->
      #{name => arguments_json, fnum => 5, rnum => 6, type => string, occurrence => optional, opts => []},
      #{name => risk_level, fnum => 6, rnum => 7, type => string, occurrence => optional, opts => []},
      #{name => expire_ms, fnum => 7, rnum => 8, type => int32, occurrence => optional, opts => []}];
+find_msg_def('PendingApprovalEntry') ->
+    [#{name => req_id, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
+     #{name => session_id, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
+     #{name => tool_call_id, fnum => 3, rnum => 4, type => string, occurrence => optional, opts => []},
+     #{name => tool_name, fnum => 4, rnum => 5, type => string, occurrence => optional, opts => []},
+     #{name => arguments_json, fnum => 5, rnum => 6, type => string, occurrence => optional, opts => []},
+     #{name => risk_level, fnum => 6, rnum => 7, type => string, occurrence => optional, opts => []},
+     #{name => expire_ms, fnum => 7, rnum => 8, type => int32, occurrence => optional, opts => []},
+     #{name => registered_at, fnum => 8, rnum => 9, type => int64, occurrence => optional, opts => []}];
 find_msg_def('LlmChunk') -> [#{name => content, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => reasoning_content, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []}];
 find_msg_def('JsonField') -> [#{name => key, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []}, #{name => value, fnum => 2, rnum => 3, type => {msg, 'JsonValue'}, occurrence => optional, opts => []}];
 find_msg_def('ToolParameter') ->
@@ -6842,6 +7303,7 @@ find_msg_def('ToolDesc') ->
      #{name => description, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
      #{name => parameters_pb, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('ListCapabilitiesResult') -> [#{name => capabilities, fnum => 1, rnum => 2, type => {msg, 'CapabilityDesc'}, occurrence => repeated, opts => []}];
+find_msg_def('ListPendingApprovalsResult') -> [#{name => approvals, fnum => 1, rnum => 2, type => {msg, 'PendingApprovalEntry'}, occurrence => repeated, opts => []}];
 find_msg_def('CapabilityDesc') ->
     [#{name => name, fnum => 1, rnum => 2, type => string, occurrence => optional, opts => []},
      #{name => kind, fnum => 2, rnum => 3, type => string, occurrence => optional, opts => []},
@@ -6941,6 +7403,7 @@ fqbin_to_msg_name(<<"panel.PanelRequest">>) -> 'PanelRequest';
 fqbin_to_msg_name(<<"panel.PanelResponse">>) -> 'PanelResponse';
 fqbin_to_msg_name(<<"panel.PanelStream">>) -> 'PanelStream';
 fqbin_to_msg_name(<<"panel.ApprovalRequired">>) -> 'ApprovalRequired';
+fqbin_to_msg_name(<<"panel.PendingApprovalEntry">>) -> 'PendingApprovalEntry';
 fqbin_to_msg_name(<<"panel.LlmChunk">>) -> 'LlmChunk';
 fqbin_to_msg_name(<<"panel.JsonField">>) -> 'JsonField';
 fqbin_to_msg_name(<<"panel.ToolParameter">>) -> 'ToolParameter';
@@ -6964,6 +7427,7 @@ fqbin_to_msg_name(<<"panel.SendResult">>) -> 'SendResult';
 fqbin_to_msg_name(<<"panel.ListToolsResult">>) -> 'ListToolsResult';
 fqbin_to_msg_name(<<"panel.ToolDesc">>) -> 'ToolDesc';
 fqbin_to_msg_name(<<"panel.ListCapabilitiesResult">>) -> 'ListCapabilitiesResult';
+fqbin_to_msg_name(<<"panel.ListPendingApprovalsResult">>) -> 'ListPendingApprovalsResult';
 fqbin_to_msg_name(<<"panel.CapabilityDesc">>) -> 'CapabilityDesc';
 fqbin_to_msg_name(<<"panel.DebugCapabilityArgs">>) -> 'DebugCapabilityArgs';
 fqbin_to_msg_name(<<"panel.DebugCapabilityResult">>) -> 'DebugCapabilityResult';
@@ -6983,6 +7447,7 @@ msg_name_to_fqbin('PanelRequest') -> <<"panel.PanelRequest">>;
 msg_name_to_fqbin('PanelResponse') -> <<"panel.PanelResponse">>;
 msg_name_to_fqbin('PanelStream') -> <<"panel.PanelStream">>;
 msg_name_to_fqbin('ApprovalRequired') -> <<"panel.ApprovalRequired">>;
+msg_name_to_fqbin('PendingApprovalEntry') -> <<"panel.PendingApprovalEntry">>;
 msg_name_to_fqbin('LlmChunk') -> <<"panel.LlmChunk">>;
 msg_name_to_fqbin('JsonField') -> <<"panel.JsonField">>;
 msg_name_to_fqbin('ToolParameter') -> <<"panel.ToolParameter">>;
@@ -7006,6 +7471,7 @@ msg_name_to_fqbin('SendResult') -> <<"panel.SendResult">>;
 msg_name_to_fqbin('ListToolsResult') -> <<"panel.ListToolsResult">>;
 msg_name_to_fqbin('ToolDesc') -> <<"panel.ToolDesc">>;
 msg_name_to_fqbin('ListCapabilitiesResult') -> <<"panel.ListCapabilitiesResult">>;
+msg_name_to_fqbin('ListPendingApprovalsResult') -> <<"panel.ListPendingApprovalsResult">>;
 msg_name_to_fqbin('CapabilityDesc') -> <<"panel.CapabilityDesc">>;
 msg_name_to_fqbin('DebugCapabilityArgs') -> <<"panel.DebugCapabilityArgs">>;
 msg_name_to_fqbin('DebugCapabilityResult') -> <<"panel.DebugCapabilityResult">>;
@@ -7073,6 +7539,7 @@ get_msg_containment("panel") ->
      'JsonObject',
      'JsonValue',
      'ListCapabilitiesResult',
+     'ListPendingApprovalsResult',
      'ListToolsResult',
      'LlmChunk',
      'PanelExec',
@@ -7081,6 +7548,7 @@ get_msg_containment("panel") ->
      'PanelRequest',
      'PanelResponse',
      'PanelStream',
+     'PendingApprovalEntry',
      'SendArgs',
      'SendResult',
      'StartSessionArgs',
@@ -7112,45 +7580,47 @@ get_enum_containment("panel") -> [];
 get_enum_containment(P) -> error({gpb_error, {badproto, P}}).
 
 
-get_proto_by_msg_name_as_fqbin(<<"panel.JsonArray">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ListToolsResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.DebugCapabilityResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ListCapabilitiesResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.LlmChunk">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.JsonObject">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.HistoryEntry">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.SendResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameter">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.FinalAnswer">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolEvent">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.JsonValue">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ApprovalRequired">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ApproveArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelExecResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ApproveResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ListCapabilitiesResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolFunction">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.PanelResponse">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StopResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.SendArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameters">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelRequest">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.JsonField">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolCall">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonObject">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.CapabilityDesc">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SendResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DebugCapabilityArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ApprovalRequired">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolDesc">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelFrame">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DebugCapabilityResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.HistoryEntry">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ListToolsResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PendingApprovalEntry">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolEvent">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelExec">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelExecResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.FinalAnswer">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonArray">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ApproveResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.PanelStream">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolFunction">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.ToolDesc">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelExec">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.BrainStatusArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ApproveArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.PanelRequest">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameters">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.StreamError">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.CapabilityDesc">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.GetHistoryResult">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.DebugCapabilityArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.SendArgs">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StopResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.LlmChunk">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.JsonField">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolParameter">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionArgs">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionArgs">>) -> "panel";
-get_proto_by_msg_name_as_fqbin(<<"panel.PanelFrame">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.StartSessionResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ToolCall">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.DeleteSessionResult">>) -> "panel";
+get_proto_by_msg_name_as_fqbin(<<"panel.ListPendingApprovalsResult">>) -> "panel";
 get_proto_by_msg_name_as_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 
 

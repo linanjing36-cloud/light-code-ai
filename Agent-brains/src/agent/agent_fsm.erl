@@ -59,6 +59,8 @@
     api_base = <<>> :: binary(),
     %% 统一能力描述列表 (兼容旧 ToolDesc): #{name, description, parameters_json, kind, source, ...}
     tools = [] :: [map()],
+    %% 当前轮实际暴露给 LLM 的能力集 (含 requires_approval 标记), 供 acting 分流
+    visible_tools = [] :: [map()],
     %% 对话历史 (Message map): #{role, content, tool_calls, tool_call_id}
     history = [] :: [map()],
     loop_count = 0 :: non_neg_integer(),
@@ -127,6 +129,7 @@ init(Args) ->
             Data = #data{session_id = SessionId,
                          model = Model,
                          tools = Tools,
+                         visible_tools = Tools,
                          history = History0,
                          session_prompt = SessionPrompt,
                          api_key = ApiKey,
@@ -168,6 +171,7 @@ sanitize_recovered(Saved, Model, Tools, History0, SessionPrompt, ApiKey, ApiBase
     SavedBase = Saved#data{
         model = Model,
         tools = Tools,
+        visible_tools = Tools,
         history = Hist,
         session_prompt = Prompt,
         api_key = Key,
@@ -251,7 +255,7 @@ thinking(enter, _OldState, Data) ->
     Req1 = maybe_inject_session_creds(Req, Data),
     Ref = bridge_manager:call_llm(self(), Req1),
     lager:info("llm request dispatched, ref=~p", [Ref]),
-    Data1 = Data#data{llm_ref = Ref},
+    Data1 = Data#data{llm_ref = Ref, visible_tools = VisibleTools},
     ok = snapshot(thinking, Data1),
     {keep_state, Data1};
 thinking(cast, {llm_chunk, Ref, Chunk},
@@ -356,13 +360,13 @@ acting(enter, _OldState, Data) ->
     ok = snapshot(acting, Data),
     ToolCalls = Data#data.pending_tool_calls,
     %% EXEC-P0-005 第二阶段: 按 capability.requires_approval 分流
-    {SafeCalls, ApprovalCalls} = partition_by_approval(ToolCalls, Data#data.tools),
+    {SafeCalls, ApprovalCalls} = partition_by_approval(ToolCalls, Data#data.visible_tools),
     %% safe 工具直接并行派发
     bridge_manager:call_tool_batch(self(), SafeCalls),
     %% EXEC-P1-005: 推送 safe 工具开始事件到前端 trace 面板
     [push_tool_event_start(Data#data.session_id, TC) || TC <- SafeCalls],
     %% needs_approval 工具注册 approval_store + 推送 approval_required 到前端
-    PendingApprovals = register_approvals(ApprovalCalls, Data#data.session_id, Data#data.tools),
+    PendingApprovals = register_approvals(ApprovalCalls, Data#data.session_id, Data#data.visible_tools),
     PendingCount = length(SafeCalls) + length(ApprovalCalls),
     lager:info("acting(enter) dispatched ~p safe, ~p needs_approval, pending_count=~p",
                [length(SafeCalls), length(ApprovalCalls), PendingCount]),

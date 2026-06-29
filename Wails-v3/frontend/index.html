@@ -142,6 +142,22 @@
       </div>
 
       <div class="ctx-section">
+        <div class="approval-head">
+          <div class="ctx-label approval-label">审批中心</div>
+          <span class="count" id="approval-count">0</span>
+        </div>
+        <div class="approval-toolbar">
+          <select id="approval-scope">
+            <option value="all">全部会话</option>
+            <option value="current">当前会话</option>
+          </select>
+        </div>
+        <div class="approval-center" id="approval-center">
+          <div class="approval-empty">暂无待审批项</div>
+        </div>
+      </div>
+
+      <div class="ctx-section">
         <div class="ctx-label">LLM 配置</div>
         <div class="config-form">
           <label class="cfg-field">

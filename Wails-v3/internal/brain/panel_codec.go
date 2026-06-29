@@ -36,6 +36,17 @@ type CapabilityDesc struct {
 	Tags        []string
 }
 
+type PendingApprovalEntry struct {
+	ReqID         string `json:"req_id"`
+	SessionID     string `json:"session_id"`
+	ToolCallID    string `json:"tool_call_id"`
+	ToolName      string `json:"tool_name"`
+	ArgumentsJSON string `json:"arguments_json,omitempty"`
+	RiskLevel     string `json:"risk_level"`
+	ExpireMS      int32  `json:"expire_ms"`
+	RegisteredAt  int64  `json:"registered_at"`
+}
+
 type DebugCapabilityResult struct {
 	CapabilityName string
 	ResultJSON     string
@@ -143,7 +154,7 @@ func encodePanelArgs(method string, args map[string]any) ([]byte, error) {
 			SessionId: stringArg(args, "session_id"),
 		}
 		return proto.Marshal(msg)
-	case "list_tools", "list_capabilities", "stop":
+	case "list_tools", "list_capabilities", "list_pending_approvals", "stop":
 		return nil, nil
 	default:
 		return nil, fmt.Errorf("unknown method: %s", method)
@@ -209,6 +220,25 @@ func decodePanelResult(method string, bin []byte) (any, error) {
 			})
 		}
 		return caps, nil
+	case "list_pending_approvals":
+		var msg panelpb.ListPendingApprovalsResult
+		if err := proto.Unmarshal(bin, &msg); err != nil {
+			return nil, err
+		}
+		approvals := make([]PendingApprovalEntry, 0, len(msg.GetApprovals()))
+		for _, item := range msg.GetApprovals() {
+			approvals = append(approvals, PendingApprovalEntry{
+				ReqID:         item.GetReqId(),
+				SessionID:     item.GetSessionId(),
+				ToolCallID:    item.GetToolCallId(),
+				ToolName:      item.GetToolName(),
+				ArgumentsJSON: item.GetArgumentsJson(),
+				RiskLevel:     item.GetRiskLevel(),
+				ExpireMS:      item.GetExpireMs(),
+				RegisteredAt:  item.GetRegisteredAt(),
+			})
+		}
+		return approvals, nil
 	case "debug_capability":
 		var msg panelpb.DebugCapabilityResult
 		if err := proto.Unmarshal(bin, &msg); err != nil {

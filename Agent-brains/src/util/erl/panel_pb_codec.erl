@@ -327,6 +327,9 @@ encode_result(<<"list_tools">>, #{tools := Tools}) ->
 encode_result(<<"list_capabilities">>, #{capabilities := Caps}) ->
     PbCaps = [capability_desc_to_pb(C) || C <- Caps],
     ?PANEL_PB:encode_msg(#{capabilities => PbCaps}, 'ListCapabilitiesResult');
+encode_result(<<"list_pending_approvals">>, #{approvals := Approvals}) ->
+    PbApprovals = [pending_approval_entry_to_pb(A) || A <- Approvals],
+    ?PANEL_PB:encode_msg(#{approvals => PbApprovals}, 'ListPendingApprovalsResult');
 encode_result(<<"debug_capability">>, M) ->
     ?PANEL_PB:encode_msg(
       #{capability_name => maps:get(capability_name, M, <<>>),
@@ -365,6 +368,9 @@ decode_result(<<"list_tools">>, Bin) ->
 decode_result(<<"list_capabilities">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'ListCapabilitiesResult'),
     #{capabilities => [capability_desc_from_pb(C) || C <- maps:get(capabilities, M, [])]};
+decode_result(<<"list_pending_approvals">>, Bin) ->
+    M = ?PANEL_PB:decode_msg(Bin, 'ListPendingApprovalsResult'),
+    #{approvals => [pending_approval_entry_from_pb(A) || A <- maps:get(approvals, M, [])]};
 decode_result(<<"debug_capability">>, Bin) ->
     M = ?PANEL_PB:decode_msg(Bin, 'DebugCapabilityResult'),
     #{capability_name => maps:get(capability_name, M, <<>>),
@@ -456,6 +462,26 @@ capability_desc_from_pb(C) ->
         [] -> Base1;
         Tags -> Base1#{tags => Tags}
     end.
+
+pending_approval_entry_to_pb(A) ->
+    #{req_id => maps:get(req_id, A, <<>>),
+      session_id => maps:get(session_id, A, <<>>),
+      tool_call_id => maps:get(tool_call_id, A, <<>>),
+      tool_name => maps:get(tool_name, A, <<>>),
+      arguments_json => maps:get(arguments_json, A, <<>>),
+      risk_level => maps:get(risk_level, A, <<>>),
+      expire_ms => maps:get(expire_ms, A, 300000),
+      registered_at => maps:get(registered_at, A, 0)}.
+
+pending_approval_entry_from_pb(A) ->
+    #{req_id => maps:get(req_id, A, <<>>),
+      session_id => maps:get(session_id, A, <<>>),
+      tool_call_id => maps:get(tool_call_id, A, <<>>),
+      tool_name => maps:get(tool_name, A, <<>>),
+      arguments_json => maps:get(arguments_json, A, <<>>),
+      risk_level => maps:get(risk_level, A, <<>>),
+      expire_ms => maps:get(expire_ms, A, 300000),
+      registered_at => maps:get(registered_at, A, 0)}.
 
 tool_call_to_pb(TC) ->
     Fun0 = #{name => ensure_binary(maps:get(name, TC, <<>>))},

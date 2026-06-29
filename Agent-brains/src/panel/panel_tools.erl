@@ -71,6 +71,10 @@ tool_desc_to_capability_desc(T, Source) ->
       cost_hint => default_cost_hint(Name),
       tags => default_tags(Name)}.
 
+default_risk_level(<<"memory_import">>) ->
+    <<"review">>;
+default_risk_level(<<"memory_store">>) ->
+    <<"review">>;
 default_risk_level(_Name) ->
     <<"safe">>.
 

@@ -86,3 +86,48 @@ func TestServerRegistersBuiltInSkillAsCapability(t *testing.T) {
 		t.Fatalf("workspace_briefing not found in capabilities: %#v", caps)
 	}
 }
+
+func TestServerRegistersMemoryWriteCapabilitiesAsReviewRisk(t *testing.T) {
+	logging.Init()
+	t.Setenv("HERMES_MCP_SERVERS_JSON", "")
+	t.Setenv("HERMES_MEMORY_DISABLE", "0")
+	t.Setenv("HERMES_MEMORY_BACKEND", "dev")
+	t.Setenv("HERMES_MEMORY_MOCK_EMBED", "1")
+
+	srv, err := New(Options{})
+	if err != nil {
+		t.Fatalf("server new: %v", err)
+	}
+	defer srv.Stop()
+
+	caps := srv.Dispatcher().ToolWrapper().CapabilityDescs()
+	expected := map[string]string{
+		"memory_store":  "low",
+		"memory_import": "medium",
+	}
+	found := map[string]bool{}
+	for _, cap := range caps {
+		wantCost, ok := expected[cap.Name]
+		if !ok {
+			continue
+		}
+		found[cap.Name] = true
+		if string(cap.Kind) != "tool" {
+			t.Fatalf("%s unexpected kind: %s", cap.Name, cap.Kind)
+		}
+		if cap.Source != "builtin" {
+			t.Fatalf("%s unexpected source: %s", cap.Name, cap.Source)
+		}
+		if string(cap.RiskLevel) != "review" {
+			t.Fatalf("%s unexpected risk level: %s", cap.Name, cap.RiskLevel)
+		}
+		if string(cap.CostHint) != wantCost {
+			t.Fatalf("%s unexpected cost hint: %s", cap.Name, cap.CostHint)
+		}
+	}
+	for name := range expected {
+		if !found[name] {
+			t.Fatalf("%s not found in capabilities: %#v", name, caps)
+		}
+	}
+}

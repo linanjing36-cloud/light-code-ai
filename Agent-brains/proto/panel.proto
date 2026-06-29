@@ -42,7 +42,7 @@ message PanelExecResult {
 // 一次性请求。
 message PanelRequest {
   uint64 id = 1;          // 请求 ID (用于 response 路由匹配, stream 不复用此 id)
-  string method = 2;      // start_session / send / list_tools / list_capabilities / approve / brain_status / get_history / delete_session / stop
+  string method = 2;      // start_session / send / list_tools / list_capabilities / list_pending_approvals / approve / brain_status / get_history / delete_session / stop
   bytes args_bytes = 3;   // 方法对应 Args message 的 Protobuf 编码
 }
 
@@ -77,6 +77,18 @@ message ApprovalRequired {
   string arguments_json = 5;   // 工具参数 (JSON 字符串, 供前端展示)
   string risk_level = 6;       // 风险级别 (review/dangerous/high/critical)
   int32  expire_ms = 7;        // 过期时间 (毫秒, 默认 300000=5min)
+}
+
+// 审批队列条目 (server -> client): 用于审批中心拉取全局待审批列表。
+message PendingApprovalEntry {
+  string req_id = 1;
+  string session_id = 2;
+  string tool_call_id = 3;
+  string tool_name = 4;
+  string arguments_json = 5;
+  string risk_level = 6;
+  int32 expire_ms = 7;
+  int64 registered_at = 8;
 }
 
 // LLM 流式 chunk: 增量内容, 前端累加渲染。
@@ -183,6 +195,10 @@ message ToolDesc {
 
 message ListCapabilitiesResult {
   repeated CapabilityDesc capabilities = 1;
+}
+
+message ListPendingApprovalsResult {
+  repeated PendingApprovalEntry approvals = 1;
 }
 
 message CapabilityDesc {

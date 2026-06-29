@@ -46,6 +46,7 @@
 %%   start_session   [{system_prompt}]              -> {ok, #{session_id => binary()}}
 %%   send            [{session_id, message}]        -> {ok, #{stream_id => binary()}}
 %%   list_tools      []                              -> {ok, #{tools => [...]}}
+%%   list_pending_approvals []                       -> {ok, #{approvals => [...]}}
 %%   get_history     [{session_id}]                  -> {ok, #{messages => [...]}}
 %%   approve         [{req_id, allow}]               -> {ok, #{ok => true}}
 %%   brain_status    [{session_id}]                 -> {ok, #{state, loop_count, ...}}
@@ -452,6 +453,17 @@ handle_method(<<"list_tools">>, _ArgsMap, _ConnPid) ->
 handle_method(<<"list_capabilities">>, _ArgsMap, _ConnPid) ->
     {ok, #{capabilities => panel_tools:fetch_capability_descs()}};
 
+%% ---- list_pending_approvals: 审批中心拉取全局待审批队列 ----
+handle_method(<<"list_pending_approvals">>, _ArgsMap, _ConnPid) ->
+    RiskIndex = capability_risk_index(),
+    Pending0 = [approval_entry_to_pending_pb(E, RiskIndex) || E <- approval_store:list_pending()],
+    Pending = lists:sort(
+                fun(A, B) ->
+                    maps:get(registered_at, A, 0) =< maps:get(registered_at, B, 0)
+                end,
+                Pending0),
+    {ok, #{approvals => Pending}};
+
 %% ---- debug_capability: 面板直调单个 capability，供能力市场/调试面板使用 ----
 handle_method(<<"debug_capability">>, ArgsMap, _ConnPid) ->
     Name = maps:get(capability_name, ArgsMap, <<>>),
@@ -548,6 +560,41 @@ handle_method(<<"stop">>, _ArgsMap, _ConnPid) ->
 handle_method(Method, _ArgsMap, _ConnPid) ->
     ErrMsg = erlang:iolist_to_binary(io_lib:format("unknown_method: ~s", [Method])),
     {error, ErrMsg}.
+
+capability_risk_index() ->
+    maps:from_list(
+      [{maps:get(name, Cap, <<>>), maps:get(risk_level, Cap, <<"dangerous">>)}
+       || Cap <- panel_tools:fetch_capability_descs(),
+          is_map(Cap)]).
+
+approval_entry_to_pending_pb(Entry, RiskIndex) ->
+    ToolCall = maps:get(tool_call, Entry, #{}),
+    ToolName = maps:get(name, ToolCall, <<>>),
+    #{
+      req_id => maps:get(req_id, Entry, <<>>),
+      session_id => maps:get(session_id, Entry, <<>>),
+      tool_call_id => maps:get(id, ToolCall, maps:get(req_id, Entry, <<>>)),
+      tool_name => ToolName,
+      arguments_json => tool_call_arguments_json(ToolCall),
+      risk_level => maps:get(ToolName, RiskIndex, <<"dangerous">>),
+      expire_ms => 300000,
+      registered_at => maps:get(registered_at, Entry, 0)
+     }.
+
+tool_call_arguments_json(ToolCall) ->
+    case maps:get(arguments, ToolCall, <<>>) of
+        Bin when is_binary(Bin) ->
+            Bin;
+        List when is_list(List) ->
+            unicode:characters_to_binary(List);
+        undefined ->
+            <<>>;
+        Term ->
+            try json:encode(Term)
+            catch
+                _:_ -> iolist_to_binary(io_lib:format("~p", [Term]))
+            end
+    end.
 
 %%====================================================================
 %% 内部: id 生成

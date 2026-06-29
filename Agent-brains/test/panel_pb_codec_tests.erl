@@ -58,3 +58,21 @@ get_history_roundtrip_test() ->
     ?assertEqual(2, length(DecMsgs)),
     [_, Asst] = DecMsgs,
     ?assertEqual(1, length(maps:get(tool_calls, Asst))).
+
+list_pending_approvals_roundtrip_test() ->
+    ReqBin = panel_pb_codec:pack_request(5, <<"list_pending_approvals">>, #{}),
+    {request, 5, <<"list_pending_approvals">>, #{}} = panel_pb_codec:unpack_frame(ReqBin),
+    Approvals = [
+        #{req_id => <<"req-1">>,
+          session_id => <<"sess-1">>,
+          tool_call_id => <<"req-1">>,
+          tool_name => <<"memory_store">>,
+          arguments_json => <<"{\"k\":\"v\"}">>,
+          risk_level => <<"review">>,
+          expire_ms => 300000,
+          registered_at => 1710000000000}
+    ],
+    RespBin = panel_pb_codec:pack_response_ok(5, <<"list_pending_approvals">>, #{approvals => Approvals}),
+    {response, 5, ok, ResultBytes} = panel_pb_codec:unpack_frame(RespBin),
+    Dec = panel_pb_codec:decode_result(<<"list_pending_approvals">>, ResultBytes),
+    ?assertEqual(Approvals, maps:get(approvals, Dec)).
